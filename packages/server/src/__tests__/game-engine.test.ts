@@ -259,4 +259,181 @@ describe('GameEngine', () => {
       expect(GameEngine.nextDealerIndex(1, 2)).toBe(0);
     });
   });
+
+  describe('swapCards', () => {
+    it('swaps hand card with face-up card for valid swap', () => {
+      const state = GameEngine.createGame(players3, 0);
+      const player = state.players[0];
+      const originalHand0 = player.hand[0];
+      const originalFaceUp1 = player.faceUp[1];
+
+      const result = GameEngine.swapCards(state, 'p1', 0, 1);
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        const updatedPlayer = result.data!.players[0];
+        expect(cardEquals(updatedPlayer.hand[0], originalFaceUp1)).toBe(true);
+        expect(cardEquals(updatedPlayer.faceUp[1], originalHand0)).toBe(true);
+      }
+    });
+
+    it('rejects swap when phase is not "swapping"', () => {
+      const state = GameEngine.createGame(players2, 0);
+      state.phase = 'playing';
+
+      const result = GameEngine.swapCards(state, 'p1', 0, 0);
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.code).toBe('INVALID_ACTION');
+        expect(result.error).toContain('swapping');
+      }
+    });
+
+    it('rejects swap when phase is "transitioning"', () => {
+      const state = GameEngine.createGame(players2, 0);
+      state.phase = 'transitioning';
+
+      const result = GameEngine.swapCards(state, 'p1', 0, 0);
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.code).toBe('INVALID_ACTION');
+      }
+    });
+
+    it('rejects swap for unknown player', () => {
+      const state = GameEngine.createGame(players2, 0);
+
+      const result = GameEngine.swapCards(state, 'nonexistent', 0, 0);
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.code).toBe('PLAYER_NOT_FOUND');
+        expect(result.error).toContain('Player not found');
+      }
+    });
+
+    it('rejects swap with negative handIndex', () => {
+      const state = GameEngine.createGame(players2, 0);
+
+      const result = GameEngine.swapCards(state, 'p1', -1, 0);
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.code).toBe('INVALID_ACTION');
+        expect(result.error).toContain('Invalid');
+      }
+    });
+
+    it('rejects swap with handIndex >= hand.length', () => {
+      const state = GameEngine.createGame(players2, 0);
+
+      const result = GameEngine.swapCards(state, 'p1', 3, 0);
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.code).toBe('INVALID_ACTION');
+      }
+    });
+
+    it('rejects swap with negative faceUpIndex', () => {
+      const state = GameEngine.createGame(players2, 0);
+
+      const result = GameEngine.swapCards(state, 'p1', 0, -1);
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.code).toBe('INVALID_ACTION');
+      }
+    });
+
+    it('rejects swap with faceUpIndex >= faceUp.length', () => {
+      const state = GameEngine.createGame(players2, 0);
+
+      const result = GameEngine.swapCards(state, 'p1', 0, 3);
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.code).toBe('INVALID_ACTION');
+      }
+    });
+
+    it('preserves other players\' cards when swapping', () => {
+      const state = GameEngine.createGame(players3, 0);
+      const player2Before = { ...state.players[1] };
+      const player3Before = { ...state.players[2] };
+
+      const result = GameEngine.swapCards(state, 'p1', 0, 0);
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        // Player 2 unchanged
+        expect(result.data!.players[1].hand).toEqual(player2Before.hand);
+        expect(result.data!.players[1].faceUp).toEqual(player2Before.faceUp);
+        expect(result.data!.players[1].faceDown).toEqual(player2Before.faceDown);
+
+        // Player 3 unchanged
+        expect(result.data!.players[2].hand).toEqual(player3Before.hand);
+        expect(result.data!.players[2].faceUp).toEqual(player3Before.faceUp);
+        expect(result.data!.players[2].faceDown).toEqual(player3Before.faceDown);
+      }
+    });
+
+    it('allows multiple sequential swaps', () => {
+      const state = GameEngine.createGame(players2, 0);
+      const originalHand0 = state.players[0].hand[0];
+      const originalHand1 = state.players[0].hand[1];
+      const originalFaceUp0 = state.players[0].faceUp[0];
+      const originalFaceUp1 = state.players[0].faceUp[1];
+
+      // First swap
+      const result1 = GameEngine.swapCards(state, 'p1', 0, 0);
+      expect(result1.success).toBe(true);
+
+      // Second swap on the result of the first
+      const result2 = GameEngine.swapCards(result1.data!, 'p1', 1, 1);
+      expect(result2.success).toBe(true);
+
+      if (result2.success) {
+        const finalPlayer = result2.data!.players[0];
+        // hand[0] should now be originalFaceUp0 (from first swap)
+        expect(cardEquals(finalPlayer.hand[0], originalFaceUp0)).toBe(true);
+        // faceUp[0] should now be originalHand0 (from first swap)
+        expect(cardEquals(finalPlayer.faceUp[0], originalHand0)).toBe(true);
+        // hand[1] should now be originalFaceUp1 (from second swap)
+        expect(cardEquals(finalPlayer.hand[1], originalFaceUp1)).toBe(true);
+        // faceUp[1] should now be originalHand1 (from second swap)
+        expect(cardEquals(finalPlayer.faceUp[1], originalHand1)).toBe(true);
+      }
+    });
+
+    it('allows swapping same indices (self-swap)', () => {
+      const state = GameEngine.createGame(players2, 0);
+      const originalHand1 = state.players[0].hand[1];
+      const originalFaceUp1 = state.players[0].faceUp[1];
+
+      const result = GameEngine.swapCards(state, 'p1', 1, 1);
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        const updatedPlayer = result.data!.players[0];
+        // Still swapped, even though same index
+        expect(cardEquals(updatedPlayer.hand[1], originalFaceUp1)).toBe(true);
+        expect(cardEquals(updatedPlayer.faceUp[1], originalHand1)).toBe(true);
+      }
+    });
+
+    it('does not mutate original state', () => {
+      const state = GameEngine.createGame(players2, 0);
+      const originalHandCard = state.players[0].hand[0];
+      const originalFaceUpCard = state.players[0].faceUp[0];
+
+      GameEngine.swapCards(state, 'p1', 0, 0);
+
+      // Original state unchanged
+      expect(cardEquals(state.players[0].hand[0], originalHandCard)).toBe(true);
+      expect(cardEquals(state.players[0].faceUp[0], originalFaceUpCard)).toBe(true);
+    });
+  });
 });
