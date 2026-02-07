@@ -1,4 +1,4 @@
-import { ref, watch, type Ref } from 'vue';
+import { ref, watch, effectScope } from 'vue';
 import { useWebSocket } from '@vueuse/core';
 import type { ClientMessage, ServerMessage, RoomState } from '@shit-head/shared';
 
@@ -8,6 +8,9 @@ let socketInstance: ReturnType<typeof createGameSocket> | null = null;
 type MessageHandler = (msg: ServerMessage) => void;
 
 function createGameSocket() {
+  // Detached scope so the WebSocket survives component unmounts
+  const scope = effectScope(true);
+
   // Determine WebSocket URL: use env var in development, derive from page URL in production
   const serverUrl = import.meta.env.VITE_WS_URL;
   const wsUrl = serverUrl
@@ -21,25 +24,27 @@ function createGameSocket() {
   const error = ref<string | null>(null);
   const messageHandlers: MessageHandler[] = [];
 
-  // Setup WebSocket with VueUse
-  const { status, data, send: wsSend, close, open } = useWebSocket(wsUrl, {
-    autoReconnect: {
-      retries: 5,
-      delay: 1000,
-      onFailed() {
-        error.value = 'Failed to connect to server after multiple attempts';
+  // Run WebSocket and watchers inside detached scope
+  const { status, data, send: wsSend, close, open } = scope.run(() =>
+    useWebSocket(wsUrl, {
+      autoReconnect: {
+        retries: 5,
+        delay: 1000,
+        onFailed() {
+          error.value = 'Failed to connect to server after multiple attempts';
+        },
       },
-    },
-    heartbeat: {
-      message: 'ping',
-      interval: 30000,
-      pongTimeout: 5000,
-    },
-    immediate: true,
-  });
+      heartbeat: {
+        message: 'ping',
+        interval: 30000,
+        pongTimeout: 5000,
+      },
+      immediate: true,
+    })
+  )!;
 
-  // Watch for incoming messages
-  watch(data, (rawData) => {
+  // Watch for incoming messages (also inside detached scope)
+  scope.run(() => watch(data, (rawData) => {
     if (!rawData || rawData === 'pong') return;
 
     try {
@@ -87,7 +92,7 @@ function createGameSocket() {
       console.error('Failed to parse WebSocket message:', err);
       error.value = 'Invalid message received from server';
     }
-  });
+  }));
 
   // Send typed message
   const send = (msg: ClientMessage) => {
