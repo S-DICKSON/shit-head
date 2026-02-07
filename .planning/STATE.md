@@ -10,28 +10,28 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 ## Current Position
 
 Phase: 1 of 12 (Project Setup & Foundation)
-Plan: 3 of TBD in current phase
+Plan: 4 of TBD in current phase
 Status: In progress
-Last activity: 2026-02-07 — Completed 01-03-PLAN.md
+Last activity: 2026-02-07 — Completed 01-04-PLAN.md
 
-Progress: [██░░░░░░░░] ~25% (3 plans complete)
+Progress: [███░░░░░░░] ~33% (4 plans complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 3
-- Average duration: 3.2 minutes
-- Total execution time: 0.16 hours
+- Total plans completed: 4
+- Average duration: 2.9 minutes
+- Total execution time: 0.20 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01 | 3 | 574s | 191s |
+| 01 | 4 | 706s | 177s |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (153s), 01-02 (207s), 01-03 (214s)
-- Trend: Consistent velocity around 3-3.5 minutes per plan
+- Last 5 plans: 01-01 (153s), 01-02 (207s), 01-03 (214s), 01-04 (132s)
+- Trend: Improving - 01-04 was fastest plan yet at 2.2 minutes
 
 *Updated after each plan completion*
 
@@ -68,20 +68,31 @@ Recent decisions affecting current work:
 - Anonymous volumes for node_modules in Docker Compose
 - Build context is project root (access to all packages)
 
+**From 01-04:**
+- GitHub Actions for CI/CD (oven-sh/setup-bun, JorgeLNJunior/render-deploy)
+- CI runs type-check, lint, test, build on every PR
+- Deploy triggers automatically on merge to main
+- OpenTofu for infrastructure-as-code (render-oss/render provider)
+- Both client and server as render_web_service with Docker runtime
+- Secrets via GitHub Actions secrets (never committed)
+
 ### Pending Todos
 
 None yet.
 
 ### Blockers/Concerns
 
-None yet.
+**User action required:** Render account setup and credentials (see 01-USER-SETUP.md)
+- Deploy workflow will fail until GitHub secrets are configured
+- OpenTofu requires API key to provision infrastructure
+- Not a blocker for development, only for deployment
 
 ## Session Continuity
 
-Last session: 2026-02-07 15:52:16 UTC
-Stopped at: Completed 01-03-PLAN.md
+Last session: 2026-02-07 15:57:35 UTC
+Stopped at: Completed 01-04-PLAN.md
 Resume file: None
 
 ---
 *State initialized: 2026-02-07*
-*Last updated: 2026-02-07 after 01-03 completion*
+*Last updated: 2026-02-07 after 01-04 completion*
