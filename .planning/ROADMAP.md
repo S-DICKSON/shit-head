@@ -36,10 +36,13 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. Project has working build system producing optimized production bundle
   3. Basic CI/CD pipeline runs on push to main branch
   4. Deployment target is configured (Railway/Render/similar)
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
-- [ ] (Plans will be created during /gsd:plan-phase 1)
+- [ ] 01-01-PLAN.md — Monorepo scaffold with root config, shared package, and Bun server
+- [ ] 01-02-PLAN.md — Vue 3 client with Vite, Tailwind CSS, and Vitest
+- [ ] 01-03-PLAN.md — Docker containerization and Makefile developer interface
+- [ ] 01-04-PLAN.md — GitHub Actions CI/CD and OpenTofu infrastructure-as-code
 
 ### Phase 2: WebSocket Infrastructure & Room Management
 **Goal**: Players can create and join rooms via share codes with real-time communication
@@ -209,11 +212,11 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 9 → 10 → 11 → 12
+Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10 -> 11 -> 12
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Project Setup & Foundation | 0/TBD | Not started | - |
+| 1. Project Setup & Foundation | 0/4 | Planned | - |
 | 2. WebSocket Infrastructure & Room Management | 0/TBD | Not started | - |
 | 3. Deck & Dealing System | 0/TBD | Not started | - |
 | 4. Pre-Game Swap Phase | 0/TBD | Not started | - |
@@ -228,4 +231,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 
 ---
 *Roadmap created: 2026-02-07*
-*Last updated: 2026-02-07 after roadmap creation*
+*Last updated: 2026-02-07 after Phase 1 planning*
