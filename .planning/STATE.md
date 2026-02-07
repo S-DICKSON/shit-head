@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 ## Current Position
 
 Phase: 4 of 12 (Pre-Game Swap Phase) — IN PROGRESS
-Plan: 2 of 3 in phase
+Plan: 3 of 4 in phase
 Status: In progress
-Last activity: 2026-02-07 — Completed 04-02-PLAN.md
+Last activity: 2026-02-07 — Completed 04-03-PLAN.md
 
-Progress: [███░░░░░░░] ~27% (13 plans complete)
+Progress: [███░░░░░░░] ~29% (14 plans complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 13
+- Total plans completed: 14
 - Average duration: 2.4 minutes
-- Total execution time: 0.56 hours
+- Total execution time: 0.65 hours
 
 **By Phase:**
 
@@ -30,11 +30,11 @@ Progress: [███░░░░░░░] ~27% (13 plans complete)
 | 01 | 4 | 706s | 177s |
 | 02 | 4 | 705s | 176s |
 | 03 | 3 | 503s | 168s |
-| 04 | 2 | 275s | 138s |
+| 04 | 3 | 472s | 157s |
 
 **Recent Trend:**
-- Last 5 plans: 03-02 (156s), 03-03 (207s), 04-01 (150s), 04-02 (125s)
-- Trend: Phase 4 maintaining fast pace - 04-02 TDD completed in 125s (under 3 min average)
+- Last 5 plans: 03-03 (207s), 04-01 (150s), 04-02 (125s), 04-03 (197s)
+- Trend: Phase 4 maintaining excellent pace - averaging 157s per plan (well under 3 min target)
 
 *Updated after each plan completion*
 
@@ -141,6 +141,13 @@ Recent decisions affecting current work:
 - Validate indices against actual array lengths (not hardcoded 0-2) for future flexibility
 - TDD cycle produces atomic commits per phase (test → feat → refactor)
 
+**From 04-03:**
+- Callback pattern for Room-to-handler broadcasting (onTick, onReady, onComplete)
+- Swap after ready-up auto-un-readies player to prevent confusion
+- Validate game exists in Room.swapCards() before delegating to GameEngine
+- Set callbacks before startGame() to ensure timer broadcasts work immediately
+- Per-player views sent to all players after any swap (authoritative server state)
+
 ### Pending Todos
 
 1 pending — `/gsd:check-todos` to review
@@ -155,10 +162,10 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-02-07T22:07:14Z
-Stopped at: Completed 04-02-PLAN.md
+Last session: 2026-02-07T22:14:51Z
+Stopped at: Completed 04-03-PLAN.md
 Resume file: None
 
 ---
 *State initialized: 2026-02-07*
-*Last updated: 2026-02-07 after completing 04-02*
+*Last updated: 2026-02-07 after completing 04-03*
