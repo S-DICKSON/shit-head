@@ -98,7 +98,7 @@ Plans:
 - [x] 04-03-PLAN.md — Room swap/ready/timer integration and WebSocket handlers
 - [x] 04-04-PLAN.md — Client swap phase composable and UI component
 - [x] 04-05-PLAN.md — Wire SwapPhase into app (gap closure: Game.vue + routing)
-- [ ] 04-06-PLAN.md — Fix lobby-to-swap navigation (gap closure: game-dealt listener)
+- [x] 04-06-PLAN.md — Fix lobby-to-swap navigation (gap closure: game-dealt listener)
 
 ### Phase 5: Core Game Engine & Rules
 **Goal**: Players can take turns playing cards following basic Shithead rules
@@ -237,7 +237,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 1. Project Setup & Foundation | 4/4 | Complete | 2026-02-07 |
 | 2. WebSocket Infrastructure & Room Management | 5/5 | Complete | 2026-02-07 |
 | 3. Deck & Dealing System | 3/3 | Complete | 2026-02-07 |
-| 4. Pre-Game Swap Phase | 5/5 | Complete | 2026-02-07 |
+| 4. Pre-Game Swap Phase | 6/6 | Complete | 2026-02-07 |
 | 5. Core Game Engine & Rules | 4/4 | Complete | 2026-02-07 |
 | 6. Special Cards & Burn Mechanics | 0/TBD | Not started | - |
 | 7. Endgame & Win Conditions | 0/TBD | Not started | - |
