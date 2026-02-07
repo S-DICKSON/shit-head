@@ -13,5 +13,10 @@ export const router = createRouter({
       name: 'lobby',
       component: () => import('./components/Lobby.vue'),
     },
+    {
+      path: '/game',
+      name: 'game',
+      component: () => import('./components/Game.vue'),
+    },
   ],
 });
