@@ -11,9 +11,12 @@ export default defineConfig({
     host: '0.0.0.0',  // Required for Docker
     port: 5173,
     strictPort: true,
+    hmr: {
+      path: '/__hmr',  // Avoid conflict with /ws game proxy
+    },
     proxy: {
+      '/ws': { target: wsUrl, ws: true },
       '/api': serverUrl,
-      '/ws': { target: wsUrl, ws: true }
     }
   }
 })

@@ -121,8 +121,8 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-07
-Stopped at: Completed 02-04-PLAN.md (server WebSocket handlers)
-Resume file: None
+Stopped at: 02-05 checkpoint blocked — WebSocket connection cycling bug
+Resume file: .planning/phases/02-websocket-infrastructure-room-management/.continue-here.md
 
 ---
 *State initialized: 2026-02-07*

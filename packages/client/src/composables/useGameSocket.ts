@@ -38,7 +38,7 @@ function createGameSocket() {
 
   // Watch for incoming messages
   watch(data, (rawData) => {
-    if (!rawData) return;
+    if (!rawData || rawData === 'pong') return;
 
     try {
       const message = JSON.parse(rawData) as ServerMessage;
