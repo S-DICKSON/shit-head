@@ -141,10 +141,7 @@ export function handleMessage(
         return;
       }
 
-      ws.unsubscribe(roomCode);
-      ws.data.roomCode = null;
-
-      // If room still exists, notify remaining players
+      // Notify remaining players before unsubscribing
       if (room) {
         const updatedRoom = manager.getRoom(roomCode);
         if (updatedRoom) {
@@ -154,6 +151,9 @@ export function handleMessage(
           });
         }
       }
+
+      ws.unsubscribe(roomCode);
+      ws.data.roomCode = null;
       break;
     }
 
