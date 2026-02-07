@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-07)
 
 **Core value:** Friends can play a complete, rule-accurate game of Shithead together online with zero friction
-**Current focus:** Phase 5 complete — ready for Phase 6
+**Current focus:** Phase 4 gap closure complete — Phase 5 verified, ready for Phase 6
 
 ## Current Position
 
 Phase: 5 of 12 (Core Game Engine & Rules) — COMPLETE
-Plan: 4 of 4 in phase
-Status: Phase complete, verified ✓
-Last activity: 2026-02-07 — Phase 5 verified, ready for Phase 6
+Plan: Gap closure 04-06 just completed
+Status: Phase 4 gap closed, Phase 5 verified ✓
+Last activity: 2026-02-07 — Completed gap closure 04-06-PLAN.md
 
-Progress: [████░░░░░░] ~42% (20 plans complete)
+Progress: [████░░░░░░] ~43% (21 plans complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 20
-- Average duration: 2.1 minutes
-- Total execution time: 0.87 hours
+- Total plans completed: 21
+- Average duration: 2.3 minutes
+- Total execution time: 0.91 hours
 
 **By Phase:**
 
@@ -30,12 +30,12 @@ Progress: [████░░░░░░] ~42% (20 plans complete)
 | 01 | 4 | 706s | 177s |
 | 02 | 4 | 705s | 176s |
 | 03 | 3 | 503s | 168s |
-| 04 | 5 | 716s | 143s |
+| 04 | 6 | 866s | 144s |
 | 05 | 4 | 668s | 167s |
 
 **Recent Trend:**
-- Last 5 plans: 05-01 (131s), 05-02 (174s), 05-03 (180s), 05-04 (183s)
-- Trend: Phase 5 complete - consistent execution pace, avg 167s per plan
+- Last 5 plans: 05-02 (174s), 05-03 (180s), 05-04 (183s), 04-06 (150s)
+- Trend: Gap closure fast execution (150s) - navigation fix straightforward
 
 *Updated after each plan completion*
 
@@ -159,8 +159,11 @@ Recent decisions affecting current work:
 **From 04-05:**
 - Game wrapper component pattern for phase-based rendering (conditionally render phase-specific components)
 - Route guard pattern: onMounted check for required state, redirect to landing if missing
-- Navigate on game-started message (after countdown) not game-dealt (immediate) for smoother transition
 - Game.vue renders SwapPhase for both 'swapping' and 'transitioning' phases
+
+**From 04-06:**
+- Lobby.vue navigates on game-dealt (not game-started) to align with Phase 3 server changes
+- Dead schemas removed to prevent confusion (game-started never sent by server)
 
 **From 05-01:**
 - Gameplay message schemas extend discriminated union pattern from earlier phases
@@ -204,10 +207,10 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-02-07T22:57:10Z
-Stopped at: Completed 05-04-PLAN.md
+Last session: 2026-02-07T23:10:52Z
+Stopped at: Completed 04-06-PLAN.md (gap closure)
 Resume file: None
 
 ---
 *State initialized: 2026-02-07*
-*Last updated: 2026-02-07 after completing 05-04*
+*Last updated: 2026-02-07 after completing 04-06 (gap closure)*
