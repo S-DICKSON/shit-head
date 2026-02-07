@@ -90,7 +90,7 @@ Plans:
   3. All players swap simultaneously in real-time
   4. Game automatically starts when timer expires
   5. Timer countdown is visible to all players
-**Plans**: 5 plans
+**Plans**: 6 plans
 
 Plans:
 - [x] 04-01-PLAN.md — Swap-phase message schemas and types (shared package)
@@ -98,6 +98,7 @@ Plans:
 - [x] 04-03-PLAN.md — Room swap/ready/timer integration and WebSocket handlers
 - [x] 04-04-PLAN.md — Client swap phase composable and UI component
 - [x] 04-05-PLAN.md — Wire SwapPhase into app (gap closure: Game.vue + routing)
+- [ ] 04-06-PLAN.md — Fix lobby-to-swap navigation (gap closure: game-dealt listener)
 
 ### Phase 5: Core Game Engine & Rules
 **Goal**: Players can take turns playing cards following basic Shithead rules
@@ -236,7 +237,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 1. Project Setup & Foundation | 4/4 | Complete | 2026-02-07 |
 | 2. WebSocket Infrastructure & Room Management | 5/5 | Complete | 2026-02-07 |
 | 3. Deck & Dealing System | 3/3 | Complete | 2026-02-07 |
-| 4. Pre-Game Swap Phase | 5/5 | Complete | 2026-02-07 |
+| 4. Pre-Game Swap Phase | 5/6 | In Progress | - |
 | 5. Core Game Engine & Rules | 0/4 | Not started | - |
 | 6. Special Cards & Burn Mechanics | 0/TBD | Not started | - |
 | 7. Endgame & Win Conditions | 0/TBD | Not started | - |
@@ -248,4 +249,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 
 ---
 *Roadmap created: 2026-02-07*
-*Last updated: 2026-02-07 after Phase 4 completion*
+*Last updated: 2026-02-07 after Phase 4 gap closure planning*
