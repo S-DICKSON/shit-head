@@ -167,13 +167,14 @@ export class GameEngine {
       };
     }
 
-    // Perform the swap immutably
+    // Perform the swap immutably using destructuring assignment
     const updatedHand = [...player.hand];
     const updatedFaceUp = [...player.faceUp];
 
-    const temp = updatedHand[handIndex];
-    updatedHand[handIndex] = updatedFaceUp[faceUpIndex];
-    updatedFaceUp[faceUpIndex] = temp;
+    [updatedHand[handIndex], updatedFaceUp[faceUpIndex]] = [
+      updatedFaceUp[faceUpIndex],
+      updatedHand[handIndex],
+    ];
 
     // Create updated player state
     const updatedPlayer: PlayerGameState = {
