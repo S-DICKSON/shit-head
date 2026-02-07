@@ -14,3 +14,4 @@ export * from './types/room';
 
 // Phase 3: Deck, dealing, and game state types
 export * from './types/card';
+export * from './types/game';

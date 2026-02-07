@@ -11,6 +11,7 @@ import type {
   playerLeftSchema,
   gameStartingSchema,
   gameStartedSchema,
+  gameDealtSchema,
   errorSchema,
   clientMessageSchema,
   serverMessageSchema,
@@ -31,6 +32,7 @@ export type RoomUpdatedMessage = z.infer<typeof roomUpdatedSchema>;
 export type PlayerLeftMessage = z.infer<typeof playerLeftSchema>;
 export type GameStartingMessage = z.infer<typeof gameStartingSchema>;
 export type GameStartedMessage = z.infer<typeof gameStartedSchema>;
+export type GameDealtMessage = z.infer<typeof gameDealtSchema>;
 export type ErrorMessage = z.infer<typeof errorSchema>;
 
 export type ServerMessage = z.infer<typeof serverMessageSchema>;

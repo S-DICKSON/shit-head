@@ -1,6 +1,7 @@
 // Zod validation schemas for WebSocket messages
 import { z } from 'zod';
 import type { RoomState } from '../types/room';
+import type { OpponentView } from '../types/game';
 
 // Room state schema (for nested validation)
 const lobbyPlayerSchema = z.object({
@@ -16,6 +17,35 @@ const roomStateSchema: z.ZodType<RoomState> = z.object({
   hostId: z.string(),
   maxPlayers: z.literal(4),
   minPlayers: z.literal(2),
+});
+
+// Card schemas (Phase 3: Deck & Dealing)
+const suitSchema = z.enum(['hearts', 'diamonds', 'clubs', 'spades']);
+const rankSchema = z.enum(['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']);
+
+const standardCardSchema = z.object({
+  kind: z.literal('standard'),
+  suit: suitSchema,
+  rank: rankSchema,
+});
+
+const jokerCardSchema = z.object({
+  kind: z.literal('joker'),
+  id: z.union([z.literal(1), z.literal(2)]),
+});
+
+const cardSchema = z.discriminatedUnion('kind', [
+  standardCardSchema,
+  jokerCardSchema,
+]);
+
+// Opponent view schema (what a player sees of opponents)
+const opponentViewSchema: z.ZodType<OpponentView> = z.object({
+  playerId: z.string(),
+  nickname: z.string(),
+  faceDownCount: z.number(),
+  faceUp: z.array(cardSchema),
+  handCount: z.number(),
 });
 
 // Client-to-server message schemas
@@ -78,6 +108,19 @@ export const gameStartedSchema = z.object({
   type: z.literal('game-started'),
 });
 
+export const gameDealtSchema = z.object({
+  type: z.literal('game-dealt'),
+  phase: z.enum(['dealing', 'swapping', 'playing', 'finished']),
+  hand: z.array(cardSchema),
+  faceUp: z.array(cardSchema),
+  faceDownCount: z.number(),
+  opponents: z.array(opponentViewSchema),
+  drawPileCount: z.number(),
+  discardPile: z.array(cardSchema),
+  currentPlayerIndex: z.number(),
+  dealerIndex: z.number(),
+});
+
 export const errorSchema = z.object({
   type: z.literal('error'),
   message: z.string(),
@@ -99,5 +142,6 @@ export const serverMessageSchema = z.discriminatedUnion('type', [
   playerLeftSchema,
   gameStartingSchema,
   gameStartedSchema,
+  gameDealtSchema,
   errorSchema,
 ]);
