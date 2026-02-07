@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Type-check client
+        run: cd packages/client && bun run type-check
+
+      - name: Type-check server
+        run: cd packages/server && bun run tsc --noEmit
+
+      - name: Lint client
+        run: cd packages/client && bun run lint
+
+      - name: Test client
+        run: cd packages/client && bun run test
+
+      - name: Test server
+        run: cd packages/server && bun run test
+
+      - name: Build client
+        run: cd packages/client && bun run vite build
