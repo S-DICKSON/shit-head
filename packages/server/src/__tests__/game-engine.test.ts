@@ -630,8 +630,8 @@ describe('GameEngine', () => {
         // Card should move to discard pile
         expect(newState.discardPile).toHaveLength(2);
         expect(newState.discardPile[1]).toEqual({ kind: 'standard', suit: 'hearts', rank: '5' });
-        // Hand should have 2 cards remaining
-        expect(newState.players[0].hand).toHaveLength(2);
+        // Hand should still have 3 cards (played 1, drew 1 from draw pile)
+        expect(newState.players[0].hand).toHaveLength(3);
       }
     });
 
@@ -653,8 +653,8 @@ describe('GameEngine', () => {
         expect(newState.discardPile).toHaveLength(3);
         expect(newState.discardPile[1]).toEqual({ kind: 'standard', suit: 'hearts', rank: '7' });
         expect(newState.discardPile[2]).toEqual({ kind: 'standard', suit: 'diamonds', rank: '7' });
-        // Hand should have 1 card remaining
-        expect(newState.players[0].hand).toHaveLength(1);
+        // Hand should have 3 cards (started 3, played 2, drew 2 from pile)
+        expect(newState.players[0].hand).toHaveLength(3);
       }
     });
 

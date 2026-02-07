@@ -1,7 +1,7 @@
 import type { Card, GameState, PlayerGameView, PlayerGameState, OpponentView } from '@shit-head/shared';
 import { createDeck } from '@shit-head/shared';
 import { shuffleDeck } from './Deck';
-import { RANK_ORDER } from './CardComparison';
+import { RANK_ORDER, canPlayOn } from './CardComparison';
 
 type OperationResult<T = void> =
   | { success: true; data?: T }
@@ -224,6 +224,242 @@ export class GameEngine {
     const newState: GameState = {
       ...state,
       players: updatedPlayers,
+    };
+
+    return {
+      success: true,
+      data: newState,
+    };
+  }
+
+  /**
+   * Plays cards from a player's hand onto the discard pile.
+   * Validates phase, turn, card indices, rank consistency, and playability.
+   * Auto-draws cards after play to maintain hand size of 3 if possible.
+   * Advances turn to next player on success.
+   *
+   * @param state - Current game state
+   * @param playerId - ID of the player playing cards
+   * @param cardIndices - Array of indices of cards in player's hand to play
+   * @returns OperationResult with updated GameState on success
+   */
+  static playCards(
+    state: GameState,
+    playerId: string,
+    cardIndices: number[]
+  ): OperationResult<GameState> {
+    // Validate phase
+    if (state.phase !== 'playing') {
+      return {
+        success: false,
+        error: 'Can only play cards during playing phase',
+        code: 'INVALID_ACTION',
+      };
+    }
+
+    // Find player
+    const playerIndex = state.players.findIndex(p => p.playerId === playerId);
+    if (playerIndex === -1) {
+      return {
+        success: false,
+        error: 'Player not found',
+        code: 'PLAYER_NOT_FOUND',
+      };
+    }
+
+    // Validate turn
+    if (playerIndex !== state.currentPlayerIndex) {
+      return {
+        success: false,
+        error: 'Not your turn',
+        code: 'NOT_YOUR_TURN',
+      };
+    }
+
+    // Validate cardIndices not empty
+    if (cardIndices.length === 0) {
+      return {
+        success: false,
+        error: 'Must play at least one card',
+        code: 'INVALID_ACTION',
+      };
+    }
+
+    const player = state.players[playerIndex];
+
+    // Validate all indices are within bounds
+    for (const idx of cardIndices) {
+      if (idx < 0 || idx >= player.hand.length) {
+        return {
+          success: false,
+          error: 'Invalid card index',
+          code: 'INVALID_ACTION',
+        };
+      }
+    }
+
+    // Validate no duplicate indices
+    const indicesSet = new Set(cardIndices);
+    if (indicesSet.size !== cardIndices.length) {
+      return {
+        success: false,
+        error: 'Duplicate card indices',
+        code: 'INVALID_ACTION',
+      };
+    }
+
+    // Get the cards being played
+    const cardsToPlay = cardIndices.map(idx => player.hand[idx]);
+
+    // Validate all cards have same rank (for multi-card plays)
+    if (cardsToPlay.length > 1) {
+      const firstRank = cardsToPlay[0].kind === 'standard' ? cardsToPlay[0].rank : null;
+      for (const card of cardsToPlay) {
+        const cardRank = card.kind === 'standard' ? card.rank : null;
+        if (cardRank !== firstRank) {
+          return {
+            success: false,
+            error: 'All cards must have same rank',
+            code: 'INVALID_ACTION',
+          };
+        }
+      }
+    }
+
+    // Validate card can be played on top of discard pile
+    if (state.discardPile.length > 0) {
+      const topCard = state.discardPile[state.discardPile.length - 1];
+      const playedCard = cardsToPlay[0];
+
+      if (!canPlayOn(playedCard, topCard)) {
+        return {
+          success: false,
+          error: 'Card value too low',
+          code: 'INVALID_ACTION',
+        };
+      }
+    }
+
+    // All validations passed - perform the play
+
+    // Remove played cards from hand (sort indices descending to avoid index shifting)
+    const sortedIndices = [...cardIndices].sort((a, b) => b - a);
+    let updatedHand = [...player.hand];
+    for (const idx of sortedIndices) {
+      updatedHand.splice(idx, 1);
+    }
+
+    // Add played cards to discard pile
+    const updatedDiscardPile = [...state.discardPile, ...cardsToPlay];
+
+    // Auto-draw: if hand < 3 and draw pile has cards, draw until hand is 3 or pile empty
+    let updatedDrawPile = [...state.drawPile];
+    while (updatedHand.length < 3 && updatedDrawPile.length > 0) {
+      const drawnCard = updatedDrawPile.shift()!;
+      updatedHand.push(drawnCard);
+    }
+
+    // Update player state
+    const updatedPlayer: PlayerGameState = {
+      ...player,
+      hand: updatedHand,
+    };
+
+    // Advance turn
+    const nextPlayerIndex = (state.currentPlayerIndex + 1) % state.players.length;
+
+    // Create new game state
+    const updatedPlayers = state.players.map((p, i) =>
+      i === playerIndex ? updatedPlayer : p
+    );
+
+    const newState: GameState = {
+      ...state,
+      players: updatedPlayers,
+      discardPile: updatedDiscardPile,
+      drawPile: updatedDrawPile,
+      currentPlayerIndex: nextPlayerIndex,
+    };
+
+    return {
+      success: true,
+      data: newState,
+    };
+  }
+
+  /**
+   * Picks up the entire discard pile and adds it to the player's hand.
+   * Advances turn to next player on success.
+   *
+   * @param state - Current game state
+   * @param playerId - ID of the player picking up the pile
+   * @returns OperationResult with updated GameState on success
+   */
+  static pickupPile(
+    state: GameState,
+    playerId: string
+  ): OperationResult<GameState> {
+    // Validate phase
+    if (state.phase !== 'playing') {
+      return {
+        success: false,
+        error: 'Can only pick up during playing phase',
+        code: 'INVALID_ACTION',
+      };
+    }
+
+    // Find player
+    const playerIndex = state.players.findIndex(p => p.playerId === playerId);
+    if (playerIndex === -1) {
+      return {
+        success: false,
+        error: 'Player not found',
+        code: 'PLAYER_NOT_FOUND',
+      };
+    }
+
+    // Validate turn
+    if (playerIndex !== state.currentPlayerIndex) {
+      return {
+        success: false,
+        error: 'Not your turn',
+        code: 'NOT_YOUR_TURN',
+      };
+    }
+
+    // Validate discard pile not empty
+    if (state.discardPile.length === 0) {
+      return {
+        success: false,
+        error: 'No cards to pick up',
+        code: 'INVALID_ACTION',
+      };
+    }
+
+    const player = state.players[playerIndex];
+
+    // Add all discard pile cards to player's hand
+    const updatedHand = [...player.hand, ...state.discardPile];
+
+    // Update player state
+    const updatedPlayer: PlayerGameState = {
+      ...player,
+      hand: updatedHand,
+    };
+
+    // Advance turn
+    const nextPlayerIndex = (state.currentPlayerIndex + 1) % state.players.length;
+
+    // Create new game state
+    const updatedPlayers = state.players.map((p, i) =>
+      i === playerIndex ? updatedPlayer : p
+    );
+
+    const newState: GameState = {
+      ...state,
+      players: updatedPlayers,
+      discardPile: [],
+      currentPlayerIndex: nextPlayerIndex,
     };
 
     return {
