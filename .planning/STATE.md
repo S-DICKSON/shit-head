@@ -10,29 +10,29 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 ## Current Position
 
 Phase: 2 of 12 (WebSocket Infrastructure & Room Management) — IN PROGRESS
-Plan: 1 of 3 in phase (shared protocol definition complete)
+Plan: 3 of 5 in phase (client infrastructure complete, running 02-02 and 02-03 in parallel)
 Status: In progress
-Last activity: 2026-02-07 — Completed 02-01-PLAN.md
+Last activity: 2026-02-07 — Completed 02-03-PLAN.md
 
-Progress: [███░░░░░░░] ~10% (1 phase complete + 1 plan of phase 2)
+Progress: [███░░░░░░░] ~12% (1 phase complete + 3 plans of phase 2)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 5
-- Average duration: 2.9 minutes
-- Total execution time: 0.25 hours
+- Total plans completed: 6
+- Average duration: 2.7 minutes
+- Total execution time: 0.27 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01 | 4 | 706s | 177s |
-| 02 | 1 | 178s | 178s |
+| 02 | 2 | 321s | 161s |
 
 **Recent Trend:**
-- Last 5 plans: 01-02 (207s), 01-03 (214s), 01-04 (132s), 02-01 (178s)
-- Trend: Consistent - maintaining ~3 min average per plan
+- Last 5 plans: 01-03 (214s), 01-04 (132s), 02-01 (178s), 02-03 (143s)
+- Trend: Improving - average trending down to ~2.5 min per plan
 
 *Updated after each plan completion*
 
@@ -84,6 +84,14 @@ Recent decisions affecting current work:
 - Nickname length constrained to 1-20 characters with trim
 - Max 4 players, min 2 players per room
 
+**From 02-03:**
+- Singleton pattern for WebSocket composable to ensure all components share one connection
+- WebSocket URL determined dynamically from window.location (works in dev and production)
+- Auto-reconnect with 5 retries and 1s delay between attempts
+- Heartbeat every 30s with 5s pong timeout to detect stale connections
+- Room code input auto-uppercase and sanitized to alphanumeric only
+- Hash history for router (GitHub Pages compatibility)
+
 ### Pending Todos
 
 None yet.
@@ -98,9 +106,9 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-07
-Stopped at: Completed 02-01-PLAN.md (shared protocol definition)
+Stopped at: Completed 02-03-PLAN.md (client WebSocket infrastructure)
 Resume file: None
 
 ---
 *State initialized: 2026-02-07*
-*Last updated: 2026-02-07 after completing 02-01*
+*Last updated: 2026-02-07 after completing 02-03*
