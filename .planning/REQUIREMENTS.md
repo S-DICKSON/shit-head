@@ -27,13 +27,13 @@
 
 ### Core Gameplay
 
-- [ ] **PLAY-01**: Turns proceed clockwise
-- [ ] **PLAY-02**: Player must play card equal to or higher than top of discard pile
-- [ ] **PLAY-03**: Player can play multiple cards of same value in one turn
-- [ ] **PLAY-04**: Player draws back up to 3 cards until draw pile is empty
-- [ ] **PLAY-05**: Player picks up entire discard pile when unable to play
-- [ ] **PLAY-06**: First player auto-detected by lowest card starting from 3 upward
-- [ ] **PLAY-07**: After burn, player can play any card on empty pile
+- [x] **PLAY-01**: Turns proceed clockwise
+- [x] **PLAY-02**: Player must play card equal to or higher than top of discard pile
+- [x] **PLAY-03**: Player can play multiple cards of same value in one turn
+- [x] **PLAY-04**: Player draws back up to 3 cards until draw pile is empty
+- [x] **PLAY-05**: Player picks up entire discard pile when unable to play
+- [x] **PLAY-06**: First player auto-detected by lowest card starting from 3 upward
+- [x] **PLAY-07**: After burn, player can play any card on empty pile
 
 ### Special Cards
 
@@ -41,7 +41,7 @@
 - [ ] **SPEC-02**: 7 follows normal ordering, next player must play <= 7
 - [ ] **SPEC-03**: 8 is invisible (next player plays on card beneath), stackable
 - [ ] **SPEC-04**: 10 burns pile, player goes again, cannot win on a 10
-- [ ] **SPEC-05**: Card values: 3 < 4 < 5 < 6 < 7 < 9 < J < Q < K < A < Joker
+- [x] **SPEC-05**: Card values: 3 < 4 < 5 < 6 < 7 < 9 < J < Q < K < A < Joker
 
 ### Burn Mechanic
 
@@ -118,18 +118,18 @@
 | SWAP-01 | Phase 4 | Complete |
 | SWAP-02 | Phase 4 | Complete |
 | SWAP-03 | Phase 4 | Complete |
-| PLAY-01 | Phase 5 | Pending |
-| PLAY-02 | Phase 5 | Pending |
-| PLAY-03 | Phase 5 | Pending |
-| PLAY-04 | Phase 5 | Pending |
-| PLAY-05 | Phase 5 | Pending |
-| PLAY-06 | Phase 5 | Pending |
-| PLAY-07 | Phase 5 | Pending |
+| PLAY-01 | Phase 5 | Complete |
+| PLAY-02 | Phase 5 | Complete |
+| PLAY-03 | Phase 5 | Complete |
+| PLAY-04 | Phase 5 | Complete |
+| PLAY-05 | Phase 5 | Complete |
+| PLAY-06 | Phase 5 | Complete |
+| PLAY-07 | Phase 5 | Complete |
 | SPEC-01 | Phase 6 | Pending |
 | SPEC-02 | Phase 6 | Pending |
 | SPEC-03 | Phase 6 | Pending |
 | SPEC-04 | Phase 6 | Pending |
-| SPEC-05 | Phase 5 | Pending |
+| SPEC-05 | Phase 5 | Complete |
 | BURN-01 | Phase 6 | Pending |
 | BURN-02 | Phase 6 | Pending |
 | BURN-03 | Phase 6 | Pending |
@@ -157,4 +157,4 @@
 
 ---
 *Requirements defined: 2026-02-07*
-*Last updated: 2026-02-07 after roadmap creation*
+*Last updated: 2026-02-07 after Phase 5 completion*

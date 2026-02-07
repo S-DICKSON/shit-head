@@ -16,7 +16,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2: WebSocket Infrastructure & Room Management** - Real-time communication layer and lobby system
 - [x] **Phase 3: Deck & Dealing System** - Card deck initialization and dealing logic
 - [x] **Phase 4: Pre-Game Swap Phase** - 30-second simultaneous card swap before game start
-- [ ] **Phase 5: Core Game Engine & Rules** - Turn system, play validation, draw/pickup mechanics
+- [x] **Phase 5: Core Game Engine & Rules** - Turn system, play validation, draw/pickup mechanics
 - [ ] **Phase 6: Special Cards & Burn Mechanics** - 2s, 7s, 8s, 10s, and burn detection
 - [ ] **Phase 7: Endgame & Win Conditions** - Hand to face-up to face-down progression and winner detection
 - [ ] **Phase 8: Turn Timing & Auto-Pickup** - Turn timer with timeout handling
@@ -114,10 +114,10 @@ Plans:
 **Plans**: 4 plans
 
 Plans:
-- [ ] 05-01-PLAN.md — Gameplay message schemas and types (play-cards, pickup-pile, card-played, pile-pickup, turn-changed)
-- [ ] 05-02-PLAN.md — Card rank comparison utilities and determineFirstPlayer (TDD)
-- [ ] 05-03-PLAN.md — GameEngine.playCards() and pickupPile() with validation and auto-draw (TDD)
-- [ ] 05-04-PLAN.md — Room gameplay methods and WebSocket handler integration
+- [x] 05-01-PLAN.md — Gameplay message schemas and types (play-cards, pickup-pile, card-played, pile-pickup, turn-changed)
+- [x] 05-02-PLAN.md — Card rank comparison utilities and determineFirstPlayer (TDD)
+- [x] 05-03-PLAN.md — GameEngine.playCards() and pickupPile() with validation and auto-draw (TDD)
+- [x] 05-04-PLAN.md — Room gameplay methods and WebSocket handler integration
 
 ### Phase 6: Special Cards & Burn Mechanics
 **Goal**: Special cards (2, 7, 8, 10) and burn detection work correctly
@@ -237,8 +237,8 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 1. Project Setup & Foundation | 4/4 | Complete | 2026-02-07 |
 | 2. WebSocket Infrastructure & Room Management | 5/5 | Complete | 2026-02-07 |
 | 3. Deck & Dealing System | 3/3 | Complete | 2026-02-07 |
-| 4. Pre-Game Swap Phase | 5/6 | In Progress | - |
-| 5. Core Game Engine & Rules | 0/4 | Not started | - |
+| 4. Pre-Game Swap Phase | 5/5 | Complete | 2026-02-07 |
+| 5. Core Game Engine & Rules | 4/4 | Complete | 2026-02-07 |
 | 6. Special Cards & Burn Mechanics | 0/TBD | Not started | - |
 | 7. Endgame & Win Conditions | 0/TBD | Not started | - |
 | 8. Turn Timing & Auto-Pickup | 0/TBD | Not started | - |
@@ -249,4 +249,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 
 ---
 *Roadmap created: 2026-02-07*
-*Last updated: 2026-02-07 after Phase 4 gap closure planning*
+*Last updated: 2026-02-07 after Phase 5 execution*
