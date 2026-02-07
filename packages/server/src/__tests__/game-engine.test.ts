@@ -260,6 +260,127 @@ describe('GameEngine', () => {
     });
   });
 
+  describe('determineFirstPlayer', () => {
+    it('returns player index with lowest card starting from 3', () => {
+      // Create a game state and manually set hand cards for testing
+      const state = GameEngine.createGame(players2, 0);
+
+      // P0 has [5, K, A], P1 has [3, 7, Q]
+      state.players[0].hand = [
+        { kind: 'standard', suit: 'hearts', rank: '5' },
+        { kind: 'standard', suit: 'diamonds', rank: 'K' },
+        { kind: 'standard', suit: 'clubs', rank: 'A' },
+      ];
+      state.players[1].hand = [
+        { kind: 'standard', suit: 'spades', rank: '3' },
+        { kind: 'standard', suit: 'hearts', rank: '7' },
+        { kind: 'standard', suit: 'diamonds', rank: 'Q' },
+      ];
+
+      const firstPlayer = GameEngine.determineFirstPlayer(state);
+      expect(firstPlayer).toBe(1); // P1 has 3
+    });
+
+    it('returns first player when both have same lowest card', () => {
+      const state = GameEngine.createGame(players2, 0);
+
+      // P0 has [3, 4, 5], P1 has [3, 6, 7]
+      state.players[0].hand = [
+        { kind: 'standard', suit: 'hearts', rank: '3' },
+        { kind: 'standard', suit: 'diamonds', rank: '4' },
+        { kind: 'standard', suit: 'clubs', rank: '5' },
+      ];
+      state.players[1].hand = [
+        { kind: 'standard', suit: 'spades', rank: '3' },
+        { kind: 'standard', suit: 'hearts', rank: '6' },
+        { kind: 'standard', suit: 'diamonds', rank: '7' },
+      ];
+
+      const firstPlayer = GameEngine.determineFirstPlayer(state);
+      expect(firstPlayer).toBe(0); // First player in order with 3
+    });
+
+    it('returns correct player when lowest card is not 3', () => {
+      const state = GameEngine.createGame(players2, 0);
+
+      // P0 has [4, 6, 8], P1 has [5, J, Q]
+      state.players[0].hand = [
+        { kind: 'standard', suit: 'hearts', rank: '4' },
+        { kind: 'standard', suit: 'diamonds', rank: '6' },
+        { kind: 'standard', suit: 'clubs', rank: '8' },
+      ];
+      state.players[1].hand = [
+        { kind: 'standard', suit: 'spades', rank: '5' },
+        { kind: 'standard', suit: 'hearts', rank: 'J' },
+        { kind: 'standard', suit: 'diamonds', rank: 'Q' },
+      ];
+
+      const firstPlayer = GameEngine.determineFirstPlayer(state);
+      expect(firstPlayer).toBe(0); // P0 has 4
+    });
+
+    it('returns player with jack when all have high cards', () => {
+      const state = GameEngine.createGame(players3, 0);
+
+      // All players have J or higher
+      state.players[0].hand = [
+        { kind: 'standard', suit: 'hearts', rank: 'Q' },
+        { kind: 'standard', suit: 'diamonds', rank: 'K' },
+        { kind: 'standard', suit: 'clubs', rank: 'A' },
+      ];
+      state.players[1].hand = [
+        { kind: 'standard', suit: 'spades', rank: 'J' },
+        { kind: 'standard', suit: 'hearts', rank: 'Q' },
+        { kind: 'standard', suit: 'diamonds', rank: 'K' },
+      ];
+      state.players[2].hand = [
+        { kind: 'standard', suit: 'clubs', rank: 'Q' },
+        { kind: 'standard', suit: 'spades', rank: 'K' },
+        { kind: 'standard', suit: 'hearts', rank: 'A' },
+      ];
+
+      const firstPlayer = GameEngine.determineFirstPlayer(state);
+      expect(firstPlayer).toBe(1); // P1 has J
+    });
+
+    it('only scans hand cards, not face-up or face-down', () => {
+      const state = GameEngine.createGame(players2, 0);
+
+      // P0 has 3 in face-up but not in hand
+      state.players[0].faceUp = [
+        { kind: 'standard', suit: 'hearts', rank: '3' },
+        { kind: 'standard', suit: 'diamonds', rank: '4' },
+        { kind: 'standard', suit: 'clubs', rank: '5' },
+      ];
+      state.players[0].hand = [
+        { kind: 'standard', suit: 'hearts', rank: '7' },
+        { kind: 'standard', suit: 'diamonds', rank: '8' },
+        { kind: 'standard', suit: 'clubs', rank: '9' },
+      ];
+
+      // P1 has 4 in hand
+      state.players[1].hand = [
+        { kind: 'standard', suit: 'spades', rank: '4' },
+        { kind: 'standard', suit: 'hearts', rank: 'J' },
+        { kind: 'standard', suit: 'diamonds', rank: 'Q' },
+      ];
+
+      const firstPlayer = GameEngine.determineFirstPlayer(state);
+      expect(firstPlayer).toBe(1); // P1 has 4 in hand, even though P0 has 3 face-up
+    });
+
+    it('returns player 0 as fallback when all hands are empty or only jokers', () => {
+      const state = GameEngine.createGame(players2, 0);
+
+      // Both players have only jokers (edge case)
+      state.players[0].hand = [{ kind: 'joker', id: 1 }];
+      state.players[1].hand = [{ kind: 'joker', id: 2 }];
+
+      const firstPlayer = GameEngine.determineFirstPlayer(state);
+      expect(firstPlayer).toBe(0); // Fallback
+    });
+  });
+
   describe('swapCards', () => {
     it('swaps hand card with face-up card for valid swap', () => {
       const state = GameEngine.createGame(players3, 0);
