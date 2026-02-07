@@ -1,0 +1,160 @@
+# Requirements: Shithead Online
+
+**Defined:** 2026-02-07
+**Core Value:** Friends can play a complete, rule-accurate game of Shithead together online with zero friction
+
+## v1 Requirements
+
+### Room Management
+
+- [ ] **ROOM-01**: Player can create a room and receive a shareable 6-character code
+- [ ] **ROOM-02**: Player can join a room by entering a room code
+- [ ] **ROOM-03**: Player can enter a nickname before joining (no accounts)
+- [ ] **ROOM-04**: Room supports 2-4 players
+
+### Deck & Dealing
+
+- [ ] **DECK-01**: Game uses standard 52-card deck + 2 Jokers (54 cards)
+- [ ] **DECK-02**: Each player dealt 3 face-down, 3 face-up, 3 hand cards
+- [ ] **DECK-03**: Remaining cards form draw pile
+- [ ] **DECK-04**: Dealer rotates clockwise after each hand
+
+### Pre-Game Swap
+
+- [ ] **SWAP-01**: Players can swap cards between hand and face-up during 30-second swap phase
+- [ ] **SWAP-02**: All players swap simultaneously
+- [ ] **SWAP-03**: Game starts automatically after timer expires
+
+### Core Gameplay
+
+- [ ] **PLAY-01**: Turns proceed clockwise
+- [ ] **PLAY-02**: Player must play card equal to or higher than top of discard pile
+- [ ] **PLAY-03**: Player can play multiple cards of same value in one turn
+- [ ] **PLAY-04**: Player draws back up to 3 cards until draw pile is empty
+- [ ] **PLAY-05**: Player picks up entire discard pile when unable to play
+- [ ] **PLAY-06**: First player auto-detected by lowest card starting from 3 upward
+- [ ] **PLAY-07**: After burn, player can play any card on empty pile
+
+### Special Cards
+
+- [ ] **SPEC-01**: 2 resets pile and can be played on anything
+- [ ] **SPEC-02**: 7 follows normal ordering, next player must play <= 7
+- [ ] **SPEC-03**: 8 is invisible (next player plays on card beneath), stackable
+- [ ] **SPEC-04**: 10 burns pile, player goes again, cannot win on a 10
+- [ ] **SPEC-05**: Card values: 3 < 4 < 5 < 6 < 7 < 9 < J < Q < K < A < Joker
+
+### Burn Mechanic
+
+- [ ] **BURN-01**: 4-of-a-kind on pile burns it, including four 8s (player goes again)
+- [ ] **BURN-02**: 8s are invisible when counting burns for non-8 cards (e.g., 2,2,2,8,8,2 = burn because four 2s)
+- [ ] **BURN-03**: 10 burns pile immediately
+
+### Endgame
+
+- [ ] **END-01**: When hand empty and draw pile empty, player plays face-up cards
+- [ ] **END-02**: When face-up cards gone, player plays face-down cards blindly
+- [ ] **END-03**: If blind face-down card unplayable, player picks up pile (returns to hand phase)
+- [ ] **END-04**: Player who empties all cards drops out of game
+- [ ] **END-05**: Last player with cards is the shithead and deals next hand
+
+### Multiplayer
+
+- [ ] **MULT-01**: Real-time game state sync via WebSocket
+- [ ] **MULT-02**: Server-authoritative game state (prevents cheating)
+- [ ] **MULT-03**: Turn timer (30-60s) with auto-pickup on timeout
+- [ ] **MULT-04**: Player-specific state views (hide opponent hands and face-down cards)
+- [ ] **MULT-05**: Reconnection handling with brief wait period
+- [ ] **MULT-06**: Remove player after disconnect timeout
+
+### User Interface
+
+- [ ] **UI-01**: Responsive layout works on mobile and desktop browsers
+- [ ] **UI-02**: Functional card animations (deal, play, burn)
+- [ ] **UI-03**: Clear turn indicators showing whose turn it is
+- [ ] **UI-04**: Turn timer countdown visible to all players
+- [ ] **UI-05**: Card hand display with clear selection state
+
+## v2 Requirements
+
+### Social & Polish
+
+- **SOCL-01**: Quick emotes during gameplay (4-6 reactions)
+- **SOCL-02**: Play again / rematch button after game ends
+- **SOCL-03**: Sound effects for card plays, burns, turn start
+- **SOCL-04**: In-game rules reference page
+- **SOCL-05**: Host controls (kick players, start game)
+
+### Advanced
+
+- **ADVN-01**: Spectator mode for watching games
+- **ADVN-02**: Chat system during gameplay
+- **ADVN-03**: AI opponents for practice mode
+
+## Out of Scope
+
+| Feature | Reason |
+|---------|--------|
+| User accounts / authentication | Zero friction — nicknames only, no persistence |
+| Public matchmaking | Room codes only, play with friends |
+| Native mobile apps | Browser-based only, responsive web |
+| Leaderboards / stats tracking | No accounts to track against |
+| Tournament mode | Overkill for casual friend game |
+| Voice chat | Users have Discord/phone for voice |
+| In-game purchases | Free game, no monetization |
+| Custom card skins | Polish feature, not core |
+
+## Traceability
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| ROOM-01 | Pending | Pending |
+| ROOM-02 | Pending | Pending |
+| ROOM-03 | Pending | Pending |
+| ROOM-04 | Pending | Pending |
+| DECK-01 | Pending | Pending |
+| DECK-02 | Pending | Pending |
+| DECK-03 | Pending | Pending |
+| DECK-04 | Pending | Pending |
+| SWAP-01 | Pending | Pending |
+| SWAP-02 | Pending | Pending |
+| SWAP-03 | Pending | Pending |
+| PLAY-01 | Pending | Pending |
+| PLAY-02 | Pending | Pending |
+| PLAY-03 | Pending | Pending |
+| PLAY-04 | Pending | Pending |
+| PLAY-05 | Pending | Pending |
+| PLAY-06 | Pending | Pending |
+| PLAY-07 | Pending | Pending |
+| SPEC-01 | Pending | Pending |
+| SPEC-02 | Pending | Pending |
+| SPEC-03 | Pending | Pending |
+| SPEC-04 | Pending | Pending |
+| SPEC-05 | Pending | Pending |
+| BURN-01 | Pending | Pending |
+| BURN-02 | Pending | Pending |
+| BURN-03 | Pending | Pending |
+| END-01 | Pending | Pending |
+| END-02 | Pending | Pending |
+| END-03 | Pending | Pending |
+| END-04 | Pending | Pending |
+| END-05 | Pending | Pending |
+| MULT-01 | Pending | Pending |
+| MULT-02 | Pending | Pending |
+| MULT-03 | Pending | Pending |
+| MULT-04 | Pending | Pending |
+| MULT-05 | Pending | Pending |
+| MULT-06 | Pending | Pending |
+| UI-01 | Pending | Pending |
+| UI-02 | Pending | Pending |
+| UI-03 | Pending | Pending |
+| UI-04 | Pending | Pending |
+| UI-05 | Pending | Pending |
+
+**Coverage:**
+- v1 requirements: 42 total
+- Mapped to phases: 0
+- Unmapped: 42 (will be mapped during roadmap creation)
+
+---
+*Requirements defined: 2026-02-07*
+*Last updated: 2026-02-07 after initial definition*
