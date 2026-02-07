@@ -129,10 +129,11 @@ Plans:
   4. Playing a 10 burns the pile and player goes again
   5. Four-of-a-kind on pile burns it (8s invisible for non-8 counting)
   6. After burn, player can play any card on empty pile
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] (Plans will be created during /gsd:plan-phase 6)
+- [ ] 06-01-PLAN.md — Special card validation and burn detection pure functions (TDD)
+- [ ] 06-02-PLAN.md — Integrate special cards and burn mechanics into GameEngine.playCards() (TDD)
 
 ### Phase 7: Endgame & Win Conditions
 **Goal**: Players progress through hand, face-up, and face-down cards to win
