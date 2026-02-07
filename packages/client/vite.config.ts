@@ -7,6 +7,7 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',  // Required for Docker
     port: 5173,
+    strictPort: true,
     proxy: {
       '/api': 'http://localhost:3000',
       '/ws': { target: 'ws://localhost:3000', ws: true }
