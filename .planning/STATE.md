@@ -9,19 +9,19 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 
 ## Current Position
 
-Phase: 4 of 12 (Pre-Game Swap Phase) — IN PROGRESS
-Plan: 3 of 4 in phase
-Status: In progress
-Last activity: 2026-02-07 — Completed 04-03-PLAN.md
+Phase: 4 of 12 (Pre-Game Swap Phase) — COMPLETE
+Plan: 4 of 4 in phase
+Status: Phase complete
+Last activity: 2026-02-07 — Completed 04-04-PLAN.md
 
-Progress: [███░░░░░░░] ~29% (14 plans complete)
+Progress: [███░░░░░░░] ~31% (15 plans complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 14
+- Total plans completed: 15
 - Average duration: 2.4 minutes
-- Total execution time: 0.65 hours
+- Total execution time: 0.68 hours
 
 **By Phase:**
 
@@ -30,11 +30,11 @@ Progress: [███░░░░░░░] ~29% (14 plans complete)
 | 01 | 4 | 706s | 177s |
 | 02 | 4 | 705s | 176s |
 | 03 | 3 | 503s | 168s |
-| 04 | 3 | 472s | 157s |
+| 04 | 4 | 614s | 154s |
 
 **Recent Trend:**
-- Last 5 plans: 03-03 (207s), 04-01 (150s), 04-02 (125s), 04-03 (197s)
-- Trend: Phase 4 maintaining excellent pace - averaging 157s per plan (well under 3 min target)
+- Last 5 plans: 04-01 (150s), 04-02 (125s), 04-03 (197s), 04-04 (142s)
+- Trend: Phase 4 complete - averaged 154s per plan, excellent consistency under 3 min target
 
 *Updated after each plan completion*
 
@@ -148,6 +148,13 @@ Recent decisions affecting current work:
 - Set callbacks before startGame() to ensure timer broadcasts work immediately
 - Per-player views sent to all players after any swap (authoritative server state)
 
+**From 04-04:**
+- Debounce swap messages at 150ms with 500ms maxWait to batch rapid taps
+- Tap-tap pattern: select hand card, then face-up card (or vice versa) to trigger swap
+- Auto-deselect on second tap of same card for easy selection correction
+- No swaps allowed during transition phase (cards locked after swap-phase-complete)
+- Simple numeric timer display with no urgency effects (per user decision)
+
 ### Pending Todos
 
 1 pending — `/gsd:check-todos` to review
@@ -162,10 +169,10 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-02-07T22:14:51Z
-Stopped at: Completed 04-03-PLAN.md
+Last session: 2026-02-07T22:21:22Z
+Stopped at: Completed 04-04-PLAN.md
 Resume file: None
 
 ---
 *State initialized: 2026-02-07*
-*Last updated: 2026-02-07 after completing 04-03*
+*Last updated: 2026-02-07 after completing 04-04*
