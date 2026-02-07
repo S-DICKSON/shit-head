@@ -10,7 +10,6 @@ const { send, onMessage, roomState, playerId } = useGameSocket();
 
 // Component state
 const countdown = ref<number | null>(null);
-const showGameStarted = ref(false);
 
 // Computed states
 const isHost = computed(() => {
@@ -69,8 +68,7 @@ const unregister = onMessage((msg) => {
 
   if (msg.type === 'game-started') {
     countdown.value = null;
-    showGameStarted.value = true;
-    // TODO: Navigate to game view in Phase 3
+    router.push('/game');
   }
 });
 
@@ -147,16 +145,6 @@ onUnmounted(() => {
     >
       <div class="text-white text-8xl font-bold animate-pulse">
         {{ countdown }}
-      </div>
-    </div>
-
-    <!-- Game Started Placeholder -->
-    <div
-      v-if="showGameStarted"
-      class="fixed inset-0 bg-green-600 bg-opacity-90 flex items-center justify-center z-50"
-    >
-      <div class="text-white text-4xl font-bold">
-        Game Started!
       </div>
     </div>
   </div>
