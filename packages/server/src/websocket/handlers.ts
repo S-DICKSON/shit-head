@@ -245,6 +245,16 @@ export function handleMessage(
                 }
               }
             },
+            onPlayPhaseStart: (currentPlayerIndex) => {
+              // Notify all players when playing phase begins with first player
+              const playerIds = room.getPlayerIds();
+              for (const pid of playerIds) {
+                const pWs = playerSockets.get(pid);
+                if (pWs) {
+                  sendMessage(pWs, { type: 'turn-changed', currentPlayerIndex });
+                }
+              }
+            },
           });
 
           room.startGame();
@@ -358,6 +368,89 @@ export function handleMessage(
           code: result.code,
         });
         return;
+      }
+      break;
+    }
+
+    case 'play-cards': {
+      const roomCode = ws.data.roomCode;
+      if (!roomCode) {
+        sendMessage(ws, { type: 'error', message: 'Not in a room', code: 'ROOM_NOT_FOUND' });
+        return;
+      }
+      const room = manager.getRoom(roomCode);
+      if (!room) {
+        sendMessage(ws, { type: 'error', message: 'Room not found', code: 'ROOM_NOT_FOUND' });
+        return;
+      }
+
+      const result = room.playCards(ws.data.playerId, message.cardIndices);
+      if (!result.success) {
+        sendMessage(ws, { type: 'error', message: result.error, code: result.code });
+        return;
+      }
+
+      // Get the game state for building response
+      const gameState = room.getGameState();
+      if (!gameState) return;
+
+      // Get played cards from the end of discard pile
+      const playedCards = gameState.discardPile.slice(-message.cardIndices.length);
+
+      // Send per-player views to ALL players in the room
+      const playerIds = room.getPlayerIds();
+      for (const playerId of playerIds) {
+        const view = room.getPlayerView(playerId);
+        const playerWs = playerSockets.get(playerId);
+        if (view && playerWs) {
+          sendMessage(playerWs, {
+            type: 'card-played',
+            playerId: ws.data.playerId,
+            cards: playedCards,
+            currentPlayerIndex: view.currentPlayerIndex,
+            drawPileCount: view.drawPileCount,
+            discardPile: view.discardPile,
+            hand: view.hand,
+            opponents: view.opponents,
+          });
+        }
+      }
+      break;
+    }
+
+    case 'pickup-pile': {
+      const roomCode = ws.data.roomCode;
+      if (!roomCode) {
+        sendMessage(ws, { type: 'error', message: 'Not in a room', code: 'ROOM_NOT_FOUND' });
+        return;
+      }
+      const room = manager.getRoom(roomCode);
+      if (!room) {
+        sendMessage(ws, { type: 'error', message: 'Room not found', code: 'ROOM_NOT_FOUND' });
+        return;
+      }
+
+      const result = room.pickupPile(ws.data.playerId);
+      if (!result.success) {
+        sendMessage(ws, { type: 'error', message: result.error, code: result.code });
+        return;
+      }
+
+      // Send per-player views to ALL players
+      const playerIds = room.getPlayerIds();
+      for (const playerId of playerIds) {
+        const view = room.getPlayerView(playerId);
+        const playerWs = playerSockets.get(playerId);
+        if (view && playerWs) {
+          sendMessage(playerWs, {
+            type: 'pile-pickup',
+            playerId: ws.data.playerId,
+            currentPlayerIndex: view.currentPlayerIndex,
+            discardPile: view.discardPile,
+            hand: view.hand,
+            opponents: view.opponents,
+          });
+        }
       }
       break;
     }
