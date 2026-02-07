@@ -66,7 +66,7 @@ const unregister = onMessage((msg) => {
     }, 1000);
   }
 
-  if (msg.type === 'game-started') {
+  if (msg.type === 'game-dealt') {
     countdown.value = null;
     router.push('/game');
   }
