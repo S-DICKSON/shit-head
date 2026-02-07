@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 ## Current Position
 
 Phase: 5 of 12 (Core Game Engine & Rules)
-Plan: 2 of 4 in phase
+Plan: 3 of 4 in phase
 Status: In progress
-Last activity: 2026-02-07 — Completed 05-02-PLAN.md
+Last activity: 2026-02-07 — Completed 05-03-PLAN.md
 
-Progress: [███░░░░░░░] ~37% (18 plans complete)
+Progress: [███░░░░░░░] ~39% (19 plans complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 18
-- Average duration: 2.3 minutes
-- Total execution time: 0.78 hours
+- Total plans completed: 19
+- Average duration: 2.2 minutes
+- Total execution time: 0.82 hours
 
 **By Phase:**
 
@@ -31,11 +31,11 @@ Progress: [███░░░░░░░] ~37% (18 plans complete)
 | 02 | 4 | 705s | 176s |
 | 03 | 3 | 503s | 168s |
 | 04 | 5 | 716s | 143s |
-| 05 | 2 | 305s | 153s |
+| 05 | 3 | 485s | 162s |
 
 **Recent Trend:**
-- Last 5 plans: 04-04 (142s), 04-05 (102s), 05-01 (131s), 05-02 (174s)
-- Trend: Phase 5 progressing - averaging 153s per plan, TDD methodology adds thoroughness
+- Last 5 plans: 04-05 (102s), 05-01 (131s), 05-02 (174s), 05-03 (180s)
+- Trend: Phase 5 progressing steadily - TDD methodology adds thoroughness, avg 162s per plan
 
 *Updated after each plan completion*
 
@@ -176,6 +176,13 @@ Recent decisions affecting current work:
 - getRankValue maps 2=-1 (lowest), 3=0, 4=1, ..., A=11, Joker=999 (highest)
 - canPlayOn validates plays via simple numeric comparison (playedCard >= topCard)
 
+**From 05-03:**
+- playCards validates all cards have same rank for multi-card plays (no mixed-rank plays allowed)
+- Auto-draw happens atomically after play within same state mutation (not separate operation)
+- Turn advances via modular arithmetic for wrap-around: (currentPlayerIndex + 1) % players.length
+- Card removal uses descending-sorted indices to avoid index shifting during splice
+- Empty discard pile accepts any card (no validation required)
+
 ### Pending Todos
 
 1 pending — `/gsd:check-todos` to review
@@ -190,10 +197,10 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-02-07T22:30:21Z
-Stopped at: Completed 05-02-PLAN.md
+Last session: 2026-02-07T22:50:42Z
+Stopped at: Completed 05-03-PLAN.md
 Resume file: None
 
 ---
 *State initialized: 2026-02-07*
-*Last updated: 2026-02-07 after completing 05-02*
+*Last updated: 2026-02-07 after completing 05-03*
