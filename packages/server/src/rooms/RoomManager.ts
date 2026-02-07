@@ -2,9 +2,9 @@
 import { Room } from './Room';
 import type { RoomState, ErrorCode } from '@shit-head/shared';
 
-type OperationResult<T = void> =
-  | { success: true; data: T }
-  | { success: false; error: string; code: ErrorCode };
+type OperationResult<T = void> = T extends void
+  ? { success: true } | { success: false; error: string; code: ErrorCode }
+  : { success: true; data: T } | { success: false; error: string; code: ErrorCode };
 
 export class RoomManager {
   private rooms: Map<string, Room>; // code -> Room
