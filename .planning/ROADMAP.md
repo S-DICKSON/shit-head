@@ -1,0 +1,231 @@
+# Roadmap: Shithead Online
+
+## Overview
+
+This roadmap delivers a browser-based multiplayer Shithead card game from zero to production deployment. The journey starts with foundational infrastructure (project setup, WebSocket communication, room management), builds the core game engine (deck dealing, turn system, special cards, endgame), adds production-critical features (timing, reconnection), implements the client UI, and finishes with deployment. Each phase delivers a coherent, testable capability following the natural dependencies of multiplayer game architecture.
+
+## Phases
+
+**Phase Numbering:**
+- Integer phases (1, 2, 3): Planned milestone work
+- Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
+
+Decimal phases appear between their surrounding integers in numeric order.
+
+- [ ] **Phase 1: Project Setup & Foundation** - Development environment, build system, deployment scaffold
+- [ ] **Phase 2: WebSocket Infrastructure & Room Management** - Real-time communication layer and lobby system
+- [ ] **Phase 3: Deck & Dealing System** - Card deck initialization and dealing logic
+- [ ] **Phase 4: Pre-Game Swap Phase** - 30-second simultaneous card swap before game start
+- [ ] **Phase 5: Core Game Engine & Rules** - Turn system, play validation, draw/pickup mechanics
+- [ ] **Phase 6: Special Cards & Burn Mechanics** - 2s, 7s, 8s, 10s, and burn detection
+- [ ] **Phase 7: Endgame & Win Conditions** - Hand to face-up to face-down progression and winner detection
+- [ ] **Phase 8: Turn Timing & Auto-Pickup** - Turn timer with timeout handling
+- [ ] **Phase 9: Connection Management & Reconnection** - Disconnect detection and reconnection flow
+- [ ] **Phase 10: Client UI & Card Interactions** - React UI with card hand display and play actions
+- [ ] **Phase 11: Game Feedback & Turn Indicators** - Turn state display and visual cues
+- [ ] **Phase 12: Deployment & Production Polish** - Production build, hosting, and monitoring
+
+## Phase Details
+
+### Phase 1: Project Setup & Foundation
+**Goal**: Development environment is ready and deployment pipeline is scaffolded
+**Depends on**: Nothing (first phase)
+**Requirements**: None (foundational infrastructure)
+**Success Criteria** (what must be TRUE):
+  1. Developer can run local development server with hot reload
+  2. Project has working build system producing optimized production bundle
+  3. Basic CI/CD pipeline runs on push to main branch
+  4. Deployment target is configured (Railway/Render/similar)
+**Plans**: TBD
+
+Plans:
+- [ ] (Plans will be created during /gsd:plan-phase 1)
+
+### Phase 2: WebSocket Infrastructure & Room Management
+**Goal**: Players can create and join rooms via share codes with real-time communication
+**Depends on**: Phase 1
+**Requirements**: ROOM-01, ROOM-02, ROOM-03, ROOM-04, MULT-01, MULT-02
+**Success Criteria** (what must be TRUE):
+  1. Player can create a room and receive a shareable 6-character code
+  2. Player can join a room by entering a code and choosing a nickname
+  3. Room displays all joined players (2-4) in real-time
+  4. Server maintains authoritative room state with player-specific views
+  5. Room creator can start the game when ready
+**Plans**: TBD
+
+Plans:
+- [ ] (Plans will be created during /gsd:plan-phase 2)
+
+### Phase 3: Deck & Dealing System
+**Goal**: Cards are properly initialized and dealt to all players when game starts
+**Depends on**: Phase 2
+**Requirements**: DECK-01, DECK-02, DECK-03, DECK-04
+**Success Criteria** (what must be TRUE):
+  1. Game uses standard 52-card deck plus 2 Jokers (54 total)
+  2. Each player receives 3 face-down, 3 face-up, and 3 hand cards
+  3. Remaining cards form a visible draw pile
+  4. Dealer role rotates clockwise after each hand
+  5. Players see their own cards but opponents' cards are hidden
+**Plans**: TBD
+
+Plans:
+- [ ] (Plans will be created during /gsd:plan-phase 3)
+
+### Phase 4: Pre-Game Swap Phase
+**Goal**: Players can swap cards between hand and face-up during timed pre-game phase
+**Depends on**: Phase 3
+**Requirements**: SWAP-01, SWAP-02, SWAP-03
+**Success Criteria** (what must be TRUE):
+  1. After dealing, players enter a 30-second swap phase
+  2. Players can swap any hand card with any face-up card
+  3. All players swap simultaneously in real-time
+  4. Game automatically starts when timer expires
+  5. Timer countdown is visible to all players
+**Plans**: TBD
+
+Plans:
+- [ ] (Plans will be created during /gsd:plan-phase 4)
+
+### Phase 5: Core Game Engine & Rules
+**Goal**: Players can take turns playing cards following basic Shithead rules
+**Depends on**: Phase 4
+**Requirements**: PLAY-01, PLAY-02, PLAY-03, PLAY-04, PLAY-05, PLAY-06, PLAY-07, SPEC-05
+**Success Criteria** (what must be TRUE):
+  1. Turns proceed clockwise starting from player with lowest card (3 upward)
+  2. Player can only play card equal to or higher than top of discard pile
+  3. Player can play multiple cards of same value in one turn
+  4. Player automatically draws back up to 3 cards after playing (until draw pile empty)
+  5. Player picks up entire discard pile when unable to play valid card
+  6. Card value ordering is enforced: 3 < 4 < 5 < 6 < 7 < 9 < J < Q < K < A < Joker
+**Plans**: TBD
+
+Plans:
+- [ ] (Plans will be created during /gsd:plan-phase 5)
+
+### Phase 6: Special Cards & Burn Mechanics
+**Goal**: Special cards (2, 7, 8, 10) and burn detection work correctly
+**Depends on**: Phase 5
+**Requirements**: SPEC-01, SPEC-02, SPEC-03, SPEC-04, BURN-01, BURN-02, BURN-03
+**Success Criteria** (what must be TRUE):
+  1. Playing a 2 resets the pile and can be played on anything
+  2. Playing a 7 forces next player to play 7 or lower
+  3. Playing an 8 makes it invisible (next player plays on card beneath)
+  4. Playing a 10 burns the pile and player goes again
+  5. Four-of-a-kind on pile burns it (8s invisible for non-8 counting)
+  6. After burn, player can play any card on empty pile
+**Plans**: TBD
+
+Plans:
+- [ ] (Plans will be created during /gsd:plan-phase 6)
+
+### Phase 7: Endgame & Win Conditions
+**Goal**: Players progress through hand, face-up, and face-down cards to win
+**Depends on**: Phase 6
+**Requirements**: END-01, END-02, END-03, END-04, END-05
+**Success Criteria** (what must be TRUE):
+  1. When hand is empty and draw pile is empty, player plays face-up cards
+  2. When face-up cards are gone, player plays face-down cards blindly
+  3. If blind face-down card is unplayable, player picks up pile (returns to hand phase)
+  4. Player who empties all cards drops out of the game
+  5. Last player with cards is declared the shithead and deals next hand
+**Plans**: TBD
+
+Plans:
+- [ ] (Plans will be created during /gsd:plan-phase 7)
+
+### Phase 8: Turn Timing & Auto-Pickup
+**Goal**: Turns have time limits with automatic pile pickup on timeout
+**Depends on**: Phase 7
+**Requirements**: MULT-03
+**Success Criteria** (what must be TRUE):
+  1. Each turn has a 30-60 second timer enforced server-side
+  2. Timer countdown is visible to all players
+  3. On timeout, player automatically picks up the discard pile
+  4. Turn advances to next player after auto-pickup
+**Plans**: TBD
+
+Plans:
+- [ ] (Plans will be created during /gsd:plan-phase 8)
+
+### Phase 9: Connection Management & Reconnection
+**Goal**: Players can reconnect after disconnect and games handle disconnects gracefully
+**Depends on**: Phase 8
+**Requirements**: MULT-04, MULT-05, MULT-06
+**Success Criteria** (what must be TRUE):
+  1. Players receive correct player-specific state (hidden opponent hands/face-down cards)
+  2. Disconnected player has brief grace period to reconnect
+  3. Player can rejoin game after disconnect with full state restoration
+  4. After grace period expires, disconnected player is removed from game
+  5. Game continues with remaining players if 2+ remain
+**Plans**: TBD
+
+Plans:
+- [ ] (Plans will be created during /gsd:plan-phase 9)
+
+### Phase 10: Client UI & Card Interactions
+**Goal**: Players have a responsive UI to view and play cards on mobile and desktop
+**Depends on**: Phase 9
+**Requirements**: UI-01, UI-02, UI-05
+**Success Criteria** (what must be TRUE):
+  1. UI works on mobile and desktop browsers with responsive layout
+  2. Players can see their hand, face-up cards, face-down cards clearly
+  3. Players can select and play cards with touch or click
+  4. Cards animate smoothly when dealt, played, or burned
+  5. Discard pile and draw pile are clearly visible
+**Plans**: TBD
+
+Plans:
+- [ ] (Plans will be created during /gsd:plan-phase 10)
+
+### Phase 11: Game Feedback & Turn Indicators
+**Goal**: Players know whose turn it is and how much time remains
+**Depends on**: Phase 10
+**Requirements**: UI-03, UI-04
+**Success Criteria** (what must be TRUE):
+  1. Current player is clearly highlighted with visual indicator
+  2. Turn timer countdown is prominently displayed
+  3. Players can distinguish whose turn it is at a glance
+  4. Turn transitions are clear and immediate
+**Plans**: TBD
+
+Plans:
+- [ ] (Plans will be created during /gsd:plan-phase 11)
+
+### Phase 12: Deployment & Production Polish
+**Goal**: Game is deployed to production and ready for real players
+**Depends on**: Phase 11
+**Requirements**: None (deployment infrastructure)
+**Success Criteria** (what must be TRUE):
+  1. Production build is deployed to public URL
+  2. WebSocket connections work in production environment
+  3. Rooms persist as long as game is active
+  4. Basic monitoring shows active games and connected players
+  5. Abandoned rooms are cleaned up after 24 hours
+**Plans**: TBD
+
+Plans:
+- [ ] (Plans will be created during /gsd:plan-phase 12)
+
+## Progress
+
+**Execution Order:**
+Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 9 → 10 → 11 → 12
+
+| Phase | Plans Complete | Status | Completed |
+|-------|----------------|--------|-----------|
+| 1. Project Setup & Foundation | 0/TBD | Not started | - |
+| 2. WebSocket Infrastructure & Room Management | 0/TBD | Not started | - |
+| 3. Deck & Dealing System | 0/TBD | Not started | - |
+| 4. Pre-Game Swap Phase | 0/TBD | Not started | - |
+| 5. Core Game Engine & Rules | 0/TBD | Not started | - |
+| 6. Special Cards & Burn Mechanics | 0/TBD | Not started | - |
+| 7. Endgame & Win Conditions | 0/TBD | Not started | - |
+| 8. Turn Timing & Auto-Pickup | 0/TBD | Not started | - |
+| 9. Connection Management & Reconnection | 0/TBD | Not started | - |
+| 10. Client UI & Card Interactions | 0/TBD | Not started | - |
+| 11. Game Feedback & Turn Indicators | 0/TBD | Not started | - |
+| 12. Deployment & Production Polish | 0/TBD | Not started | - |
+
+---
+*Roadmap created: 2026-02-07*
+*Last updated: 2026-02-07 after roadmap creation*

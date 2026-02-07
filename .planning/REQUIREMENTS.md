@@ -107,54 +107,54 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ROOM-01 | Pending | Pending |
-| ROOM-02 | Pending | Pending |
-| ROOM-03 | Pending | Pending |
-| ROOM-04 | Pending | Pending |
-| DECK-01 | Pending | Pending |
-| DECK-02 | Pending | Pending |
-| DECK-03 | Pending | Pending |
-| DECK-04 | Pending | Pending |
-| SWAP-01 | Pending | Pending |
-| SWAP-02 | Pending | Pending |
-| SWAP-03 | Pending | Pending |
-| PLAY-01 | Pending | Pending |
-| PLAY-02 | Pending | Pending |
-| PLAY-03 | Pending | Pending |
-| PLAY-04 | Pending | Pending |
-| PLAY-05 | Pending | Pending |
-| PLAY-06 | Pending | Pending |
-| PLAY-07 | Pending | Pending |
-| SPEC-01 | Pending | Pending |
-| SPEC-02 | Pending | Pending |
-| SPEC-03 | Pending | Pending |
-| SPEC-04 | Pending | Pending |
-| SPEC-05 | Pending | Pending |
-| BURN-01 | Pending | Pending |
-| BURN-02 | Pending | Pending |
-| BURN-03 | Pending | Pending |
-| END-01 | Pending | Pending |
-| END-02 | Pending | Pending |
-| END-03 | Pending | Pending |
-| END-04 | Pending | Pending |
-| END-05 | Pending | Pending |
-| MULT-01 | Pending | Pending |
-| MULT-02 | Pending | Pending |
-| MULT-03 | Pending | Pending |
-| MULT-04 | Pending | Pending |
-| MULT-05 | Pending | Pending |
-| MULT-06 | Pending | Pending |
-| UI-01 | Pending | Pending |
-| UI-02 | Pending | Pending |
-| UI-03 | Pending | Pending |
-| UI-04 | Pending | Pending |
-| UI-05 | Pending | Pending |
+| ROOM-01 | Phase 2 | Pending |
+| ROOM-02 | Phase 2 | Pending |
+| ROOM-03 | Phase 2 | Pending |
+| ROOM-04 | Phase 2 | Pending |
+| DECK-01 | Phase 3 | Pending |
+| DECK-02 | Phase 3 | Pending |
+| DECK-03 | Phase 3 | Pending |
+| DECK-04 | Phase 3 | Pending |
+| SWAP-01 | Phase 4 | Pending |
+| SWAP-02 | Phase 4 | Pending |
+| SWAP-03 | Phase 4 | Pending |
+| PLAY-01 | Phase 5 | Pending |
+| PLAY-02 | Phase 5 | Pending |
+| PLAY-03 | Phase 5 | Pending |
+| PLAY-04 | Phase 5 | Pending |
+| PLAY-05 | Phase 5 | Pending |
+| PLAY-06 | Phase 5 | Pending |
+| PLAY-07 | Phase 5 | Pending |
+| SPEC-01 | Phase 6 | Pending |
+| SPEC-02 | Phase 6 | Pending |
+| SPEC-03 | Phase 6 | Pending |
+| SPEC-04 | Phase 6 | Pending |
+| SPEC-05 | Phase 5 | Pending |
+| BURN-01 | Phase 6 | Pending |
+| BURN-02 | Phase 6 | Pending |
+| BURN-03 | Phase 6 | Pending |
+| END-01 | Phase 7 | Pending |
+| END-02 | Phase 7 | Pending |
+| END-03 | Phase 7 | Pending |
+| END-04 | Phase 7 | Pending |
+| END-05 | Phase 7 | Pending |
+| MULT-01 | Phase 2 | Pending |
+| MULT-02 | Phase 2 | Pending |
+| MULT-03 | Phase 8 | Pending |
+| MULT-04 | Phase 9 | Pending |
+| MULT-05 | Phase 9 | Pending |
+| MULT-06 | Phase 9 | Pending |
+| UI-01 | Phase 10 | Pending |
+| UI-02 | Phase 10 | Pending |
+| UI-03 | Phase 11 | Pending |
+| UI-04 | Phase 11 | Pending |
+| UI-05 | Phase 10 | Pending |
 
 **Coverage:**
 - v1 requirements: 42 total
-- Mapped to phases: 0
-- Unmapped: 42 (will be mapped during roadmap creation)
+- Mapped to phases: 42
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-07*
-*Last updated: 2026-02-07 after initial definition*
+*Last updated: 2026-02-07 after roadmap creation*
