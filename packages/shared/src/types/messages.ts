@@ -7,6 +7,8 @@ import type {
   startGameSchema,
   swapCardsSchema,
   readyUpSchema,
+  playCardsSchema,
+  pickupPileSchema,
   roomCreatedSchema,
   roomJoinedSchema,
   roomUpdatedSchema,
@@ -18,6 +20,9 @@ import type {
   playerReadySchema,
   swapPhaseCompleteSchema,
   swapCardsUpdatedSchema,
+  cardPlayedSchema,
+  pilePickupSchema,
+  turnChangedSchema,
   errorSchema,
   clientMessageSchema,
   serverMessageSchema,
@@ -30,6 +35,8 @@ export type LeaveRoomMessage = z.infer<typeof leaveRoomSchema>;
 export type StartGameMessage = z.infer<typeof startGameSchema>;
 export type SwapCardsMessage = z.infer<typeof swapCardsSchema>;
 export type ReadyUpMessage = z.infer<typeof readyUpSchema>;
+export type PlayCardsMessage = z.infer<typeof playCardsSchema>;
+export type PickupPileMessage = z.infer<typeof pickupPileSchema>;
 
 export type ClientMessage = z.infer<typeof clientMessageSchema>;
 
@@ -45,6 +52,9 @@ export type SwapTimerTickMessage = z.infer<typeof swapTimerTickSchema>;
 export type PlayerReadyMessage = z.infer<typeof playerReadySchema>;
 export type SwapPhaseCompleteMessage = z.infer<typeof swapPhaseCompleteSchema>;
 export type SwapCardsUpdatedMessage = z.infer<typeof swapCardsUpdatedSchema>;
+export type CardPlayedMessage = z.infer<typeof cardPlayedSchema>;
+export type PilePickupMessage = z.infer<typeof pilePickupSchema>;
+export type TurnChangedMessage = z.infer<typeof turnChangedSchema>;
 export type ErrorMessage = z.infer<typeof errorSchema>;
 
 export type ServerMessage = z.infer<typeof serverMessageSchema>;
@@ -59,4 +69,5 @@ export type ErrorCode =
   | 'INVALID_NICKNAME'
   | 'INVALID_MESSAGE'
   | 'INVALID_ACTION'
-  | 'PLAYER_NOT_FOUND';
+  | 'PLAYER_NOT_FOUND'
+  | 'NOT_YOUR_TURN';
