@@ -1,5 +1,5 @@
 import { APP_VERSION } from '@shit-head/shared';
-import { handleMessage, handleClose, roomManager } from './websocket/handlers';
+import { handleMessage, handleClose, handleOpen, roomManager } from './websocket/handlers';
 import type { WebSocketData } from './websocket/handlers';
 import { nanoid } from 'nanoid';
 
@@ -50,6 +50,7 @@ const server = Bun.serve<WebSocketData>({
   websocket: {
     open(ws) {
       console.log(`Player ${ws.data.playerId} connected`);
+      handleOpen(ws);
     },
 
     message(ws, message) {

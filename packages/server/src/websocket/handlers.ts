@@ -12,6 +12,9 @@ export type WebSocketData = {
 // Singleton RoomManager instance
 export const roomManager = new RoomManager();
 
+// Player WebSocket registry for per-player messaging
+const playerSockets = new Map<string, ServerWebSocket<WebSocketData>>();
+
 // Helper to send message to a specific client
 function sendMessage(ws: ServerWebSocket<WebSocketData>, message: ServerMessage): void {
   ws.send(JSON.stringify(message));
@@ -20,6 +23,10 @@ function sendMessage(ws: ServerWebSocket<WebSocketData>, message: ServerMessage)
 // Helper to publish message to room topic
 function publishToRoom(ws: ServerWebSocket<WebSocketData>, topic: string, message: ServerMessage): void {
   ws.publish(topic, JSON.stringify(message));
+}
+
+export function handleOpen(ws: ServerWebSocket<WebSocketData>): void {
+  playerSockets.set(ws.data.playerId, ws);
 }
 
 export function handleMessage(
@@ -208,15 +215,27 @@ export function handleMessage(
         if (room) {
           room.startGame();
 
-          // Send to host
-          sendMessage(ws, {
-            type: 'game-started',
-          });
+          // Send player-specific game-dealt messages to each player
+          const playerIds = room.getPlayerIds();
+          for (const playerId of playerIds) {
+            const view = room.getPlayerView(playerId);
+            const playerWs = playerSockets.get(playerId);
 
-          // Send to all other players
-          publishToRoom(ws, roomCode, {
-            type: 'game-started',
-          });
+            if (view && playerWs) {
+              sendMessage(playerWs, {
+                type: 'game-dealt',
+                phase: view.phase,
+                hand: view.hand,
+                faceUp: view.faceUp,
+                faceDownCount: view.faceDownCount,
+                opponents: view.opponents,
+                drawPileCount: view.drawPileCount,
+                discardPile: view.discardPile,
+                currentPlayerIndex: view.currentPlayerIndex,
+                dealerIndex: view.dealerIndex,
+              });
+            }
+          }
         }
       }, 3000);
       break;
@@ -225,6 +244,8 @@ export function handleMessage(
 }
 
 export function handleClose(ws: ServerWebSocket<WebSocketData>, manager: RoomManager): void {
+  playerSockets.delete(ws.data.playerId);
+
   const roomCode = ws.data.roomCode;
 
   if (roomCode) {
