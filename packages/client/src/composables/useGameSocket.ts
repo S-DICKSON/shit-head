@@ -1,6 +1,6 @@
 import { ref, watch, effectScope } from 'vue';
 import { useWebSocket } from '@vueuse/core';
-import type { ClientMessage, ServerMessage, RoomState } from '@shit-head/shared';
+import type { ClientMessage, ServerMessage, RoomState, PlayerGameView } from '@shit-head/shared';
 
 // Singleton state to share socket across all components
 let socketInstance: ReturnType<typeof createGameSocket> | null = null;
@@ -23,6 +23,13 @@ function createGameSocket() {
   const lastMessage = ref<ServerMessage | null>(null);
   const error = ref<string | null>(null);
   const messageHandlers: MessageHandler[] = [];
+
+  // Swap phase state
+  const gameView = ref<PlayerGameView | null>(null);
+  const swapTimeRemaining = ref<number>(30);
+  const readyPlayers = ref<string[]>([]);
+  const swapPhaseComplete = ref<boolean>(false);
+  const swapPhaseReason = ref<'timer-expired' | 'all-ready' | null>(null);
 
   // Run WebSocket and watchers inside detached scope
   const { status, data, send: wsSend, close, open } = scope.run(() =>
@@ -81,6 +88,42 @@ function createGameSocket() {
             }
           }
           break;
+        case 'game-dealt':
+          gameView.value = {
+            phase: message.phase,
+            hand: message.hand,
+            faceUp: message.faceUp,
+            faceDownCount: message.faceDownCount,
+            opponents: message.opponents,
+            drawPileCount: message.drawPileCount,
+            discardPile: message.discardPile,
+            currentPlayerIndex: message.currentPlayerIndex,
+            dealerIndex: message.dealerIndex,
+          };
+          swapPhaseComplete.value = false;
+          swapPhaseReason.value = null;
+          readyPlayers.value = [];
+          break;
+        case 'swap-cards-updated':
+          if (gameView.value) {
+            gameView.value = {
+              ...gameView.value,
+              hand: message.hand,
+              faceUp: message.faceUp,
+              opponents: message.opponents,
+            };
+          }
+          break;
+        case 'swap-timer-tick':
+          swapTimeRemaining.value = message.timeRemaining;
+          break;
+        case 'player-ready':
+          readyPlayers.value = message.readyPlayers;
+          break;
+        case 'swap-phase-complete':
+          swapPhaseComplete.value = true;
+          swapPhaseReason.value = message.reason;
+          break;
         case 'error':
           error.value = message.message;
           break;
@@ -125,6 +168,12 @@ function createGameSocket() {
     onMessage,
     close,
     open,
+    // Swap phase state
+    gameView,
+    swapTimeRemaining,
+    readyPlayers,
+    swapPhaseComplete,
+    swapPhaseReason,
   };
 }
 
