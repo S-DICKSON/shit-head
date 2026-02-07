@@ -21,9 +21,9 @@
 
 ### Pre-Game Swap
 
-- [ ] **SWAP-01**: Players can swap cards between hand and face-up during 30-second swap phase
-- [ ] **SWAP-02**: All players swap simultaneously
-- [ ] **SWAP-03**: Game starts automatically after timer expires
+- [x] **SWAP-01**: Players can swap cards between hand and face-up during 30-second swap phase
+- [x] **SWAP-02**: All players swap simultaneously
+- [x] **SWAP-03**: Game starts automatically after timer expires
 
 ### Core Gameplay
 
@@ -115,9 +115,9 @@
 | DECK-02 | Phase 3 | Complete |
 | DECK-03 | Phase 3 | Complete |
 | DECK-04 | Phase 3 | Complete |
-| SWAP-01 | Phase 4 | Pending |
-| SWAP-02 | Phase 4 | Pending |
-| SWAP-03 | Phase 4 | Pending |
+| SWAP-01 | Phase 4 | Complete |
+| SWAP-02 | Phase 4 | Complete |
+| SWAP-03 | Phase 4 | Complete |
 | PLAY-01 | Phase 5 | Pending |
 | PLAY-02 | Phase 5 | Pending |
 | PLAY-03 | Phase 5 | Pending |
