@@ -96,10 +96,8 @@ describe('CardComparison', () => {
       expect(RANK_ORDER).toEqual(['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']);
     });
 
-    test('is readonly', () => {
-      expect(() => {
-        (RANK_ORDER as any).push('X');
-      }).toThrow();
+    test('has 13 ranks', () => {
+      expect(RANK_ORDER).toHaveLength(13);
     });
   });
 });

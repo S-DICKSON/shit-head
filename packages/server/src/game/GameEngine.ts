@@ -1,6 +1,7 @@
 import type { Card, GameState, PlayerGameView, PlayerGameState, OpponentView } from '@shit-head/shared';
 import { createDeck } from '@shit-head/shared';
 import { shuffleDeck } from './Deck';
+import { RANK_ORDER } from './CardComparison';
 
 type OperationResult<T = void> =
   | { success: true; data?: T }
@@ -113,6 +114,38 @@ export class GameEngine {
    */
   static nextDealerIndex(currentDealerIndex: number, playerCount: number): number {
     return (currentDealerIndex + 1) % playerCount;
+  }
+
+  /**
+   * Determines which player should go first based on lowest card in hand.
+   * Scans from rank 3 upward (2s are excluded from first-player detection).
+   * Returns the index of the first player found with the lowest rank.
+   *
+   * @param state - Current game state
+   * @returns Player index (0 to playerCount-1) of the first player
+   */
+  static determineFirstPlayer(state: GameState): number {
+    // Scan ranks starting from 3 upward (skip 2s per game rules)
+    const scanOrder = RANK_ORDER.slice(1); // Skip '2', start from '3'
+
+    for (const rank of scanOrder) {
+      // Check each player's hand for this rank
+      for (let i = 0; i < state.players.length; i++) {
+        const player = state.players[i];
+
+        // Check if player has this rank in their hand
+        const hasRank = player.hand.some(
+          card => card.kind === 'standard' && card.rank === rank
+        );
+
+        if (hasRank) {
+          return i; // Found first player with lowest card
+        }
+      }
+    }
+
+    // Fallback: if no standard cards found (extremely unlikely), return player 0
+    return 0;
   }
 
   /**
