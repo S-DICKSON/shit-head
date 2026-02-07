@@ -20,6 +20,12 @@ export class Room {
   private readonly minPlayers = 2;
   private gameState: GameState | null = null;
   private dealerIndex: number = 0;
+  private readyPlayers: Set<string> = new Set();
+  private swapTimer: ReturnType<typeof setInterval> | null = null;
+  private swapTimeRemaining: number = 30;
+  private onSwapTimerTick?: (timeRemaining: number) => void;
+  private onPlayerReady?: (playerId: string, readyPlayers: string[]) => void;
+  private onSwapPhaseComplete?: (reason: 'timer-expired' | 'all-ready') => void;
 
   constructor(hostId: string, hostNickname: string) {
     this.code = generateRoomCode();
@@ -96,9 +102,11 @@ export class Room {
   startGame(): void {
     this.status = 'playing';
     this.dealCards();
+    this.startSwapTimer();
   }
 
   dealCards(): void {
+    this.readyPlayers.clear();
     const players = Array.from(this.players.values()).map(p => ({
       id: p.id,
       nickname: p.nickname,
@@ -134,5 +142,115 @@ export class Room {
       maxPlayers: this.maxPlayers,
       minPlayers: this.minPlayers,
     };
+  }
+
+  setSwapCallbacks(callbacks: {
+    onTick: (timeRemaining: number) => void;
+    onReady: (playerId: string, readyPlayers: string[]) => void;
+    onComplete: (reason: 'timer-expired' | 'all-ready') => void;
+  }): void {
+    this.onSwapTimerTick = callbacks.onTick;
+    this.onPlayerReady = callbacks.onReady;
+    this.onSwapPhaseComplete = callbacks.onComplete;
+  }
+
+  swapCards(playerId: string, handIndex: number, faceUpIndex: number): OperationResult {
+    // Validate game exists
+    if (!this.gameState) {
+      return {
+        success: false,
+        error: 'No game in progress',
+        code: 'INVALID_ACTION',
+      };
+    }
+
+    const result = GameEngine.swapCards(this.gameState, playerId, handIndex, faceUpIndex);
+
+    if (result.success && result.data) {
+      this.gameState = result.data;
+
+      // If player was ready, un-ready them after swap
+      if (this.readyPlayers.has(playerId)) {
+        this.readyPlayers.delete(playerId);
+      }
+
+      return { success: true };
+    }
+
+    return result;
+  }
+
+  markPlayerReady(playerId: string): OperationResult {
+    // Validate player exists
+    if (!this.players.has(playerId)) {
+      return {
+        success: false,
+        error: 'Player not found',
+        code: 'PLAYER_NOT_FOUND',
+      };
+    }
+
+    // Validate game is in swapping phase
+    if (!this.gameState || this.gameState.phase !== 'swapping') {
+      return {
+        success: false,
+        error: 'Can only ready up during swapping phase',
+        code: 'INVALID_ACTION',
+      };
+    }
+
+    // Add to ready set
+    this.readyPlayers.add(playerId);
+
+    // Notify via callback
+    this.onPlayerReady?.(playerId, Array.from(this.readyPlayers));
+
+    // Check if all players ready
+    if (this.readyPlayers.size === this.players.size) {
+      this.endSwapPhase('all-ready');
+    }
+
+    return { success: true };
+  }
+
+  startSwapTimer(): void {
+    this.swapTimeRemaining = 30;
+    this.readyPlayers.clear();
+
+    this.swapTimer = setInterval(() => {
+      this.swapTimeRemaining--;
+      this.onSwapTimerTick?.(this.swapTimeRemaining);
+
+      if (this.swapTimeRemaining <= 0) {
+        this.endSwapPhase('timer-expired');
+      }
+    }, 1000);
+  }
+
+  endSwapPhase(reason: 'timer-expired' | 'all-ready'): void {
+    // Clear timer
+    if (this.swapTimer) {
+      clearInterval(this.swapTimer);
+      this.swapTimer = null;
+    }
+
+    // Set to transitioning phase
+    if (this.gameState) {
+      this.gameState.phase = 'transitioning';
+    }
+
+    // Notify via callback
+    this.onSwapPhaseComplete?.(reason);
+
+    // After 2.5s, transition to playing
+    setTimeout(() => {
+      if (this.gameState) {
+        this.gameState.phase = 'playing';
+      }
+    }, 2500);
+  }
+
+  getReadyPlayers(): string[] {
+    return Array.from(this.readyPlayers);
   }
 }

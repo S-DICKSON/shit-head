@@ -204,6 +204,94 @@ describe('Room', () => {
     expect(playerIds).toContain('player-2');
     expect(playerIds).toContain('player-3');
   });
+
+  test('swapCards() delegates to GameEngine and updates gameState', () => {
+    const room = new Room('host-1', 'Alice');
+    room.addPlayer('player-2', 'Bob');
+    room.startGame();
+
+    const gameStateBefore = room.getGameState();
+    expect(gameStateBefore).not.toBeNull();
+
+    const result = room.swapCards('host-1', 0, 0);
+    expect(result.success).toBe(true);
+
+    const gameStateAfter = room.getGameState();
+    expect(gameStateAfter).not.toBeNull();
+    expect(gameStateAfter).not.toBe(gameStateBefore); // New state object
+  });
+
+  test('swapCards() returns error when no game in progress', () => {
+    const room = new Room('host-1', 'Alice');
+    room.addPlayer('player-2', 'Bob');
+
+    const result = room.swapCards('host-1', 0, 0);
+    expect(result.success).toBe(false);
+  });
+
+  test('markPlayerReady() adds player to ready set', () => {
+    const room = new Room('host-1', 'Alice');
+    room.addPlayer('player-2', 'Bob');
+    room.startGame();
+
+    const result = room.markPlayerReady('host-1');
+    expect(result.success).toBe(true);
+
+    const readyPlayers = room.getReadyPlayers();
+    expect(readyPlayers).toContain('host-1');
+  });
+
+  test('markPlayerReady() triggers onComplete when all players ready', (done) => {
+    const room = new Room('host-1', 'Alice');
+    room.addPlayer('player-2', 'Bob');
+
+    let completeCalled = false;
+
+    room.setSwapCallbacks({
+      onTick: () => {},
+      onReady: () => {},
+      onComplete: (reason) => {
+        completeCalled = true;
+        expect(reason).toBe('all-ready');
+        done();
+      },
+    });
+
+    room.startGame();
+
+    room.markPlayerReady('host-1');
+    room.markPlayerReady('player-2');
+
+    expect(completeCalled).toBe(true);
+  });
+
+  test('swapping after ready-up removes player from ready set', () => {
+    const room = new Room('host-1', 'Alice');
+    room.addPlayer('player-2', 'Bob');
+    room.startGame();
+
+    room.markPlayerReady('host-1');
+    expect(room.getReadyPlayers()).toContain('host-1');
+
+    room.swapCards('host-1', 0, 0);
+    expect(room.getReadyPlayers()).not.toContain('host-1');
+  });
+
+  test('getReadyPlayers() returns current ready player list', () => {
+    const room = new Room('host-1', 'Alice');
+    room.addPlayer('player-2', 'Bob');
+    room.startGame();
+
+    expect(room.getReadyPlayers()).toHaveLength(0);
+
+    room.markPlayerReady('host-1');
+    expect(room.getReadyPlayers()).toHaveLength(1);
+    expect(room.getReadyPlayers()).toContain('host-1');
+
+    room.markPlayerReady('player-2');
+    expect(room.getReadyPlayers()).toHaveLength(2);
+    expect(room.getReadyPlayers()).toContain('player-2');
+  });
 });
 
 describe('RoomManager', () => {
