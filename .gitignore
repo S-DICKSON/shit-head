@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Terraform/OpenTofu state
+*.tfstate
+*.tfstate.*
+.terraform/
+.tofu/
+
+# Lockfile (optional - some commit it)
+bun.lockb
+
+# OS files
+.DS_Store
+
+# Logs
+*.log
+
+# IDE
+.idea/
+.vscode/

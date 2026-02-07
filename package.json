@@ -1,0 +1,13 @@
+{
+  "name": "shit-head",
+  "version": "0.0.1",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "make dev",
+    "build": "make build",
+    "test": "make test"
+  }
+}
