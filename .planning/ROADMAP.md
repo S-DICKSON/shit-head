@@ -12,7 +12,7 @@ This roadmap delivers a browser-based multiplayer Shithead card game from zero t
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Project Setup & Foundation** - Development environment, build system, deployment scaffold
+- [x] **Phase 1: Project Setup & Foundation** - Development environment, build system, deployment scaffold
 - [ ] **Phase 2: WebSocket Infrastructure & Room Management** - Real-time communication layer and lobby system
 - [ ] **Phase 3: Deck & Dealing System** - Card deck initialization and dealing logic
 - [ ] **Phase 4: Pre-Game Swap Phase** - 30-second simultaneous card swap before game start
@@ -39,10 +39,10 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 4 plans
 
 Plans:
-- [ ] 01-01-PLAN.md — Monorepo scaffold with root config, shared package, and Bun server
-- [ ] 01-02-PLAN.md — Vue 3 client with Vite, Tailwind CSS, and Vitest
-- [ ] 01-03-PLAN.md — Docker containerization and Makefile developer interface
-- [ ] 01-04-PLAN.md — GitHub Actions CI/CD and OpenTofu infrastructure-as-code
+- [x] 01-01-PLAN.md — Monorepo scaffold with root config, shared package, and Bun server
+- [x] 01-02-PLAN.md — Vue 3 client with Vite, Tailwind CSS, and Vitest
+- [x] 01-03-PLAN.md — Docker containerization and Makefile developer interface
+- [x] 01-04-PLAN.md — GitHub Actions CI/CD and OpenTofu infrastructure-as-code
 
 ### Phase 2: WebSocket Infrastructure & Room Management
 **Goal**: Players can create and join rooms via share codes with real-time communication
@@ -216,7 +216,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Project Setup & Foundation | 0/4 | Planned | - |
+| 1. Project Setup & Foundation | 4/4 | Complete | 2026-02-07 |
 | 2. WebSocket Infrastructure & Room Management | 0/TBD | Not started | - |
 | 3. Deck & Dealing System | 0/TBD | Not started | - |
 | 4. Pre-Game Swap Phase | 0/TBD | Not started | - |
@@ -231,4 +231,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 
 ---
 *Roadmap created: 2026-02-07*
-*Last updated: 2026-02-07 after Phase 1 planning*
+*Last updated: 2026-02-07 after Phase 1 completion*
