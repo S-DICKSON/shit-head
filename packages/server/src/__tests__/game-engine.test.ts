@@ -381,6 +381,64 @@ describe('GameEngine', () => {
     });
   });
 
+  // Helper to create test game state for playing phase
+  function createTestState(overrides?: Partial<any>): any {
+    const baseState = {
+      phase: 'playing' as const,
+      players: [
+        {
+          playerId: 'p1',
+          nickname: 'Alice',
+          hand: [
+            { kind: 'standard' as const, suit: 'hearts' as const, rank: '5' as const },
+            { kind: 'standard' as const, suit: 'diamonds' as const, rank: '7' as const },
+            { kind: 'standard' as const, suit: 'clubs' as const, rank: '9' as const },
+          ],
+          faceUp: [
+            { kind: 'standard' as const, suit: 'spades' as const, rank: '4' as const },
+            { kind: 'standard' as const, suit: 'hearts' as const, rank: '6' as const },
+            { kind: 'standard' as const, suit: 'diamonds' as const, rank: '8' as const },
+          ],
+          faceDown: [
+            { kind: 'standard' as const, suit: 'clubs' as const, rank: '3' as const },
+            { kind: 'standard' as const, suit: 'spades' as const, rank: 'K' as const },
+            { kind: 'standard' as const, suit: 'hearts' as const, rank: 'A' as const },
+          ],
+        },
+        {
+          playerId: 'p2',
+          nickname: 'Bob',
+          hand: [
+            { kind: 'standard' as const, suit: 'clubs' as const, rank: '6' as const },
+            { kind: 'standard' as const, suit: 'spades' as const, rank: '8' as const },
+            { kind: 'standard' as const, suit: 'hearts' as const, rank: '10' as const },
+          ],
+          faceUp: [
+            { kind: 'standard' as const, suit: 'diamonds' as const, rank: '5' as const },
+            { kind: 'standard' as const, suit: 'clubs' as const, rank: '7' as const },
+            { kind: 'standard' as const, suit: 'spades' as const, rank: '9' as const },
+          ],
+          faceDown: [
+            { kind: 'standard' as const, suit: 'hearts' as const, rank: '4' as const },
+            { kind: 'standard' as const, suit: 'diamonds' as const, rank: 'Q' as const },
+            { kind: 'standard' as const, suit: 'clubs' as const, rank: 'K' as const },
+          ],
+        },
+      ],
+      drawPile: [
+        { kind: 'standard' as const, suit: 'spades' as const, rank: '3' as const },
+        { kind: 'standard' as const, suit: 'diamonds' as const, rank: '4' as const },
+      ],
+      discardPile: [
+        { kind: 'standard' as const, suit: 'hearts' as const, rank: '3' as const },
+      ],
+      currentPlayerIndex: 0,
+      dealerIndex: 0,
+    };
+
+    return { ...baseState, ...overrides };
+  }
+
   describe('swapCards', () => {
     it('swaps hand card with face-up card for valid swap', () => {
       const state = GameEngine.createGame(players3, 0);
@@ -555,6 +613,414 @@ describe('GameEngine', () => {
       // Original state unchanged
       expect(cardEquals(state.players[0].hand[0], originalHandCard)).toBe(true);
       expect(cardEquals(state.players[0].faceUp[0], originalFaceUpCard)).toBe(true);
+    });
+  });
+
+  describe('playCards', () => {
+    it('accepts valid single card play (higher than pile top)', () => {
+      const state = createTestState();
+      // P1 hand: [5, 7, 9], discard pile top: 3
+      // Playing card at index 0 (5) should succeed
+
+      const result = GameEngine.playCards(state, 'p1', [0]);
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        const newState = result.data!;
+        // Card should move to discard pile
+        expect(newState.discardPile).toHaveLength(2);
+        expect(newState.discardPile[1]).toEqual({ kind: 'standard', suit: 'hearts', rank: '5' });
+        // Hand should have 2 cards remaining
+        expect(newState.players[0].hand).toHaveLength(2);
+      }
+    });
+
+    it('accepts valid multi-card play (2 cards of same rank)', () => {
+      const state = createTestState();
+      // Set up P1 with two 7s
+      state.players[0].hand = [
+        { kind: 'standard', suit: 'hearts', rank: '7' },
+        { kind: 'standard', suit: 'diamonds', rank: '7' },
+        { kind: 'standard', suit: 'clubs', rank: '9' },
+      ];
+
+      const result = GameEngine.playCards(state, 'p1', [0, 1]);
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        const newState = result.data!;
+        // Both cards should move to discard pile
+        expect(newState.discardPile).toHaveLength(3);
+        expect(newState.discardPile[1]).toEqual({ kind: 'standard', suit: 'hearts', rank: '7' });
+        expect(newState.discardPile[2]).toEqual({ kind: 'standard', suit: 'diamonds', rank: '7' });
+        // Hand should have 1 card remaining
+        expect(newState.players[0].hand).toHaveLength(1);
+      }
+    });
+
+    it('accepts play on empty discard pile (any card valid)', () => {
+      const state = createTestState({ discardPile: [] });
+
+      const result = GameEngine.playCards(state, 'p1', [0]);
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data!.discardPile).toHaveLength(1);
+      }
+    });
+
+    it('accepts play of equal value card', () => {
+      const state = createTestState();
+      // Set discard pile top to 5, play 5
+      state.discardPile = [{ kind: 'standard', suit: 'clubs', rank: '5' }];
+      state.players[0].hand = [
+        { kind: 'standard', suit: 'hearts', rank: '5' },
+        { kind: 'standard', suit: 'diamonds', rank: '7' },
+        { kind: 'standard', suit: 'clubs', rank: '9' },
+      ];
+
+      const result = GameEngine.playCards(state, 'p1', [0]);
+
+      expect(result.success).toBe(true);
+    });
+
+    it('rejects play of lower value card', () => {
+      const state = createTestState();
+      // Discard pile top: 3, trying to play lower is impossible with 3 at top
+      // Set discard pile top to 8, hand has 5
+      state.discardPile = [{ kind: 'standard', suit: 'clubs', rank: '8' }];
+
+      const result = GameEngine.playCards(state, 'p1', [0]); // Playing 5
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.code).toBe('INVALID_ACTION');
+        expect(result.error).toContain('too low');
+      }
+    });
+
+    it('rejects play during non-playing phase', () => {
+      const state = createTestState({ phase: 'swapping' });
+
+      const result = GameEngine.playCards(state, 'p1', [0]);
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.code).toBe('INVALID_ACTION');
+        expect(result.error).toContain('playing phase');
+      }
+    });
+
+    it('rejects play when not player\'s turn', () => {
+      const state = createTestState();
+      // P2's turn (currentPlayerIndex: 0 is P1, so set to 1 for P2)
+      state.currentPlayerIndex = 1;
+
+      const result = GameEngine.playCards(state, 'p1', [0]);
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.code).toBe('NOT_YOUR_TURN');
+        expect(result.error).toContain('Not your turn');
+      }
+    });
+
+    it('rejects play with invalid card index (out of bounds)', () => {
+      const state = createTestState();
+
+      const result = GameEngine.playCards(state, 'p1', [5]);
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.code).toBe('INVALID_ACTION');
+        expect(result.error).toContain('Invalid card index');
+      }
+    });
+
+    it('rejects play with negative card index', () => {
+      const state = createTestState();
+
+      const result = GameEngine.playCards(state, 'p1', [-1]);
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.code).toBe('INVALID_ACTION');
+        expect(result.error).toContain('Invalid card index');
+      }
+    });
+
+    it('rejects play with duplicate card indices', () => {
+      const state = createTestState();
+
+      const result = GameEngine.playCards(state, 'p1', [0, 0]);
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.code).toBe('INVALID_ACTION');
+        expect(result.error).toContain('Duplicate');
+      }
+    });
+
+    it('rejects multi-card play with different ranks', () => {
+      const state = createTestState();
+      // P1 hand: [5, 7, 9] - different ranks
+
+      const result = GameEngine.playCards(state, 'p1', [0, 1]);
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.code).toBe('INVALID_ACTION');
+        expect(result.error).toContain('same rank');
+      }
+    });
+
+    it('rejects play with empty cardIndices array', () => {
+      const state = createTestState();
+
+      const result = GameEngine.playCards(state, 'p1', []);
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.code).toBe('INVALID_ACTION');
+        expect(result.error).toContain('at least one');
+      }
+    });
+
+    it('rejects play when player not found', () => {
+      const state = createTestState();
+
+      const result = GameEngine.playCards(state, 'unknown', [0]);
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.code).toBe('PLAYER_NOT_FOUND');
+        expect(result.error).toContain('Player not found');
+      }
+    });
+
+    it('auto-draws cards after play when hand below 3', () => {
+      const state = createTestState();
+      // P1 starts with 3 cards, plays 1, should draw 1 back to 3
+      state.drawPile = [
+        { kind: 'standard', suit: 'spades', rank: '3' },
+        { kind: 'standard', suit: 'diamonds', rank: '4' },
+      ];
+
+      const result = GameEngine.playCards(state, 'p1', [0]);
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        const newState = result.data!;
+        // Hand should still be 3 (played 1, drew 1)
+        expect(newState.players[0].hand).toHaveLength(3);
+        // Draw pile should have 1 card left
+        expect(newState.drawPile).toHaveLength(1);
+      }
+    });
+
+    it('auto-draws only available cards when draw pile has fewer than needed', () => {
+      const state = createTestState();
+      // P1 plays 2 cards (needs 2 to get back to 3), but draw pile has only 1
+      state.players[0].hand = [
+        { kind: 'standard', suit: 'hearts', rank: '7' },
+        { kind: 'standard', suit: 'diamonds', rank: '7' },
+        { kind: 'standard', suit: 'clubs', rank: '9' },
+      ];
+      state.drawPile = [
+        { kind: 'standard', suit: 'spades', rank: '3' },
+      ];
+
+      const result = GameEngine.playCards(state, 'p1', [0, 1]);
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        const newState = result.data!;
+        // Hand should have 2 (started 3, played 2, drew 1)
+        expect(newState.players[0].hand).toHaveLength(2);
+        // Draw pile should be empty
+        expect(newState.drawPile).toHaveLength(0);
+      }
+    });
+
+    it('does not draw when draw pile is empty', () => {
+      const state = createTestState({ drawPile: [] });
+
+      const result = GameEngine.playCards(state, 'p1', [0]);
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        const newState = result.data!;
+        // Hand should have 2 (played 1, no draw)
+        expect(newState.players[0].hand).toHaveLength(2);
+        expect(newState.drawPile).toHaveLength(0);
+      }
+    });
+
+    it('advances turn to next player after successful play', () => {
+      const state = createTestState();
+
+      const result = GameEngine.playCards(state, 'p1', [0]);
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        // Turn should advance from 0 to 1
+        expect(result.data!.currentPlayerIndex).toBe(1);
+      }
+    });
+
+    it('wraps turn around from last player to first', () => {
+      const state = createTestState();
+      // Add 2 more players
+      state.players.push(
+        {
+          playerId: 'p3',
+          nickname: 'Charlie',
+          hand: [{ kind: 'standard', suit: 'clubs', rank: '6' }],
+          faceUp: [],
+          faceDown: [],
+        },
+        {
+          playerId: 'p4',
+          nickname: 'Diana',
+          hand: [{ kind: 'standard', suit: 'spades', rank: '7' }],
+          faceUp: [],
+          faceDown: [],
+        }
+      );
+      state.currentPlayerIndex = 3; // P4's turn (last player)
+
+      const result = GameEngine.playCards(state, 'p4', [0]);
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        // Turn should wrap to 0
+        expect(result.data!.currentPlayerIndex).toBe(0);
+      }
+    });
+
+    it('does not mutate original state', () => {
+      const state = createTestState();
+      const originalHandLength = state.players[0].hand.length;
+      const originalDiscardLength = state.discardPile.length;
+
+      GameEngine.playCards(state, 'p1', [0]);
+
+      expect(state.players[0].hand).toHaveLength(originalHandLength);
+      expect(state.discardPile).toHaveLength(originalDiscardLength);
+    });
+  });
+
+  describe('pickupPile', () => {
+    it('adds all discard pile cards to player hand', () => {
+      const state = createTestState();
+      state.discardPile = [
+        { kind: 'standard', suit: 'hearts', rank: '3' },
+        { kind: 'standard', suit: 'diamonds', rank: '4' },
+        { kind: 'standard', suit: 'clubs', rank: '5' },
+      ];
+      const originalHandLength = state.players[0].hand.length;
+
+      const result = GameEngine.pickupPile(state, 'p1');
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        const newState = result.data!;
+        // Hand should have original + pile cards
+        expect(newState.players[0].hand).toHaveLength(originalHandLength + 3);
+        // Pile cards should be at the end of hand
+        expect(newState.players[0].hand[originalHandLength]).toEqual({ kind: 'standard', suit: 'hearts', rank: '3' });
+      }
+    });
+
+    it('clears the discard pile after pickup', () => {
+      const state = createTestState();
+      state.discardPile = [
+        { kind: 'standard', suit: 'hearts', rank: '3' },
+        { kind: 'standard', suit: 'diamonds', rank: '4' },
+      ];
+
+      const result = GameEngine.pickupPile(state, 'p1');
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data!.discardPile).toHaveLength(0);
+      }
+    });
+
+    it('advances turn to next player after pickup', () => {
+      const state = createTestState();
+      state.discardPile = [{ kind: 'standard', suit: 'hearts', rank: '3' }];
+
+      const result = GameEngine.pickupPile(state, 'p1');
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data!.currentPlayerIndex).toBe(1);
+      }
+    });
+
+    it('rejects pickup during non-playing phase', () => {
+      const state = createTestState({ phase: 'swapping' });
+
+      const result = GameEngine.pickupPile(state, 'p1');
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.code).toBe('INVALID_ACTION');
+        expect(result.error).toContain('playing phase');
+      }
+    });
+
+    it('rejects pickup when not player\'s turn', () => {
+      const state = createTestState();
+      state.currentPlayerIndex = 1;
+
+      const result = GameEngine.pickupPile(state, 'p1');
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.code).toBe('NOT_YOUR_TURN');
+        expect(result.error).toContain('Not your turn');
+      }
+    });
+
+    it('rejects pickup when discard pile is empty', () => {
+      const state = createTestState({ discardPile: [] });
+
+      const result = GameEngine.pickupPile(state, 'p1');
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.code).toBe('INVALID_ACTION');
+        expect(result.error).toContain('No cards');
+      }
+    });
+
+    it('rejects pickup when player not found', () => {
+      const state = createTestState();
+
+      const result = GameEngine.pickupPile(state, 'unknown');
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.code).toBe('PLAYER_NOT_FOUND');
+        expect(result.error).toContain('Player not found');
+      }
+    });
+
+    it('does not mutate original state', () => {
+      const state = createTestState();
+      state.discardPile = [
+        { kind: 'standard', suit: 'hearts', rank: '3' },
+        { kind: 'standard', suit: 'diamonds', rank: '4' },
+      ];
+      const originalHandLength = state.players[0].hand.length;
+      const originalDiscardLength = state.discardPile.length;
+
+      GameEngine.pickupPile(state, 'p1');
+
+      expect(state.players[0].hand).toHaveLength(originalHandLength);
+      expect(state.discardPile).toHaveLength(originalDiscardLength);
     });
   });
 });
