@@ -54,10 +54,14 @@ Plans:
   3. Room displays all joined players (2-4) in real-time
   4. Server maintains authoritative room state with player-specific views
   5. Room creator can start the game when ready
-**Plans**: TBD
+**Plans**: 5 plans
 
 Plans:
-- [ ] (Plans will be created during /gsd:plan-phase 2)
+- [ ] 02-01-PLAN.md — Shared message protocol, room types, and Zod validation schemas
+- [ ] 02-02-PLAN.md — Server room management engine (TDD: RoomManager + Room)
+- [ ] 02-03-PLAN.md — Client WebSocket composable, Vue Router, and Landing page
+- [ ] 02-04-PLAN.md — Server WebSocket handlers and index.ts integration
+- [ ] 02-05-PLAN.md — Client Lobby page, RoomCode component, and integration verification
 
 ### Phase 3: Deck & Dealing System
 **Goal**: Cards are properly initialized and dealt to all players when game starts
@@ -217,7 +221,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Project Setup & Foundation | 4/4 | Complete | 2026-02-07 |
-| 2. WebSocket Infrastructure & Room Management | 0/TBD | Not started | - |
+| 2. WebSocket Infrastructure & Room Management | 0/5 | Not started | - |
 | 3. Deck & Dealing System | 0/TBD | Not started | - |
 | 4. Pre-Game Swap Phase | 0/TBD | Not started | - |
 | 5. Core Game Engine & Rules | 0/TBD | Not started | - |
