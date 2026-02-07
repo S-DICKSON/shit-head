@@ -73,10 +73,12 @@ Plans:
   3. Remaining cards form a visible draw pile
   4. Dealer role rotates clockwise after each hand
   5. Players see their own cards but opponents' cards are hidden
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] (Plans will be created during /gsd:plan-phase 3)
+- [ ] 03-01-PLAN.md — Card types, game state types, and dealing message schemas
+- [ ] 03-02-PLAN.md — Deck shuffling and dealing engine (TDD)
+- [ ] 03-03-PLAN.md — Wire dealing into Room and WebSocket game start flow
 
 ### Phase 4: Pre-Game Swap Phase
 **Goal**: Players can swap cards between hand and face-up during timed pre-game phase
@@ -222,7 +224,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 |-------|----------------|--------|-----------|
 | 1. Project Setup & Foundation | 4/4 | Complete | 2026-02-07 |
 | 2. WebSocket Infrastructure & Room Management | 0/5 | Not started | - |
-| 3. Deck & Dealing System | 0/TBD | Not started | - |
+| 3. Deck & Dealing System | 0/3 | Not started | - |
 | 4. Pre-Game Swap Phase | 0/TBD | Not started | - |
 | 5. Core Game Engine & Rules | 0/TBD | Not started | - |
 | 6. Special Cards & Burn Mechanics | 0/TBD | Not started | - |
@@ -235,4 +237,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 
 ---
 *Roadmap created: 2026-02-07*
-*Last updated: 2026-02-07 after Phase 1 completion*
+*Last updated: 2026-02-07 after Phase 3 planning*
