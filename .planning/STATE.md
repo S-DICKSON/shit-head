@@ -10,28 +10,28 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 ## Current Position
 
 Phase: 1 of 12 (Project Setup & Foundation)
-Plan: 0 of TBD in current phase
-Status: Ready to plan
-Last activity: 2026-02-07 — Roadmap created with 12 phases
+Plan: 2 of TBD in current phase
+Status: In progress
+Last activity: 2026-02-07 — Completed 01-02-PLAN.md
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [██░░░░░░░░] ~17% (2 plans complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 0
-- Average duration: N/A
-- Total execution time: 0 hours
+- Total plans completed: 2
+- Average duration: 3 minutes
+- Total execution time: 0.1 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| - | - | - | - |
+| 01 | 2 | 360s | 180s |
 
 **Recent Trend:**
-- Last 5 plans: N/A
-- Trend: N/A (no plans completed yet)
+- Last 5 plans: 01-01 (153s), 01-02 (207s)
+- Trend: Steady progress, slightly longer for client setup
 
 *Updated after each plan completion*
 
@@ -48,6 +48,18 @@ Recent decisions affecting current work:
 - 30-second swap timer — Keeps pre-game phase moving, consistent for all players
 - Timed turns (30-60s) — Prevents stalling in online play
 
+**From 01-01:**
+- Use Bun as runtime and package manager (native TypeScript, fast, built-in WebSocket)
+- Monorepo structure with workspace protocol for internal dependencies
+- No build step for shared package (Bun resolves TypeScript natively)
+- Server runs on configurable PORT (default 3000)
+
+**From 01-02:**
+- Tailwind CSS v4 with Vite plugin (no PostCSS, simpler config)
+- Vitest for all testing (consistency across client and server)
+- Vite proxy for /api and /ws to server on localhost:3000
+- Host 0.0.0.0 for Docker compatibility
+
 ### Pending Todos
 
 None yet.
@@ -58,10 +70,10 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-07
-Stopped at: Roadmap creation complete
+Last session: 2026-02-07 15:44:37 UTC
+Stopped at: Completed 01-02-PLAN.md
 Resume file: None
 
 ---
 *State initialized: 2026-02-07*
-*Last updated: 2026-02-07 after roadmap creation*
+*Last updated: 2026-02-07 after 01-02 completion*
