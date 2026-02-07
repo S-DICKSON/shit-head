@@ -14,7 +14,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Project Setup & Foundation** - Development environment, build system, deployment scaffold
 - [x] **Phase 2: WebSocket Infrastructure & Room Management** - Real-time communication layer and lobby system
-- [ ] **Phase 3: Deck & Dealing System** - Card deck initialization and dealing logic
+- [x] **Phase 3: Deck & Dealing System** - Card deck initialization and dealing logic
 - [ ] **Phase 4: Pre-Game Swap Phase** - 30-second simultaneous card swap before game start
 - [ ] **Phase 5: Core Game Engine & Rules** - Turn system, play validation, draw/pickup mechanics
 - [ ] **Phase 6: Special Cards & Burn Mechanics** - 2s, 7s, 8s, 10s, and burn detection
@@ -76,9 +76,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 03-01-PLAN.md — Card types, game state types, and dealing message schemas
-- [ ] 03-02-PLAN.md — Deck shuffling and dealing engine (TDD)
-- [ ] 03-03-PLAN.md — Wire dealing into Room and WebSocket game start flow
+- [x] 03-01-PLAN.md — Card types, game state types, and dealing message schemas
+- [x] 03-02-PLAN.md — Deck shuffling and dealing engine (TDD)
+- [x] 03-03-PLAN.md — Wire dealing into Room and WebSocket game start flow
 
 ### Phase 4: Pre-Game Swap Phase
 **Goal**: Players can swap cards between hand and face-up during timed pre-game phase
@@ -224,7 +224,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 |-------|----------------|--------|-----------|
 | 1. Project Setup & Foundation | 4/4 | Complete | 2026-02-07 |
 | 2. WebSocket Infrastructure & Room Management | 5/5 | Complete | 2026-02-07 |
-| 3. Deck & Dealing System | 0/3 | Not started | - |
+| 3. Deck & Dealing System | 3/3 | Complete | 2026-02-07 |
 | 4. Pre-Game Swap Phase | 0/TBD | Not started | - |
 | 5. Core Game Engine & Rules | 0/TBD | Not started | - |
 | 6. Special Cards & Burn Mechanics | 0/TBD | Not started | - |

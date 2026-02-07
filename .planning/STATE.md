@@ -5,7 +5,7 @@
 See: .planning/PROJECT.md (updated 2026-02-07)
 
 **Core value:** Friends can play a complete, rule-accurate game of Shithead together online with zero friction
-**Current focus:** Phase 3 - Deck & Dealing System
+**Current focus:** Phase 3 complete — ready for Phase 4
 
 ## Current Position
 

@@ -14,10 +14,10 @@
 
 ### Deck & Dealing
 
-- [ ] **DECK-01**: Game uses standard 52-card deck + 2 Jokers (54 cards)
-- [ ] **DECK-02**: Each player dealt 3 face-down, 3 face-up, 3 hand cards
-- [ ] **DECK-03**: Remaining cards form draw pile
-- [ ] **DECK-04**: Dealer rotates clockwise after each hand
+- [x] **DECK-01**: Game uses standard 52-card deck + 2 Jokers (54 cards)
+- [x] **DECK-02**: Each player dealt 3 face-down, 3 face-up, 3 hand cards
+- [x] **DECK-03**: Remaining cards form draw pile
+- [x] **DECK-04**: Dealer rotates clockwise after each hand
 
 ### Pre-Game Swap
 
@@ -111,10 +111,10 @@
 | ROOM-02 | Phase 2 | Complete |
 | ROOM-03 | Phase 2 | Complete |
 | ROOM-04 | Phase 2 | Complete |
-| DECK-01 | Phase 3 | Pending |
-| DECK-02 | Phase 3 | Pending |
-| DECK-03 | Phase 3 | Pending |
-| DECK-04 | Phase 3 | Pending |
+| DECK-01 | Phase 3 | Complete |
+| DECK-02 | Phase 3 | Complete |
+| DECK-03 | Phase 3 | Complete |
+| DECK-04 | Phase 3 | Complete |
 | SWAP-01 | Phase 4 | Pending |
 | SWAP-02 | Phase 4 | Pending |
 | SWAP-03 | Phase 4 | Pending |
