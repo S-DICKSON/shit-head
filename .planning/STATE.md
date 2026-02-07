@@ -9,19 +9,19 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 
 ## Current Position
 
-Phase: 3 of 12 (Deck & Dealing System) — IN PROGRESS
-Plan: 2 of 3 in phase
-Status: In progress
-Last activity: 2026-02-07 — Completed 03-02-PLAN.md
+Phase: 3 of 12 (Deck & Dealing System) — COMPLETE
+Plan: 3 of 3 in phase
+Status: Phase complete
+Last activity: 2026-02-07 — Completed 03-03-PLAN.md
 
-Progress: [██░░░░░░░░] ~21% (10 plans complete)
+Progress: [██░░░░░░░░] ~23% (11 plans complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 10
+- Total plans completed: 11
 - Average duration: 2.5 minutes
-- Total execution time: 0.42 hours
+- Total execution time: 0.48 hours
 
 **By Phase:**
 
@@ -29,11 +29,11 @@ Progress: [██░░░░░░░░] ~21% (10 plans complete)
 |-------|-------|-------|----------|
 | 01 | 4 | 706s | 177s |
 | 02 | 4 | 705s | 176s |
-| 03 | 2 | 296s | 148s |
+| 03 | 3 | 503s | 168s |
 
 **Recent Trend:**
-- Last 5 plans: 02-03 (143s), 02-04 (194s), 03-01 (140s), 03-02 (156s)
-- Trend: Consistent - Phase 3 maintaining ~150s average, below overall average
+- Last 5 plans: 02-04 (194s), 03-01 (140s), 03-02 (156s), 03-03 (207s)
+- Trend: Phase 3 complete - averaged 168s/plan, slightly below overall average
 
 *Updated after each plan completion*
 
@@ -121,6 +121,12 @@ Recent decisions affecting current work:
 - Static class methods for GameEngine (stateless utilities, no instance state)
 - TDD cycle produces atomic commits per phase (test → feat → refactor if needed)
 
+**From 03-03:**
+- Player WebSocket registry for per-player messaging (Map<playerId, WebSocket>) - enables different messages per player
+- game-started replaced by game-dealt - per-player views instead of generic message
+- Room.startGame() triggers dealing automatically (no separate deal step)
+- Room manages GameState lifecycle: null in lobby, populated on game start
+
 ### Pending Todos
 
 1 pending — `/gsd:check-todos` to review
@@ -136,9 +142,9 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-07
-Stopped at: Completed 03-02-PLAN.md
+Stopped at: Completed 03-03-PLAN.md (Phase 3 complete)
 Resume file: None
 
 ---
 *State initialized: 2026-02-07*
-*Last updated: 2026-02-07 after completing 03-02*
+*Last updated: 2026-02-07 after completing 03-03*
