@@ -144,10 +144,13 @@ Plans:
   3. If blind face-down card is unplayable, player picks up pile (returns to hand phase)
   4. Player who empties all cards drops out of the game
   5. Last player with cards is declared the shithead and deals next hand
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
-- [ ] (Plans will be created during /gsd:plan-phase 7)
+- [ ] 07-01-PLAN.md — Endgame message schemas and PlaySource type (shared package)
+- [ ] 07-02-PLAN.md — Endgame utilities and playFromFaceUp (TDD)
+- [ ] 07-03-PLAN.md — Blind face-down play mechanic (TDD)
+- [ ] 07-04-PLAN.md — Wire endgame into Room and WebSocket handlers
 
 ### Phase 8: Turn Timing & Auto-Pickup
 **Goal**: Turns have time limits with automatic pile pickup on timeout
