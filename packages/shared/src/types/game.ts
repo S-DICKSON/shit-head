@@ -1,7 +1,7 @@
 // Game state types for Shithead gameplay
 import type { Card } from './card';
 
-export type GamePhase = 'dealing' | 'swapping' | 'playing' | 'finished';
+export type GamePhase = 'dealing' | 'swapping' | 'transitioning' | 'playing' | 'finished';
 
 /**
  * Per-player card state (server-side authoritative view).

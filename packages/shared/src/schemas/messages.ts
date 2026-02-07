@@ -68,11 +68,23 @@ export const startGameSchema = z.object({
   type: z.literal('start-game'),
 });
 
+export const swapCardsSchema = z.object({
+  type: z.literal('swap-cards'),
+  handIndex: z.number().int().min(0).max(2),
+  faceUpIndex: z.number().int().min(0).max(2),
+});
+
+export const readyUpSchema = z.object({
+  type: z.literal('ready-up'),
+});
+
 export const clientMessageSchema = z.discriminatedUnion('type', [
   createRoomSchema,
   joinRoomSchema,
   leaveRoomSchema,
   startGameSchema,
+  swapCardsSchema,
+  readyUpSchema,
 ]);
 
 // Server-to-client message schemas
@@ -110,7 +122,7 @@ export const gameStartedSchema = z.object({
 
 export const gameDealtSchema = z.object({
   type: z.literal('game-dealt'),
-  phase: z.enum(['dealing', 'swapping', 'playing', 'finished']),
+  phase: z.enum(['dealing', 'swapping', 'transitioning', 'playing', 'finished']),
   hand: z.array(cardSchema),
   faceUp: z.array(cardSchema),
   faceDownCount: z.number(),
@@ -119,6 +131,29 @@ export const gameDealtSchema = z.object({
   discardPile: z.array(cardSchema),
   currentPlayerIndex: z.number(),
   dealerIndex: z.number(),
+});
+
+export const swapTimerTickSchema = z.object({
+  type: z.literal('swap-timer-tick'),
+  timeRemaining: z.number().int().min(0).max(30),
+});
+
+export const playerReadySchema = z.object({
+  type: z.literal('player-ready'),
+  playerId: z.string(),
+  readyPlayers: z.array(z.string()),
+});
+
+export const swapPhaseCompleteSchema = z.object({
+  type: z.literal('swap-phase-complete'),
+  reason: z.enum(['timer-expired', 'all-ready']),
+});
+
+export const swapCardsUpdatedSchema = z.object({
+  type: z.literal('swap-cards-updated'),
+  hand: z.array(cardSchema),
+  faceUp: z.array(cardSchema),
+  opponents: z.array(opponentViewSchema),
 });
 
 export const errorSchema = z.object({
@@ -132,6 +167,8 @@ export const errorSchema = z.object({
     'NOT_ENOUGH_PLAYERS',
     'INVALID_NICKNAME',
     'INVALID_MESSAGE',
+    'INVALID_ACTION',
+    'PLAYER_NOT_FOUND',
   ]),
 });
 
@@ -143,5 +180,9 @@ export const serverMessageSchema = z.discriminatedUnion('type', [
   gameStartingSchema,
   gameStartedSchema,
   gameDealtSchema,
+  swapTimerTickSchema,
+  playerReadySchema,
+  swapPhaseCompleteSchema,
+  swapCardsUpdatedSchema,
   errorSchema,
 ]);
