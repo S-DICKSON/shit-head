@@ -1,16 +1,16 @@
 # Phase 2: WebSocket Infrastructure & Room Management - Research
 
 **Researched:** 2026-02-07
-**Domain:** Real-time WebSocket communication, room management, multiplayer game architecture
+**Domain:** Bun native WebSocket, room management, real-time multiplayer architecture
 **Confidence:** HIGH
 
 ## Summary
 
-This phase implements real-time WebSocket infrastructure for a multiplayer card game using Bun's native WebSocket API. Research reveals that Bun provides a performant, type-safe WebSocket implementation (7x throughput vs Node.js alternatives) with built-in pub/sub capabilities that map directly to room broadcasting needs. The standard approach uses: (1) Bun's native WebSocket server with typed data contexts, (2) nanoid for collision-free room code generation, (3) in-memory Map-based room state management with server-authoritative validation, and (4) Zod for runtime message validation paired with TypeScript discriminated unions for type-safe event handling.
+This phase builds a real-time WebSocket infrastructure for room-based multiplayer using Bun's native WebSocket implementation. The research confirms that Bun's built-in WebSocket support (based on uWebSockets) provides all necessary features including pub/sub for room broadcasting, contextual data for room/player state, and excellent performance (7x faster than Node.js + ws). The user has already made key UI/UX decisions in CONTEXT.md, leaving technical implementation details to our discretion.
 
-Key architectural insight: Bun's handler-per-server design (not per-connection) reduces memory overhead for concurrent connections, making it ideal for multiplayer lobbies. The pub/sub API provides natural room isolation without external dependencies like Redis (though Redis becomes necessary for horizontal scaling beyond single-instance deployment).
+Key findings: (1) Bun's native pub/sub eliminates need for Redis or external message brokers for single-server deployments, (2) VueUse provides production-ready `useWebSocket` composable with auto-reconnect and heartbeat support, (3) Zod provides runtime message validation essential for preventing client manipulation in server-authoritative architecture, (4) Nanoid is the standard for short, collision-resistant room codes with customizable alphabet, and (5) Server-authoritative architecture requires careful validation of all client messages to prevent cheating and state corruption.
 
-**Primary recommendation:** Use Bun's native WebSocket API with typed data contexts, implement discriminated union message types validated with Zod, manage rooms in-memory with Map<roomCode, RoomState>, and leverage Bun's pub/sub for room-scoped broadcasts.
+**Primary recommendation:** Use Bun's native WebSocket with pub/sub topics (one per room), Zod for message validation in packages/shared, VueUse `useWebSocket` composable on client for connection management, and Nanoid for 6-character room codes using custom alphabet (uppercase + digits, excluding confusables like 0/O, 1/I).
 
 <user_constraints>
 ## User Constraints (from CONTEXT.md)
@@ -41,8 +41,7 @@ Key architectural insight: Bun's handler-per-server design (not per-connection) 
 
 ### Claude's Discretion
 
-**Technical Implementation Choices:**
-- Room code format and length (user wants balance between usability and uniqueness)
+- Room code format and length
 - Shared link join flow (auto-fill code vs direct to nickname entry)
 - Exact UI layout and spacing
 - WebSocket message protocol design
@@ -57,40 +56,47 @@ None — discussion stayed within phase scope
 
 ## Standard Stack
 
-The established libraries/tools for WebSocket room management in Bun:
+The established libraries/tools for this implementation:
 
 ### Core
 
 | Library | Version | Purpose | Why Standard |
 |---------|---------|---------|--------------|
-| Bun native WebSocket | Built-in | WebSocket server with pub/sub | 7x throughput vs Node.js, native TypeScript, built-in pub/sub for room broadcasts, no external dependencies |
-| nanoid | ^5.0.0 | Short unique ID generation | Industry standard (60% faster than UUID), URL-safe, 21-char default with UUID-equivalent collision resistance, tiny bundle (118 bytes) |
-| zod | ^3.23.0 | Runtime schema validation | TypeScript-first validation, automatic type inference, zero dependencies, standard for WebSocket message validation |
+| Bun native WebSocket | Built-in | Server WebSocket implementation | 7x faster than Node.js+ws, built-in pub/sub, no external dependencies, native TypeScript |
+| VueUse | ^11.0.0 | Client WebSocket composable | De facto standard for Vue 3 utilities, provides `useWebSocket` with auto-reconnect, heartbeat, reactive state |
+| Zod | ^3.23.0 | Runtime message validation | TypeScript-first schema validation, ensures type safety + runtime safety for WebSocket messages |
+| Nanoid | ^5.1.0 | Room code generation | Tiny (118 bytes), secure, URL-friendly, customizable alphabet for short codes |
 
 ### Supporting
 
 | Library | Version | Purpose | When to Use |
 |---------|---------|---------|-------------|
-| @types/bun | latest | TypeScript definitions for Bun | Already in project (devDependency in server package) |
-| ws (client) | ^8.18.0 | WebSocket client for testing | Integration tests that simulate client connections (Vitest compatible) |
+| @vueuse/core | ^11.0.0 | Vue composables collection | Already includes useWebSocket, no need for separate WebSocket library |
+| @types/bun | latest | TypeScript types for Bun APIs | Already in devDependencies, covers ServerWebSocket types |
+| ws (for testing) | ^8.18.0 | WebSocket client for integration tests | Simulate client connections in Vitest tests |
 
 ### Alternatives Considered
 
 | Instead of | Could Use | Tradeoff |
 |------------|-----------|----------|
-| Bun WebSocket | Socket.io | Socket.io adds 50KB+ bundle, fallback transport (not needed for modern browsers), auto-reconnect (add manually if needed). Use Bun for simplicity and performance. |
-| nanoid | UUID v4 | UUIDs are 36 chars vs nanoid's 21 for equivalent collision safety. Use UUID only if external systems require RFC-compliant UUIDs. |
-| nanoid | sqids | Sqids encodes sequential IDs (reveals room count). Use only if you need reversible encoding of database IDs. Nanoid preferred for privacy. |
-| Zod | Valibot | Valibot is 90% smaller bundle but less mature ecosystem. Use Zod unless bundle size is critical (not an issue for Bun server). |
-| In-memory Map | Redis | Redis adds deployment complexity and is overkill for single-instance deployment. Add Redis only when horizontally scaling (Phase 6+). |
+| Bun pub/sub | Redis pub/sub | Redis adds complexity, external dependency, and latency for a single-server setup; only needed for multi-server horizontal scaling (out of scope) |
+| VueUse | Socket.IO client | Socket.IO adds 50KB+ to bundle, provides fallbacks we don't need (targeting modern browsers), and requires Socket.IO server library |
+| Zod | Manual validation | Manual validation is error-prone, verbose, and loses type inference; Zod provides both compile-time and runtime safety |
+| Nanoid | UUID/CUID | UUIDs are too long for human entry (36 chars), CUIDs are sortable but longer (25 chars); room codes need to be short (6 chars) |
 
 **Installation:**
 ```bash
-# In packages/server
-bun add nanoid zod
+# Server dependencies
+cd packages/server
+bun add zod nanoid
 
-# For testing (devDependencies)
-bun add -d ws @types/ws
+# Client dependencies
+cd packages/client
+bun add @vueuse/core zod
+
+# Shared dependencies (message types)
+cd packages/shared
+bun add zod
 ```
 
 ## Architecture Patterns
@@ -98,51 +104,590 @@ bun add -d ws @types/ws
 ### Recommended Project Structure
 
 ```
-packages/server/src/
-├── index.ts              # Main server entry (Bun.serve)
-├── websocket/
-│   ├── handler.ts        # WebSocket handler implementation (open, message, close)
-│   ├── rooms.ts          # Room state management (Map<code, Room>)
-│   └── messages.ts       # Message type definitions (Zod schemas + TS types)
-├── types/
-│   └── websocket.ts      # WebSocket data context types
-└── utils/
-    └── room-codes.ts     # Room code generation (nanoid wrapper)
-
-packages/shared/src/
-├── types/
-│   └── messages.ts       # Shared message type definitions (for client+server)
-└── schemas/
-    └── messages.ts       # Shared Zod schemas (for validation on both ends)
+packages/
+├── server/
+│   ├── src/
+│   │   ├── index.ts                    # Main server entry (existing)
+│   │   ├── rooms/
+│   │   │   ├── RoomManager.ts          # Central room lifecycle management
+│   │   │   └── Room.ts                 # Individual room state + logic
+│   │   └── websocket/
+│   │       ├── handlers.ts             # Message handlers (create, join, start, etc.)
+│   │       └── validation.ts           # Message validation with Zod
+├── client/
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── Landing.vue             # Nickname + Create/Join
+│   │   │   ├── Lobby.vue               # Player list + host controls
+│   │   │   └── RoomCode.vue            # Display code + shareable link
+│   │   └── composables/
+│   │       └── useGameSocket.ts        # Wraps useWebSocket with game logic
+└── shared/
+    └── src/
+        ├── types/
+        │   ├── messages.ts              # WebSocket message type unions
+        │   └── room.ts                  # Room state types
+        └── schemas/
+            └── messages.ts              # Zod schemas for validation
 ```
 
-**Rationale:** Shared package contains message contracts consumed by both client and server. Server owns room state management and WebSocket handler logic. This structure supports the existing Bun workspace with no build step for shared package (TypeScript resolved natively).
+### Pattern 1: Bun Pub/Sub for Room Broadcasting
 
-### Pattern 1: Typed WebSocket Data Context
+**What:** Each room is a pub/sub topic. Players subscribe on join, server publishes state updates to topic.
 
-**What:** Attach typed metadata to each WebSocket connection during upgrade for access throughout the socket's lifetime.
-
-**When to use:** Store per-connection state (user ID, room code, nickname) that handlers need without external lookups.
+**When to use:** Any time you need to broadcast to all players in a room (state updates, player joined/left, game started).
 
 **Example:**
 ```typescript
-// Source: https://bun.com/docs/api/websockets
+// Source: https://bun.sh/docs/api/websockets
+
+// Server-side room management
+const server = Bun.serve({
+  websocket: {
+    open(ws) {
+      // Subscribe socket to room topic
+      ws.subscribe(`room:${ws.data.roomCode}`);
+    },
+    message(ws, message) {
+      // Broadcast to all players in room (excluding sender)
+      ws.publish(`room:${ws.data.roomCode}`, JSON.stringify({
+        type: 'PLAYER_JOINED',
+        nickname: ws.data.nickname
+      }));
+
+      // Or broadcast from server instance (includes sender)
+      server.publish(`room:${ws.data.roomCode}`, message);
+    },
+    close(ws) {
+      ws.unsubscribe(`room:${ws.data.roomCode}`);
+    }
+  }
+});
+```
+
+**Key insight:** Bun's pub/sub is topic-based and lightweight — no need for Redis unless scaling to multiple server instances (out of scope for this phase).
+
+### Pattern 2: Contextual Data for Room State
+
+**What:** Attach room/player context to WebSocket via `data` property during upgrade.
+
+**When to use:** Store room code, player ID, nickname, and host status per connection.
+
+**Example:**
+```typescript
+// Source: https://bun.sh/docs/api/websockets
+
 type WebSocketData = {
-  playerId: string;      // nanoid-generated unique player ID
-  roomCode: string | null; // null until joined/created a room
+  playerId: string;
+  roomCode: string;
   nickname: string;
+  isHost: boolean;
 };
 
-const server = Bun.serve<WebSocketData>({
+Bun.serve({
+  fetch(req, server) {
+    const url = new URL(req.url);
+
+    // Extract nickname and room code from query params or request
+    const roomCode = getRoomCodeFromRequest(req);
+    const nickname = getNicknameFromRequest(req);
+
+    server.upgrade(req, {
+      data: {
+        playerId: generatePlayerId(),
+        roomCode,
+        nickname,
+        isHost: false, // Set based on room state
+      }
+    });
+  },
+  websocket: {
+    // Type ws.data across all handlers
+    data: {} as WebSocketData,
+
+    message(ws, message) {
+      // ws.data is now properly typed
+      console.log(`${ws.data.nickname} sent message in room ${ws.data.roomCode}`);
+    }
+  }
+});
+```
+
+**Key insight:** Strongly type `ws.data` using the `data` property on websocket handler (newer pattern, replaces deprecated `Bun.serve<T>` generic).
+
+### Pattern 3: Zod Message Validation
+
+**What:** Define message schemas in `packages/shared`, validate incoming messages server-side, infer TypeScript types.
+
+**When to use:** Every incoming WebSocket message must be validated to prevent client manipulation.
+
+**Example:**
+```typescript
+// Source: https://egghead.io/lessons/make-a-type-safe-and-runtime-safe-web-socket-communication-with-zod~efw0y
+// packages/shared/src/schemas/messages.ts
+
+import { z } from 'zod';
+
+export const CreateRoomMessageSchema = z.object({
+  type: z.literal('CREATE_ROOM'),
+  nickname: z.string().min(1).max(20),
+});
+
+export const JoinRoomMessageSchema = z.object({
+  type: z.literal('JOIN_ROOM'),
+  roomCode: z.string().length(6),
+  nickname: z.string().min(1).max(20),
+});
+
+export const StartGameMessageSchema = z.object({
+  type: z.literal('START_GAME'),
+});
+
+// Union type for all client messages
+export const ClientMessageSchema = z.discriminatedUnion('type', [
+  CreateRoomMessageSchema,
+  JoinRoomMessageSchema,
+  StartGameMessageSchema,
+]);
+
+// Infer TypeScript types from schemas
+export type ClientMessage = z.infer<typeof ClientMessageSchema>;
+
+// Server-side validation
+websocket: {
+  message(ws, message) {
+    const parsed = ClientMessageSchema.safeParse(JSON.parse(message));
+    if (!parsed.success) {
+      ws.send(JSON.stringify({ type: 'ERROR', message: 'Invalid message' }));
+      return;
+    }
+
+    // Now parsed.data is properly typed
+    switch (parsed.data.type) {
+      case 'CREATE_ROOM':
+        // Handle create room
+        break;
+      case 'JOIN_ROOM':
+        // Handle join room
+        break;
+      // ...
+    }
+  }
+}
+```
+
+**Key insight:** Zod provides both compile-time TypeScript inference AND runtime validation. Critical for server-authoritative architecture.
+
+### Pattern 4: VueUse WebSocket Composable
+
+**What:** Use `useWebSocket` from VueUse for client-side connection with auto-reconnect and reactive state.
+
+**When to use:** All client-side WebSocket communication.
+
+**Example:**
+```typescript
+// Source: https://vueuse.org/core/useWebSocket/
+// packages/client/src/composables/useGameSocket.ts
+
+import { useWebSocket } from '@vueuse/core';
+import { ref } from 'vue';
+import type { ClientMessage } from '@shit-head/shared';
+
+export function useGameSocket() {
+  const roomCode = ref<string | null>(null);
+  const players = ref<Array<{ nickname: string; isHost: boolean }>>([]);
+
+  const { status, data, send, open, close } = useWebSocket('ws://localhost:3000/ws', {
+    autoReconnect: {
+      retries: 3,
+      delay: 1000,
+      onFailed() {
+        console.error('Failed to reconnect');
+      }
+    },
+    heartbeat: {
+      message: 'ping',
+      interval: 30000,
+    },
+    onMessage(ws, event) {
+      const message = JSON.parse(event.data);
+
+      switch (message.type) {
+        case 'ROOM_CREATED':
+          roomCode.value = message.roomCode;
+          break;
+        case 'PLAYER_JOINED':
+          players.value.push(message.player);
+          break;
+        // ...
+      }
+    }
+  });
+
+  const createRoom = (nickname: string) => {
+    send(JSON.stringify({ type: 'CREATE_ROOM', nickname }));
+  };
+
+  return { status, roomCode, players, createRoom, /* ... */ };
+}
+```
+
+**Key insight:** VueUse handles reconnection, heartbeat, and reactive state. Wrap it in a game-specific composable for cleaner component code.
+
+### Pattern 5: Room Code Generation with Nanoid
+
+**What:** Generate short, collision-resistant room codes using custom alphabet.
+
+**When to use:** When creating a new room.
+
+**Example:**
+```typescript
+// Source: https://github.com/ai/nanoid
+// packages/server/src/rooms/RoomManager.ts
+
+import { customAlphabet } from 'nanoid';
+
+// Exclude confusable characters: 0/O, 1/I/l, etc.
+const ROOM_CODE_ALPHABET = '234679ABCDEFGHJKLMNPQRSTUVWXYZ';
+const generateRoomCode = customAlphabet(ROOM_CODE_ALPHABET, 6);
+
+class RoomManager {
+  private rooms = new Map<string, Room>();
+
+  createRoom(hostNickname: string): string {
+    let roomCode: string;
+
+    // Ensure uniqueness (extremely rare collision with 6 chars from 29-char alphabet)
+    do {
+      roomCode = generateRoomCode();
+    } while (this.rooms.has(roomCode));
+
+    const room = new Room(roomCode, hostNickname);
+    this.rooms.set(roomCode, room);
+
+    return roomCode;
+  }
+}
+```
+
+**Key insight:** Custom alphabet improves human readability by removing confusable characters. 6 characters from 29-char alphabet = 29^6 = ~600 million combinations — collision probability is negligible for short-lived rooms.
+
+### Pattern 6: Server-Authoritative State Updates
+
+**What:** Server owns the room state. Clients send actions, server validates and broadcasts state updates.
+
+**When to use:** All game state changes (player joined, game started, etc.).
+
+**Example:**
+```typescript
+// Server-side validation pattern
+class Room {
+  private players: Map<string, Player> = new Map();
+  private state: 'waiting' | 'countdown' | 'playing' = 'waiting';
+
+  addPlayer(playerId: string, nickname: string): boolean {
+    // Server validates constraints
+    if (this.players.size >= 4) return false;
+    if (this.state !== 'waiting') return false;
+
+    this.players.set(playerId, { nickname, joinedAt: Date.now() });
+    return true;
+  }
+
+  startGame(requesterId: string): boolean {
+    // Server validates requester is host
+    if (!this.isHost(requesterId)) return false;
+
+    // Server validates state
+    if (this.players.size < 2) return false;
+    if (this.state !== 'waiting') return false;
+
+    this.state = 'countdown';
+    return true;
+  }
+}
+```
+
+**Key insight:** Never trust client messages. Server must validate every state transition and broadcast the authoritative state to all clients.
+
+### Anti-Patterns to Avoid
+
+- **Client-side state ownership:** Clients send desired state → Server validates and owns state, broadcasts updates
+- **Missing message validation:** Trust all WebSocket messages → Validate all messages with Zod before processing
+- **ws:// in production:** Unencrypted WebSocket → Use wss:// (WebSocket Secure) in production
+- **Missing origin validation:** Accept all WebSocket connections → Validate Origin header to prevent CSWSH (Cross-Site WebSocket Hijacking)
+- **Long-lived tokens without refresh:** WebSocket stays open for hours → No auth tokens in this phase, but future phases should implement token refresh for long sessions
+- **Synchronous message handlers:** Block on slow operations → Use async handlers, return errors to client on timeout
+- **Global room storage in module scope:** Room state in module-level Map → Encapsulate in RoomManager class for testability and cleanup
+
+## Don't Hand-Roll
+
+Problems that look simple but have existing solutions:
+
+| Problem | Don't Build | Use Instead | Why |
+|---------|-------------|-------------|-----|
+| WebSocket reconnection logic | Custom retry + exponential backoff | VueUse `useWebSocket` with `autoReconnect` | Handles edge cases: network flapping, max retries, jitter to prevent thundering herd |
+| Room broadcasting | Loop through sockets and `.send()` | Bun's native `.publish()` on topic | Built-in, optimized, handles unsubscribe on disconnect |
+| Message validation | Manual `if/else` type checking | Zod discriminated unions | Type-safe, runtime-safe, auto-inferred types, clear error messages |
+| Unique ID generation | `Math.random().toString(36)` | Nanoid with custom alphabet | Cryptographically secure, collision-resistant, customizable |
+| WebSocket state management (client) | Manual `readyState` tracking | VueUse `status` ref | Reactive, handles CONNECTING/OPEN/CLOSED states, integrates with Vue lifecycle |
+| Heartbeat/ping-pong | Manual `setInterval` + timeout tracking | VueUse `heartbeat` option | Handles timeouts, reconnection on missed pong, configurable intervals |
+
+**Key insight:** The WebSocket ecosystem has matured. For a multiplayer lobby, the standard stack (Bun pub/sub + VueUse + Zod + Nanoid) covers 95% of needs without custom infrastructure code.
+
+## Common Pitfalls
+
+### Pitfall 1: Cross-Site WebSocket Hijacking (CSWSH)
+
+**What goes wrong:** Attacker creates malicious page that opens WebSocket to your server using victim's cookies/session.
+
+**Why it happens:** WebSocket handshakes don't enforce same-origin policy. If you only rely on cookies for auth, any site can initiate a connection.
+
+**How to avoid:**
+```typescript
+// Validate Origin header during upgrade
+fetch(req, server) {
+  const origin = req.headers.get('origin');
+  const allowedOrigins = ['http://localhost:5173', 'https://yourapp.com'];
+
+  if (origin && !allowedOrigins.includes(origin)) {
+    return new Response('Forbidden', { status: 403 });
+  }
+
+  server.upgrade(req, { /* ... */ });
+}
+```
+
+**Warning signs:** Security audit flags missing origin validation, penetration test shows WebSocket hijacking.
+
+**Source:** [OWASP WebSocket Security Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/WebSocket_Security_Cheat_Sheet.html), [WebSocket Security | Heroku](https://devcenter.heroku.com/articles/websocket-security)
+
+### Pitfall 2: Missing Input Validation
+
+**What goes wrong:** Client sends malformed or malicious messages → Server crashes or behaves unexpectedly.
+
+**Why it happens:** Developers assume clients send well-formed messages. WebSocket messages have `any` type by default in TypeScript.
+
+**How to avoid:**
+```typescript
+// Always parse and validate
+message(ws, message) {
+  let parsed;
+  try {
+    parsed = JSON.parse(message);
+  } catch {
+    ws.send(JSON.stringify({ type: 'ERROR', message: 'Invalid JSON' }));
+    return;
+  }
+
+  const validated = ClientMessageSchema.safeParse(parsed);
+  if (!validated.success) {
+    ws.send(JSON.stringify({ type: 'ERROR', message: 'Invalid message schema' }));
+    return;
+  }
+
+  // Now safe to process
+  handleMessage(ws, validated.data);
+}
+```
+
+**Warning signs:** Server crashes on unexpected client messages, TypeScript `any` types in message handlers.
+
+**Source:** [WebSocket Security: How to prevent 9 common vulnerabilities](https://ably.com/topic/websocket-security)
+
+### Pitfall 3: Reconnection Storms (Thundering Herd)
+
+**What goes wrong:** Server restart causes thousands of clients to reconnect simultaneously → Server overload.
+
+**Why it happens:** Clients retry immediately or at same interval, creating synchronized load spike.
+
+**How to avoid:**
+```typescript
+// Client-side: Use jittered exponential backoff
+useWebSocket(url, {
+  autoReconnect: {
+    retries: 5,
+    delay: 1000, // Can also be a function for exponential backoff
+    onFailed() {
+      // After max retries, wait random interval before next attempt
+      setTimeout(() => open(), Math.random() * 30000);
+    }
+  }
+});
+```
+
+**Warning signs:** Server CPU spikes on restart, connection accept queue fills up.
+
+**Source:** [Deal with Reconnection Storm — Two Strategies](https://amirsoleimani.medium.com/deal-with-reconnection-storm-two-strategies-4a835d0457f6)
+
+### Pitfall 4: Memory Leaks from Abandoned Rooms
+
+**What goes wrong:** Rooms stay in memory forever after all players disconnect → Memory grows unbounded.
+
+**Why it happens:** No cleanup logic for empty rooms.
+
+**How to avoid:**
+```typescript
+class RoomManager {
+  private rooms = new Map<string, Room>();
+
+  removePlayer(roomCode: string, playerId: string): void {
+    const room = this.rooms.get(roomCode);
+    if (!room) return;
+
+    room.removePlayer(playerId);
+
+    // Clean up empty rooms
+    if (room.isEmpty()) {
+      this.rooms.delete(roomCode);
+      console.log(`Room ${roomCode} cleaned up (empty)`);
+    }
+  }
+}
+```
+
+**Warning signs:** Memory usage grows over time, `rooms` Map size increases indefinitely.
+
+**Source:** Common multiplayer game server pattern, documented in [Building a Real-Time Multiplayer Game Server](https://dev.to/dowerdev/building-a-real-time-multiplayer-game-server-with-socketio-and-redis-architecture-and-583m)
+
+### Pitfall 5: Race Conditions on Room Join
+
+**What goes wrong:** Two players join simultaneously when only one slot available → Room has 5 players (exceeds max 4).
+
+**Why it happens:** Non-atomic check-then-add operations.
+
+**How to avoid:**
+```typescript
+class Room {
+  addPlayer(playerId: string, nickname: string): boolean {
+    // Atomic check and add
+    if (this.players.size >= 4) {
+      return false; // Room full
+    }
+
+    this.players.set(playerId, { nickname });
+
+    // Double-check after add (defensive)
+    if (this.players.size > 4) {
+      this.players.delete(playerId);
+      return false;
+    }
+
+    return true;
+  }
+}
+```
+
+**Warning signs:** Rooms occasionally exceed max players, race condition errors in logs.
+
+**Source:** Standard concurrency pattern for multiplayer games
+
+### Pitfall 6: Unhandled WebSocket Backpressure
+
+**What goes wrong:** Sending too many messages to slow clients → Memory builds up, connection drops.
+
+**Why it happens:** Not checking `.send()` return value or handling backpressure.
+
+**How to avoid:**
+```typescript
+// Bun's .send() returns number indicating backpressure
+websocket: {
+  message(ws, message) {
+    const result = ws.send(message);
+
+    if (result === -1) {
+      // Backpressure: message queued but socket is slow
+      console.warn('Backpressure detected, slowing down');
+    } else if (result === 0) {
+      // Connection issue: message dropped
+      console.error('Message dropped due to connection issue');
+    }
+    // result > 0: bytes sent successfully
+  },
+
+  drain(ws) {
+    // Called when socket is ready to receive more data after backpressure
+    console.log('Backpressure cleared');
+  }
+}
+```
+
+**Warning signs:** Connections drop under high message volume, memory usage spikes.
+
+**Source:** [Bun WebSocket Documentation - Backpressure](https://bun.sh/docs/api/websockets)
+
+### Pitfall 7: Forgetting to Unsubscribe on Disconnect
+
+**What goes wrong:** Player disconnects but remains subscribed to room topic → Ghost player receives messages.
+
+**Why it happens:** No cleanup in `close` handler.
+
+**How to avoid:**
+```typescript
+websocket: {
+  close(ws) {
+    const { roomCode, playerId } = ws.data;
+
+    // Unsubscribe from room topic
+    ws.unsubscribe(`room:${roomCode}`);
+
+    // Remove player from room state
+    roomManager.removePlayer(roomCode, playerId);
+
+    // Notify other players
+    server.publish(`room:${roomCode}`, JSON.stringify({
+      type: 'PLAYER_LEFT',
+      playerId
+    }));
+  }
+}
+```
+
+**Warning signs:** `server.publish()` sends to disconnected sockets, subscription count grows over time.
+
+**Source:** [Bun WebSocket Documentation - Pub/Sub](https://bun.sh/docs/api/websockets)
+
+## Code Examples
+
+Verified patterns from official sources:
+
+### Server Setup with WebSocket Upgrade
+
+```typescript
+// Source: https://bun.sh/docs/api/websockets
+
+type WebSocketData = {
+  playerId: string;
+  roomCode: string;
+  nickname: string;
+  isHost: boolean;
+};
+
+const server = Bun.serve({
+  port: 3000,
+
   fetch(req, server) {
     const url = new URL(req.url);
 
     if (url.pathname === '/ws') {
+      // Validate origin
+      const origin = req.headers.get('origin');
+      const allowed = ['http://localhost:5173'];
+      if (origin && !allowed.includes(origin)) {
+        return new Response('Forbidden', { status: 403 });
+      }
+
+      // Extract connection params from query
+      const roomCode = url.searchParams.get('roomCode');
+      const nickname = url.searchParams.get('nickname');
+
+      // Upgrade with contextual data
       const success = server.upgrade(req, {
         data: {
-          playerId: nanoid(),
-          roomCode: null,
-          nickname: '', // Set when player sends JOIN or CREATE
+          playerId: generatePlayerId(),
+          roomCode: roomCode || '',
+          nickname: nickname || '',
+          isHost: false,
         }
       });
 
@@ -153,835 +698,334 @@ const server = Bun.serve<WebSocketData>({
   },
 
   websocket: {
+    data: {} as WebSocketData,
+
     open(ws) {
       console.log(`Player ${ws.data.playerId} connected`);
     },
 
     message(ws, message) {
-      // ws.data is properly typed as WebSocketData
-      console.log(`Message from ${ws.data.nickname} in room ${ws.data.roomCode}`);
+      // Validate and handle messages
     },
 
     close(ws) {
-      // Clean up room membership using ws.data.roomCode
+      // Cleanup
     },
-  },
-});
-```
 
-### Pattern 2: Pub/Sub for Room Broadcasting
-
-**What:** Use Bun's native pub/sub to broadcast messages to all players in a room.
-
-**When to use:** Any event that all room members need to see (player joined, player left, game starting, etc.)
-
-**Example:**
-```typescript
-// Source: https://bun.com/docs/api/websockets
-websocket: {
-  open(ws) {
-    // Subscribe to room-specific topic when player joins
-    const roomTopic = `room:${ws.data.roomCode}`;
-    ws.subscribe(roomTopic);
-
-    // Notify others that player joined (excludes sender)
-    ws.publish(roomTopic, JSON.stringify({
-      type: 'PLAYER_JOINED',
-      nickname: ws.data.nickname,
-      playerId: ws.data.playerId,
-    }));
-  },
-
-  message(ws, message) {
-    const msg = JSON.parse(message as string);
-
-    if (msg.type === 'START_GAME') {
-      const roomTopic = `room:${ws.data.roomCode}`;
-
-      // Broadcast to all subscribers (use server.publish to include sender)
-      server.publish(roomTopic, JSON.stringify({
-        type: 'GAME_STARTING',
-        countdown: 3,
-      }));
-    }
-  },
-
-  close(ws) {
-    // Automatically unsubscribed on close
-    const roomTopic = `room:${ws.data.roomCode}`;
-    ws.publish(roomTopic, JSON.stringify({
-      type: 'PLAYER_LEFT',
-      playerId: ws.data.playerId,
-    }));
-  },
-}
-```
-
-**Key insight:** `ws.publish()` excludes the sender (use for player actions). `server.publish()` includes all subscribers (use for authoritative server announcements).
-
-### Pattern 3: Discriminated Unions for Type-Safe Messages
-
-**What:** Use TypeScript discriminated unions with a `type` field to model all possible WebSocket messages.
-
-**When to use:** Ensures exhaustive handling of all message types at compile time, prevents missing handlers.
-
-**Example:**
-```typescript
-// Source: TypeScript discriminated unions pattern
-// packages/shared/src/types/messages.ts
-
-// Client -> Server messages
-type ClientMessage =
-  | { type: 'CREATE_ROOM'; nickname: string }
-  | { type: 'JOIN_ROOM'; roomCode: string; nickname: string }
-  | { type: 'LEAVE_ROOM' }
-  | { type: 'START_GAME' };
-
-// Server -> Client messages
-type ServerMessage =
-  | { type: 'ROOM_CREATED'; roomCode: string; playerId: string }
-  | { type: 'ROOM_JOINED'; roomCode: string; players: Player[] }
-  | { type: 'PLAYER_JOINED'; nickname: string; playerId: string }
-  | { type: 'PLAYER_LEFT'; playerId: string }
-  | { type: 'GAME_STARTING'; countdown: number }
-  | { type: 'ERROR'; message: string; code: ErrorCode };
-
-// Handler with exhaustive type checking
-function handleClientMessage(ws: ServerWebSocket<WebSocketData>, msg: ClientMessage) {
-  switch (msg.type) {
-    case 'CREATE_ROOM':
-      // TypeScript knows msg.nickname exists here
-      return handleCreateRoom(ws, msg.nickname);
-
-    case 'JOIN_ROOM':
-      // TypeScript knows msg.roomCode and msg.nickname exist
-      return handleJoinRoom(ws, msg.roomCode, msg.nickname);
-
-    case 'LEAVE_ROOM':
-      return handleLeaveRoom(ws);
-
-    case 'START_GAME':
-      return handleStartGame(ws);
-
-    default:
-      // Exhaustiveness check - will error if a case is missing
-      const exhaustive: never = msg;
-      return exhaustive;
+    // Configure timeouts
+    idleTimeout: 120, // 2 minutes
+    maxPayloadLength: 1024 * 1024, // 1 MB
   }
-}
+});
 ```
 
-### Pattern 4: Runtime Validation with Zod
+### Client WebSocket Connection
 
-**What:** Define Zod schemas that validate incoming messages and infer TypeScript types.
-
-**When to use:** All WebSocket message handling to prevent malformed/malicious data from causing runtime errors.
-
-**Example:**
 ```typescript
-// Source: Zod WebSocket validation patterns
-// packages/shared/src/schemas/messages.ts
-import { z } from 'zod';
+// Source: https://vueuse.org/core/useWebSocket/
+// packages/client/src/composables/useGameSocket.ts
 
-const createRoomSchema = z.object({
-  type: z.literal('CREATE_ROOM'),
-  nickname: z.string().min(1).max(20),
-});
+import { useWebSocket } from '@vueuse/core';
+import { ref, computed } from 'vue';
 
-const joinRoomSchema = z.object({
-  type: z.literal('JOIN_ROOM'),
-  roomCode: z.string().length(6), // Assuming 6-char codes
-  nickname: z.string().min(1).max(20),
-});
+export function useGameSocket() {
+  const roomCode = ref<string | null>(null);
+  const nickname = ref<string>('');
 
-const clientMessageSchema = z.discriminatedUnion('type', [
-  createRoomSchema,
-  joinRoomSchema,
-  z.object({ type: z.literal('LEAVE_ROOM') }),
-  z.object({ type: z.literal('START_GAME') }),
-]);
-
-// Infer TypeScript type from Zod schema
-export type ClientMessage = z.infer<typeof clientMessageSchema>;
-
-// packages/server/src/websocket/handler.ts
-websocket: {
-  message(ws, message) {
-    try {
-      const parsed = JSON.parse(message as string);
-      const validated = clientMessageSchema.parse(parsed);
-
-      // validated is now type-safe ClientMessage
-      handleClientMessage(ws, validated);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        ws.send(JSON.stringify({
-          type: 'ERROR',
-          message: 'Invalid message format',
-          code: 'VALIDATION_ERROR',
-        }));
-      }
-    }
-  },
-}
-```
-
-### Pattern 5: In-Memory Room State Management
-
-**What:** Use a Map to store room state server-side as the authoritative source of truth.
-
-**When to use:** Single-instance deployments (Phase 2). Replace with Redis for horizontal scaling (Phase 6+).
-
-**Example:**
-```typescript
-// Source: In-memory state management patterns
-// packages/server/src/websocket/rooms.ts
-import { nanoid } from 'nanoid';
-
-interface Player {
-  id: string;
-  nickname: string;
-  isHost: boolean;
-}
-
-interface Room {
-  code: string;
-  players: Map<string, Player>; // playerId -> Player
-  state: 'LOBBY' | 'STARTING' | 'PLAYING';
-  createdAt: number;
-}
-
-const rooms = new Map<string, Room>();
-
-export function createRoom(hostId: string, nickname: string): string {
-  const code = generateRoomCode();
-
-  rooms.set(code, {
-    code,
-    players: new Map([[hostId, { id: hostId, nickname, isHost: true }]]),
-    state: 'LOBBY',
-    createdAt: Date.now(),
+  const wsUrl = computed(() => {
+    if (!roomCode.value || !nickname.value) return null;
+    return `ws://localhost:3000/ws?roomCode=${roomCode.value}&nickname=${nickname.value}`;
   });
 
-  return code;
-}
-
-export function joinRoom(roomCode: string, playerId: string, nickname: string): Room | null {
-  const room = rooms.get(roomCode);
-
-  if (!room) return null; // Room doesn't exist
-  if (room.state !== 'LOBBY') return null; // Game already started
-  if (room.players.size >= 4) return null; // Room full
-
-  room.players.set(playerId, { id: playerId, nickname, isHost: false });
-  return room;
-}
-
-export function leaveRoom(roomCode: string, playerId: string): void {
-  const room = rooms.get(roomCode);
-  if (!room) return;
-
-  room.players.delete(playerId);
-
-  // Delete room if empty or host left
-  const wasHost = room.players.has(playerId) && room.players.get(playerId)!.isHost;
-  if (room.players.size === 0 || wasHost) {
-    rooms.delete(roomCode);
-  }
-}
-
-function generateRoomCode(): string {
-  // Generate unique 6-char uppercase code
-  const code = nanoid(6).toUpperCase();
-
-  // Ensure uniqueness (extremely rare collision with nanoid)
-  return rooms.has(code) ? generateRoomCode() : code;
-}
-```
-
-**Note on WeakMap:** Research found WeakMap useful for DOM node metadata, but not applicable here (room codes are strings, not objects; we need explicit room lifecycle control, not garbage collection).
-
-### Anti-Patterns to Avoid
-
-- **Storing room state in WebSocket data context:** This creates inconsistent views across connections. Room state must live in a shared Map accessible to all connections.
-
-- **Broadcasting to all connections instead of using pub/sub:** Iterating all sockets and checking room membership is O(n) per message. Pub/sub is O(1) with topic-based filtering.
-
-- **Trusting client-provided player IDs:** Always generate player IDs server-side during upgrade to prevent impersonation.
-
-- **Forgetting to unsubscribe on leave/disconnect:** Leads to ghost subscriptions and messages sent to closed connections (Bun auto-unsubscribes on close, but explicit leave needs manual unsubscribe).
-
-- **Using Math.random() for room codes:** Not cryptographically secure. Use nanoid which uses hardware random generator (Crypto.getRandomValues).
-
-- **Parsing JSON without try/catch:** Malformed JSON crashes the handler. Always wrap JSON.parse and validate with Zod.
-
-## Don't Hand-Roll
-
-Problems that look simple but have existing solutions:
-
-| Problem | Don't Build | Use Instead | Why |
-|---------|-------------|-------------|-----|
-| Unique short IDs | Custom random alphanumeric generator with collision checks | nanoid | Handles collision resistance (126 random bits), URL-safe alphabet, profanity filtering, cryptographic randomness. Custom solutions miss edge cases (birthday paradox, weak randomness). |
-| Message validation | Manual property checks and type guards | Zod schemas with discriminated unions | Zod provides automatic TypeScript inference, detailed error messages, composable schemas, and runtime safety. Manual validation is verbose and error-prone. |
-| WebSocket reconnection | Custom ping/pong heartbeat logic | Built-in idleTimeout + client library with exponential backoff | Bun's idleTimeout (default 120s) handles server-side cleanup. Client reconnection needs exponential backoff with jitter to prevent thundering herd. Don't build from scratch. |
-| Room code profanity filtering | Custom word list checks | nanoid's default alphabet (no vowels = fewer words) or nanoid-dictionary | Profanity detection is hard (unicode, leetspeak, cultural differences). Nanoid's consonant-heavy alphabet naturally avoids most issues. |
-
-**Key insight:** WebSocket infrastructure has well-documented pitfalls (backpressure, reconnection storms, memory leaks). Bun's built-in features (pub/sub, idleTimeout, backpressure limits) handle these better than custom solutions.
-
-## Common Pitfalls
-
-### Pitfall 1: Not Handling Backpressure
-
-**What goes wrong:** When clients are slow to consume messages (slow network, frozen browser tab), the server's send buffer fills up. Without checking `.send()` return values, memory usage grows unbounded and eventually crashes the server.
-
-**Why it happens:** WebSocket `.send()` is non-blocking. If the client's receive buffer is full, Bun queues the message. Developers assume send always succeeds immediately.
-
-**How to avoid:**
-- Check `.send()` return value: `-1` means backpressure (message queued), `0` means connection closed, `1+` means bytes sent
-- Configure `backpressureLimit` (default 1MB) to control buffer size
-- For high-frequency updates (game state), skip stale updates if backpressure is detected
-
-**Warning signs:** Memory usage growing over time, slow clients causing server slowdown, WebSocket close with code 1009 (message too big)
-
-**Example:**
-```typescript
-// Source: Bun backpressure handling documentation
-websocket: {
-  message(ws, message) {
-    const response = JSON.stringify({ type: 'ACK' });
-    const result = ws.send(response);
-
-    if (result === -1) {
-      console.warn(`Backpressure for player ${ws.data.playerId}`);
-      // Option 1: Skip this update (acceptable for frequent game state)
-      // Option 2: Close slow connections after threshold
-      // Option 3: Reduce update frequency for this client
-    } else if (result === 0) {
-      console.error(`Failed to send to ${ws.data.playerId} - connection closed`);
+  const { status, data, send, open, close } = useWebSocket(wsUrl, {
+    immediate: false, // Don't connect until we have roomCode + nickname
+    autoReconnect: {
+      retries: 3,
+      delay: 1000,
+    },
+    heartbeat: {
+      message: JSON.stringify({ type: 'PING' }),
+      interval: 30000,
+    },
+    onMessage(ws, event) {
+      const message = JSON.parse(event.data);
+      handleServerMessage(message);
+    },
+    onConnected() {
+      console.log('Connected to game server');
+    },
+    onDisconnected() {
+      console.log('Disconnected from game server');
     }
-  }
+  });
+
+  return { status, send, open, close, roomCode, nickname };
 }
 ```
 
-### Pitfall 2: Connection Lifecycle Mismanagement
+### Shared Message Types with Zod
 
-**What goes wrong:** Not cleaning up resources on disconnect leads to memory leaks (room state retaining disconnected players), ghost subscriptions (messages sent to closed sockets), and stale room listings.
-
-**Why it happens:** Developers implement `open` and `message` handlers but forget robust `close` handling, assuming clients will send graceful "LEAVE_ROOM" messages. Network failures and browser closes bypass application-level leave messages.
-
-**How to avoid:**
-- Always implement `close` handler to clean up room membership
-- Don't rely on application-level "LEAVE" messages for cleanup (they're hints, not guarantees)
-- Use idleTimeout (default 120s) to detect zombies
-- Remove empty rooms or host-abandoned rooms immediately
-
-**Warning signs:** Room list growing indefinitely, player count in UI doesn't match server state, memory usage growing with connection churn
-
-**Example:**
 ```typescript
-// Source: WebSocket lifecycle best practices
-websocket: {
-  close(ws, code, message) {
-    const { playerId, roomCode, nickname } = ws.data;
+// Source: https://github.com/colinhacks/zod
+// packages/shared/src/schemas/messages.ts
 
-    if (roomCode) {
-      // Remove player from room
-      leaveRoom(roomCode, playerId);
+import { z } from 'zod';
 
-      // Notify remaining players
-      ws.publish(`room:${roomCode}`, JSON.stringify({
-        type: 'PLAYER_LEFT',
-        playerId,
-      }));
+// Nickname validation (reused across messages)
+const NicknameSchema = z.string().min(1).max(20).trim();
 
-      console.log(`Player ${nickname} disconnected from room ${roomCode} (code: ${code})`);
-    }
-  }
-}
-```
+// Client → Server messages
+export const CreateRoomMessageSchema = z.object({
+  type: z.literal('CREATE_ROOM'),
+  nickname: NicknameSchema,
+});
 
-### Pitfall 3: Reconnection Storms
-
-**What goes wrong:** Server restarts or network blips cause all clients to reconnect simultaneously. Without exponential backoff and jitter, thousands of clients hammer the server in sync, preventing recovery.
-
-**Why it happens:** Clients detect disconnect and immediately reconnect. If all clients disconnect at the same moment (server crash), they all reconnect at the same moment.
-
-**How to avoid:**
-- Client-side: Implement exponential backoff (1s, 2s, 4s, 8s, up to max like 30s)
-- Client-side: Add random jitter (e.g., ±25% of delay) to spread reconnection attempts
-- Server-side: Rate limit WebSocket upgrades per IP to detect storms
-- Server-side: Provide "server busy" response (503) to slow clients when overloaded
-
-**Warning signs:** CPU spike after deployment, "thundering herd" in logs, legitimate connections failing during recovery
-
-**Example:**
-```typescript
-// Source: Exponential backoff pattern for WebSocket reconnection
-// Client-side (packages/client/src/websocket.ts)
-class ReconnectingWebSocket {
-  private attempt = 0;
-  private maxDelay = 30000; // 30 seconds
-  private baseDelay = 1000; // 1 second
-
-  private async reconnect() {
-    const delay = Math.min(
-      this.baseDelay * Math.pow(2, this.attempt),
-      this.maxDelay
-    );
-
-    // Add jitter: ±25%
-    const jitter = delay * 0.25 * (Math.random() * 2 - 1);
-    const actualDelay = delay + jitter;
-
-    console.log(`Reconnecting in ${actualDelay}ms (attempt ${this.attempt + 1})`);
-    await new Promise(resolve => setTimeout(resolve, actualDelay));
-
-    this.attempt++;
-    this.connect();
-  }
-
-  private onClose() {
-    // Don't reconnect if closed intentionally
-    if (this.shouldReconnect) {
-      this.reconnect();
-    }
-  }
-
-  private onOpen() {
-    // Reset backoff on successful connection
-    this.attempt = 0;
-  }
-}
-```
-
-### Pitfall 4: Race Conditions with Room State Updates
-
-**What goes wrong:** Two players try to join the same full room simultaneously. Both read "3/4 players", both join, room now has 5/4 players. Or host clicks "Start Game" while another player leaves, leading to inconsistent state.
-
-**Why it happens:** JavaScript is single-threaded but async. Between reading room state and updating it, another handler can run. Developers assume atomic operations.
-
-**How to avoid:**
-- Check room state immediately before mutation (don't cache room lookups)
-- Perform check-and-update in a single function (JavaScript's event loop guarantees synchronous code is atomic)
-- Validate state transitions (can't start game in 'PLAYING' state)
-- Broadcast state changes immediately so clients stay in sync
-
-**Warning signs:** Room player counts don't match UI, games starting with wrong player count, "room full" errors when room looks joinable
-
-**Example:**
-```typescript
-// Source: Atomic state updates for room management
-export function joinRoom(roomCode: string, playerId: string, nickname: string):
-  { success: true; room: Room } | { success: false; reason: string } {
-
-  const room = rooms.get(roomCode);
-
-  // All validation happens synchronously before mutation
-  if (!room) {
-    return { success: false, reason: 'Room not found' };
-  }
-
-  if (room.state !== 'LOBBY') {
-    return { success: false, reason: 'Game already started' };
-  }
-
-  if (room.players.size >= 4) {
-    return { success: false, reason: 'Room is full' };
-  }
-
-  // Atomic update (no async between check and update)
-  room.players.set(playerId, { id: playerId, nickname, isHost: false });
-
-  return { success: true, room };
-}
-```
-
-### Pitfall 5: Not Validating Client Input
-
-**What goes wrong:** Client sends nickname: `"<script>alert('xss')</script>"` or roomCode: `"../../../../etc/passwd"`. Server blindly broadcasts or uses in operations, causing XSS, injection, or crashes.
-
-**Why it happens:** Developers trust client data or assume browser validation is sufficient. Validation is only a UX hint; malicious actors bypass it.
-
-**How to avoid:**
-- Validate ALL incoming messages with Zod schemas
-- Enforce length limits (nickname 1-20 chars, room code exactly 6 chars)
-- Sanitize or reject special characters if broadcasting to web UI
-- Use Zod's built-in string validators (.min(), .max(), .regex(), .email(), etc.)
-
-**Warning signs:** Crashes on unexpected input, room codes with weird characters, player names breaking UI layout, security scans flagging injection vulnerabilities
-
-**Example:**
-```typescript
-// Source: Zod validation for WebSocket security
-const nicknameSchema = z.string()
-  .min(1, 'Nickname required')
-  .max(20, 'Nickname too long')
-  .regex(/^[a-zA-Z0-9_-]+$/, 'Nickname contains invalid characters');
-
-const roomCodeSchema = z.string()
-  .length(6, 'Room code must be 6 characters')
-  .regex(/^[A-Z0-9]+$/, 'Invalid room code format');
-
-const joinRoomSchema = z.object({
+export const JoinRoomMessageSchema = z.object({
   type: z.literal('JOIN_ROOM'),
-  roomCode: roomCodeSchema,
-  nickname: nicknameSchema,
+  roomCode: z.string().length(6).toUpperCase(),
+  nickname: NicknameSchema,
 });
 
-// In handler
-websocket: {
-  message(ws, message) {
-    try {
-      const parsed = JSON.parse(message as string);
-      const validated = joinRoomSchema.parse(parsed);
-      // validated.nickname and validated.roomCode are now safe
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        ws.send(JSON.stringify({
-          type: 'ERROR',
-          message: error.errors[0].message,
-          code: 'VALIDATION_ERROR',
-        }));
-      }
+export const StartGameMessageSchema = z.object({
+  type: z.literal('START_GAME'),
+});
+
+export const LeaveRoomMessageSchema = z.object({
+  type: z.literal('LEAVE_ROOM'),
+});
+
+// Discriminated union for type-safe handling
+export const ClientMessageSchema = z.discriminatedUnion('type', [
+  CreateRoomMessageSchema,
+  JoinRoomMessageSchema,
+  StartGameMessageSchema,
+  LeaveRoomMessageSchema,
+]);
+
+// Server → Client messages
+export const RoomCreatedMessageSchema = z.object({
+  type: z.literal('ROOM_CREATED'),
+  roomCode: z.string(),
+});
+
+export const PlayerJoinedMessageSchema = z.object({
+  type: z.literal('PLAYER_JOINED'),
+  player: z.object({
+    id: z.string(),
+    nickname: z.string(),
+    isHost: z.boolean(),
+  }),
+});
+
+export const GameStartingMessageSchema = z.object({
+  type: z.literal('GAME_STARTING'),
+  countdown: z.number(),
+});
+
+export const ErrorMessageSchema = z.object({
+  type: z.literal('ERROR'),
+  message: z.string(),
+});
+
+export const ServerMessageSchema = z.discriminatedUnion('type', [
+  RoomCreatedMessageSchema,
+  PlayerJoinedMessageSchema,
+  GameStartingMessageSchema,
+  ErrorMessageSchema,
+]);
+
+// Infer TypeScript types
+export type ClientMessage = z.infer<typeof ClientMessageSchema>;
+export type ServerMessage = z.infer<typeof ServerMessageSchema>;
+```
+
+### Room State Management
+
+```typescript
+// packages/server/src/rooms/Room.ts
+
+export class Room {
+  public readonly code: string;
+  private players = new Map<string, Player>();
+  private hostId: string;
+  private state: 'waiting' | 'countdown' | 'playing' = 'waiting';
+  private createdAt = Date.now();
+
+  constructor(code: string, hostId: string, hostNickname: string) {
+    this.code = code;
+    this.hostId = hostId;
+    this.players.set(hostId, {
+      id: hostId,
+      nickname: hostNickname,
+      isHost: true,
+      joinedAt: Date.now(),
+    });
+  }
+
+  addPlayer(playerId: string, nickname: string): boolean {
+    // Validate room state
+    if (this.state !== 'waiting') return false;
+    if (this.players.size >= 4) return false;
+    if (this.players.has(playerId)) return false;
+
+    this.players.set(playerId, {
+      id: playerId,
+      nickname,
+      isHost: false,
+      joinedAt: Date.now(),
+    });
+
+    return true;
+  }
+
+  removePlayer(playerId: string): void {
+    this.players.delete(playerId);
+
+    // If host leaves, close room or promote new host
+    if (playerId === this.hostId && this.players.size > 0) {
+      // Promote first joined player to host
+      const newHost = Array.from(this.players.values())[0];
+      this.hostId = newHost.id;
+      newHost.isHost = true;
     }
+  }
+
+  startGame(requesterId: string): boolean {
+    if (requesterId !== this.hostId) return false;
+    if (this.players.size < 2) return false;
+    if (this.state !== 'waiting') return false;
+
+    this.state = 'countdown';
+    return true;
+  }
+
+  isEmpty(): boolean {
+    return this.players.size === 0;
+  }
+
+  getPlayers(): Player[] {
+    return Array.from(this.players.values());
   }
 }
 ```
 
-## Code Examples
-
-Verified patterns from official sources:
-
-### Example 1: Complete WebSocket Server Setup
-
-```typescript
-// Source: https://bun.com/docs/api/websockets
-// packages/server/src/index.ts
-import type { ServerWebSocket } from 'bun';
-
-type WebSocketData = {
-  playerId: string;
-  roomCode: string | null;
-  nickname: string;
-};
-
-const server = Bun.serve<WebSocketData>({
-  port: Number(process.env.PORT) || 3000,
-
-  fetch(req, server) {
-    const url = new URL(req.url);
-
-    // Health check (already exists from Phase 1)
-    if (url.pathname === '/health') {
-      return new Response(JSON.stringify({ status: 'ok' }), {
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
-
-    // WebSocket upgrade
-    if (url.pathname === '/ws') {
-      const upgraded = server.upgrade(req, {
-        data: {
-          playerId: nanoid(),
-          roomCode: null,
-          nickname: '',
-        },
-      });
-
-      return upgraded ? undefined : new Response('Upgrade failed', { status: 500 });
-    }
-
-    return new Response('Not Found', { status: 404 });
-  },
-
-  websocket: {
-    // Handler options
-    idleTimeout: 120, // Close after 120s of inactivity
-    maxPayloadLength: 16 * 1024, // 16KB message limit
-    backpressureLimit: 1024 * 1024, // 1MB buffer limit
-
-    open(ws) {
-      console.log(`Player ${ws.data.playerId} connected`);
-    },
-
-    message(ws, message) {
-      // Handle incoming messages (validate, route, respond)
-      handleMessage(ws, message);
-    },
-
-    close(ws, code, reason) {
-      console.log(`Player ${ws.data.playerId} disconnected: ${code} ${reason}`);
-
-      if (ws.data.roomCode) {
-        leaveRoom(ws.data.roomCode, ws.data.playerId);
-        ws.publish(`room:${ws.data.roomCode}`, JSON.stringify({
-          type: 'PLAYER_LEFT',
-          playerId: ws.data.playerId,
-        }));
-      }
-    },
-
-    drain(ws) {
-      // Called when backpressure is relieved
-      console.log(`Backpressure drained for ${ws.data.playerId}`);
-    },
-  },
-});
-
-console.log(`Server listening on port ${server.port}`);
-```
-
-### Example 2: Room Code Generation with Nanoid
+### Room Code Generation
 
 ```typescript
 // Source: https://github.com/ai/nanoid
-// packages/server/src/utils/room-codes.ts
+// packages/server/src/rooms/RoomManager.ts
+
 import { customAlphabet } from 'nanoid';
 
-// Custom alphabet: uppercase letters + numbers, no lookalikes (0/O, 1/I)
-const alphabet = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
-const nanoid = customAlphabet(alphabet, 6);
+// Alphabet excludes confusable characters: 0/O, 1/I/L, 5/S
+const ALPHABET = '234679ABCDEFGHJKLMNPQRTUVWXYZ';
+const generateRoomCode = customAlphabet(ALPHABET, 6);
 
-export function generateRoomCode(): string {
-  return nanoid(); // e.g., "3K7XP2"
+export class RoomManager {
+  private rooms = new Map<string, Room>();
+
+  createRoom(hostId: string, hostNickname: string): string {
+    let roomCode: string;
+
+    // Ensure uniqueness (collision extremely rare with 6 chars)
+    do {
+      roomCode = generateRoomCode();
+    } while (this.rooms.has(roomCode));
+
+    const room = new Room(roomCode, hostId, hostNickname);
+    this.rooms.set(roomCode, room);
+
+    return roomCode;
+  }
+
+  getRoom(roomCode: string): Room | undefined {
+    return this.rooms.get(roomCode.toUpperCase());
+  }
+
+  removePlayer(roomCode: string, playerId: string): void {
+    const room = this.rooms.get(roomCode);
+    if (!room) return;
+
+    room.removePlayer(playerId);
+
+    // Clean up empty rooms
+    if (room.isEmpty()) {
+      this.rooms.delete(roomCode);
+    }
+  }
 }
-
-// Collision probability calculation:
-// With 32-char alphabet and 6-char length:
-// Total possible codes = 32^6 = 1,073,741,824 (1 billion+)
-// Birthday paradox: 50% collision at ~37,000 codes
-// For typical game (hundreds of concurrent rooms), collision is negligible
-```
-
-**Rationale for 6 characters:** Balance between usability (easy to type/read) and uniqueness (1B+ possible codes). Research shows UUID-equivalent collision safety needs 21 chars with full alphabet, but reduced alphabet (32 chars) + shorter length (6) still provides sufficient uniqueness for game lobbies (hundreds of concurrent rooms, not millions of persistent records).
-
-### Example 3: Testing WebSocket Handlers with Vitest
-
-```typescript
-// Source: WebSocket testing best practices + Vitest patterns
-// packages/server/src/websocket/__tests__/rooms.test.ts
-import { describe, test, expect, beforeEach } from 'vitest';
-import { createRoom, joinRoom, leaveRoom, getRoomState } from '../rooms';
-
-describe('Room Management', () => {
-  beforeEach(() => {
-    // Clear rooms before each test
-    clearAllRooms();
-  });
-
-  test('creates room with host as first player', () => {
-    const hostId = 'player-1';
-    const nickname = 'Alice';
-
-    const roomCode = createRoom(hostId, nickname);
-
-    expect(roomCode).toHaveLength(6);
-
-    const room = getRoomState(roomCode);
-    expect(room).toBeDefined();
-    expect(room!.players.size).toBe(1);
-    expect(room!.players.get(hostId)).toEqual({
-      id: hostId,
-      nickname: 'Alice',
-      isHost: true,
-    });
-    expect(room!.state).toBe('LOBBY');
-  });
-
-  test('allows up to 4 players to join', () => {
-    const roomCode = createRoom('host', 'Host');
-
-    const result1 = joinRoom(roomCode, 'p2', 'Player2');
-    expect(result1?.players.size).toBe(2);
-
-    const result2 = joinRoom(roomCode, 'p3', 'Player3');
-    expect(result2?.players.size).toBe(3);
-
-    const result3 = joinRoom(roomCode, 'p4', 'Player4');
-    expect(result3?.players.size).toBe(4);
-
-    // 5th player should be rejected
-    const result4 = joinRoom(roomCode, 'p5', 'Player5');
-    expect(result4).toBeNull();
-  });
-
-  test('prevents joining non-existent room', () => {
-    const result = joinRoom('INVALID', 'p1', 'Player');
-    expect(result).toBeNull();
-  });
-
-  test('deletes room when last player leaves', () => {
-    const roomCode = createRoom('host', 'Host');
-    joinRoom(roomCode, 'p2', 'Player2');
-
-    leaveRoom(roomCode, 'p2');
-    expect(getRoomState(roomCode)).toBeDefined();
-
-    leaveRoom(roomCode, 'host');
-    expect(getRoomState(roomCode)).toBeUndefined();
-  });
-});
-```
-
-### Example 4: Integration Test with Real WebSocket Client
-
-```typescript
-// Source: https://github.com/ITenthusiasm/testing-websockets
-// packages/server/src/websocket/__tests__/integration.test.ts
-import { describe, test, expect, beforeAll, afterAll } from 'vitest';
-import WebSocket from 'ws';
-
-describe('WebSocket Integration', () => {
-  let serverUrl: string;
-
-  beforeAll(() => {
-    // Assume server is running on port 3000 for tests
-    serverUrl = 'ws://localhost:3000/ws';
-  });
-
-  test('client can create and join room', async () => {
-    const client1 = new WebSocket(serverUrl);
-    const client2 = new WebSocket(serverUrl);
-
-    await new Promise<void>((resolve) => {
-      let opened = 0;
-      const onOpen = () => {
-        opened++;
-        if (opened === 2) resolve();
-      };
-
-      client1.on('open', onOpen);
-      client2.on('open', onOpen);
-    });
-
-    // Client 1 creates room
-    const createPromise = new Promise<string>((resolve) => {
-      client1.on('message', (data) => {
-        const msg = JSON.parse(data.toString());
-        if (msg.type === 'ROOM_CREATED') {
-          resolve(msg.roomCode);
-        }
-      });
-    });
-
-    client1.send(JSON.stringify({
-      type: 'CREATE_ROOM',
-      nickname: 'Alice',
-    }));
-
-    const roomCode = await createPromise;
-    expect(roomCode).toHaveLength(6);
-
-    // Client 2 joins room
-    const joinPromise = new Promise<number>((resolve) => {
-      client2.on('message', (data) => {
-        const msg = JSON.parse(data.toString());
-        if (msg.type === 'ROOM_JOINED') {
-          resolve(msg.players.length);
-        }
-      });
-    });
-
-    client2.send(JSON.stringify({
-      type: 'JOIN_ROOM',
-      roomCode,
-      nickname: 'Bob',
-    }));
-
-    const playerCount = await joinPromise;
-    expect(playerCount).toBe(2);
-
-    // Cleanup
-    client1.close();
-    client2.close();
-  });
-});
 ```
 
 ## State of the Art
 
 | Old Approach | Current Approach | When Changed | Impact |
 |--------------|------------------|--------------|--------|
-| Socket.io for all WebSocket needs | Bun native WebSocket for new projects | Bun 1.0 (Sep 2023) | Simpler stack (no external deps), 7x throughput, native TypeScript, built-in pub/sub. Socket.io still valid for browser fallbacks or Node.js. |
-| Manual JSON validation with type guards | Zod schemas with type inference | Zod stable 2022, mainstream 2024+ | Single source of truth for types and validation, eliminates drift between runtime checks and TypeScript types. |
-| Custom short ID generators | nanoid or UUID v7 | nanoid stable 2020, UUID v7 ratified 2024 | nanoid for random IDs (URL-safe, tiny bundle), UUID v7 for time-sortable IDs. Don't hand-roll ID generation. |
-| In-memory state for multi-instance | Redis pub/sub from day 1 | Pragmatic shift 2024+ | Start simple (in-memory Map) for single instance. Add Redis only when scaling horizontally. Premature optimization wastes effort. |
-| String message types checked with === | Discriminated unions with exhaustive checking | TypeScript 2.0+, best practice 2024+ | Compile-time guarantee all message types handled, autocomplete for message properties, refactor-safe. |
+| Socket.IO for all WebSocket needs | Native WebSocket with Bun/browser APIs | 2021-2024 | Smaller bundles, simpler code, Bun's native impl is 7x faster |
+| Manual TypeScript types for messages | Zod schemas with inferred types | 2020-present | Runtime + compile-time safety, less boilerplate, auto-sync types |
+| Redis pub/sub for all room broadcasting | Native pub/sub for single-server, Redis for multi-server | 2023-2024 | Bun's built-in pub/sub eliminates dependency for simple cases |
+| Manual reconnection logic | Library-provided auto-reconnect (VueUse, etc.) | 2020-present | More reliable, handles edge cases (jitter, max retries) |
+| UUID for all IDs | Nanoid for user-facing short codes | 2019-present | Shorter, customizable alphabet, better UX for manual entry |
+| Pinia stores for WebSocket state | Composables with `useWebSocket` | 2021-present | Lighter weight, better composition, less global state |
 
 **Deprecated/outdated:**
-- **hashids:** Renamed to sqids. Sqids is the maintained version with modern API.
-- **shortid:** Unmaintained since 2018. Use nanoid instead (same use case, actively maintained).
-- **ws library's custom room management:** Don't build custom Map<roomId, Set<WebSocket>>. Use Bun's pub/sub topics for natural room isolation.
-- **Parsing cookies for WebSocket auth:** Use upgrade headers or query params. Cookie parsing is inconsistent across browsers for WebSocket upgrades.
+- **Socket.IO for browser-to-server communication:** Still maintained but overkill for modern browsers with native WebSocket. Only needed for old browser fallbacks (polling) or advanced features like rooms with multiple servers.
+- **shortid package:** No longer maintained, recommend Nanoid instead.
+- **`Bun.serve<T>` generic for typing ws.data:** Deprecated due to TypeScript limitation. Use `data: {} as T` in websocket handler instead.
 
 ## Open Questions
 
 Things that couldn't be fully resolved:
 
-1. **Shared URL behavior (auto-fill vs direct to lobby)**
-   - What we know: User left this to Claude's discretion. Both patterns exist in the wild.
-   - What's unclear: Whether query param (?room=ABC123) should auto-fill code input or bypass landing page entirely.
-   - Recommendation: Auto-fill is safer (gives player chance to review/edit). Direct join is faster UX. Suggest auto-fill for Phase 2, gather feedback, add direct join later if requested.
+1. **Room cleanup timing**
+   - What we know: Rooms should be cleaned up when empty
+   - What's unclear: Should there be a grace period for reconnection? (e.g., keep room alive for 30s after last player disconnects)
+   - Recommendation: Start with immediate cleanup. Add grace period in future phase if users report issues with accidental disconnects. CONTEXT.md specifies "no room idle timeout" but that's for active lobbies, not empty ones.
 
-2. **Room cleanup on server restart**
-   - What we know: In-memory Map means all rooms lost on restart. No persistence in Phase 2.
-   - What's unclear: Should server persist rooms to disk/DB for crash recovery?
-   - Recommendation: Accept ephemeral rooms for Phase 2. User said "no idle timeout" but didn't address restart behavior. Rooms lost on restart is acceptable for MVP (players recreate room). Add persistence in Phase 4+ if needed.
+2. **Shared link join flow**
+   - What we know: User can share URL with room code embedded
+   - What's unclear: URL structure (`/join?code=ABC123` vs `/room/ABC123`), whether URL auto-fills code or directly joins
+   - Recommendation: Use `/join?code=ABC123` format that pre-fills the code but still requires nickname entry. Respects "nickname is entered once on landing page" decision.
 
-3. **Nickname uniqueness within a room**
-   - What we know: User said "basic length limit, no complex rules" and wants simple nickname handling.
-   - What's unclear: Can two players in the same room have the same nickname?
-   - Recommendation: Allow duplicates for Phase 2 simplicity (display player IDs in UI if needed for disambiguation). Enforce uniqueness later if it causes confusion.
+3. **Heartbeat/ping-pong configuration**
+   - What we know: VueUse supports heartbeat, Bun supports `sendPings` option
+   - What's unclear: Optimal interval for card game (30s? 60s?), whether server should send pings or rely on client heartbeat
+   - Recommendation: Use VueUse client heartbeat with 30s interval (standard for real-time apps). Enable Bun's `sendPings: true` (default) as backup.
 
-4. **Client reconnection after network blip**
-   - What we know: User didn't specify reconnection behavior. No "session resume" mentioned.
-   - What's unclear: Should client auto-reconnect and rejoin room? Or require manual refresh and rejoin?
-   - Recommendation: Phase 2 doesn't implement auto-reconnect (simplicity). Player must manually rejoin room after disconnect. Add reconnection in Phase 3+ with session tokens.
-
-5. **WebSocket message compression**
-   - What we know: Bun supports per-message deflate compression. Disabled by default.
-   - What's unclear: Should Phase 2 enable compression? Tradeoff is CPU vs bandwidth.
-   - Recommendation: Leave disabled for Phase 2 (simpler, local dev doesn't need compression). Enable in production if bandwidth costs are high (unlikely for small JSON messages and low player count).
+4. **Error message specificity**
+   - What we know: User decisions specify simple error messages ("Room is full" / "Game already started")
+   - What's unclear: Should errors distinguish between "room doesn't exist" vs "invalid room code format"?
+   - Recommendation: Keep it simple: "Room not found" covers both cases. Prevents information leakage about which rooms exist.
 
 ## Sources
 
 ### Primary (HIGH confidence)
 
-- [Bun WebSocket API Documentation](https://bun.com/docs/api/websockets) - Official API reference for Bun's native WebSocket implementation
-- [Bun WebSocket Guide](https://bun.com/guides/websocket/simple) - Official guide for building WebSocket servers
-- [How to Build WebSocket Servers with Bun](https://oneuptime.com/blog/post/2026-01-31-bun-websocket-servers/view) - Recent 2026 best practices
-- [nanoid GitHub Repository](https://github.com/ai/nanoid) - Official nanoid documentation and API
-- [Zod GitHub Repository](https://github.com/colinhacks/zod) - Official Zod schema validation library
-- [Zod Documentation](https://zod.dev/) - Official Zod docs with examples
+- [Bun WebSocket Documentation](https://bun.sh/docs/api/websockets) - Official Bun docs, WebSocket API reference
+- [VueUse useWebSocket](https://vueuse.org/core/useWebSocket/) - Official VueUse composable documentation
+- [Zod GitHub](https://github.com/colinhacks/zod) - Official Zod repository and examples
+- [Nanoid GitHub](https://github.com/ai/nanoid) - Official Nanoid repository
+- [OWASP WebSocket Security Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/WebSocket_Security_Cheat_Sheet.html) - Security best practices
 
 ### Secondary (MEDIUM confidence)
 
-- [Building a Real-Time Multiplayer Game Server with Socket.io and Redis](https://dev.to/dowerdev/building-a-real-time-multiplayer-game-server-with-socketio-and-redis-architecture-and-583m) - Multiplayer architecture patterns (verified with multiple sources)
-- [WebSocket Rooms: Complete Guide](https://copyprogramming.com/howto/how-to-make-a-room-on-websocket) - Room management patterns
-- [Sqids - Generate Short Unique IDs](https://sqids.org/) - Short ID generation (alternative to nanoid)
-- [Type-safe WebSocket Applications with Bun and Zod](https://medium.com/@koistya/building-type-safe-websocket-applications-with-bun-and-zod-f0aef259a53e) - Zod + Bun patterns (title referenced, content blocked)
-- [bun-ws-router](https://github.com/kriasoft/bun-ws-router) - Type-safe routing library demonstrating Zod + Bun patterns
-- [TypeScript Discriminated Unions](https://www.fullstory.com/blog/discriminated-unions-and-exhaustiveness-checking-in-typescript/) - Exhaustive type checking patterns
-- [State Management in Vanilla JS: 2026 Trends](https://medium.com/@chirag.dave/state-management-in-vanilla-js-2026-trends-f9baed7599de) - WeakMap vs Map for state management
-- [How to Implement Reconnection Logic for WebSockets](https://oneuptime.com/blog/post/2026-01-27-websocket-reconnection/view) - Exponential backoff patterns
-- [Backpressure in WebSocket Streams](https://skylinecodes.substack.com/p/backpressure-in-websocket-streams) - Backpressure handling deep dive
-- [Writing Integration Tests for WebSocket Servers](https://thomason-isaiah.medium.com/writing-integration-tests-for-websocket-servers-using-jest-and-ws-8e5c61726b2a) - Vitest/Jest testing patterns
-- [testing-websockets GitHub](https://github.com/ITenthusiasm/testing-websockets) - WebSocket testing examples
+- [How to Build WebSocket Servers with Bun](https://oneuptime.com/blog/post/2026-01-31-bun-websocket-servers/view) - Recent 2026 guide
+- [Building Type-Safe WebSocket Applications with Bun and Zod](https://medium.com/@koistya/building-type-safe-websocket-applications-with-bun-and-zod-f0aef259a53e) - Community pattern
+- [Building a Real-Time Multiplayer Game Server](https://dev.to/dowerdev/building-a-real-time-multiplayer-game-server-with-socketio-and-redis-architecture-and-583m) - Multiplayer patterns
+- [WebSocket Reconnection Logic](https://oneuptime.com/blog/post/2026-01-24-websocket-reconnection-logic/view) - Recent 2026 guide
+- [WebSocket Security | Heroku](https://devcenter.heroku.com/articles/websocket-security) - Platform security guide
 
 ### Tertiary (LOW confidence)
 
-- WebSearch results for ecosystem discovery (cross-referenced with official docs where possible)
-- Community blog posts on multiplayer game patterns (used for patterns, not technical details)
+- [Comparing UUID, CUID, and Nanoid](https://dev.to/turck/comparing-uuid-cuid-and-nanoid-a-developers-guide-50c) - Community comparison
+- [Vue 3 Composables Best Practices](https://learnwebcraft.com/learn/vuejs/vue-3-composables) - Tutorial site
+- [WebSocket Use Cases in System Design](https://blog.algomaster.io/p/websocket-use-cases-system-design) - General overview
 
 ## Metadata
 
 **Confidence breakdown:**
-- Standard stack: HIGH - Official Bun docs, established libraries with stable APIs
-- Architecture patterns: HIGH - Verified with official docs and multiple sources
-- Room management: HIGH - Standard Map-based approach, well-documented pub/sub
-- Message validation: HIGH - Zod is standard for TypeScript validation, discriminated unions are core TS feature
-- Pitfalls: MEDIUM - Based on community experience and best practices articles (not official docs)
-- Testing patterns: MEDIUM - Vitest + ws library is standard but less documented for Bun specifically
+- Standard stack: HIGH - All libraries are official, well-documented, and widely adopted
+- Architecture patterns: HIGH - Bun pub/sub, VueUse, and Zod patterns verified with official documentation
+- Pitfalls: MEDIUM-HIGH - Security pitfalls from OWASP (HIGH), implementation pitfalls from community sources (MEDIUM)
 
 **Research date:** 2026-02-07
-**Valid until:** ~30 days (Bun and libraries are stable, architecture patterns are timeless)
+**Valid until:** 2026-03-07 (30 days) - Stack is stable, Bun WebSocket API is mature
