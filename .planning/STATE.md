@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-07)
 
 **Core value:** Friends can play a complete, rule-accurate game of Shithead together online with zero friction
-**Current focus:** Phase 2 - WebSocket Infrastructure & Room Management
+**Current focus:** Phase 3 - Deck & Dealing System
 
 ## Current Position
 
-Phase: 2 of 12 (WebSocket Infrastructure & Room Management) — IN PROGRESS
-Plan: 4 of 5 in phase (shared protocol, room engine, client infrastructure, server handlers complete)
+Phase: 3 of 12 (Deck & Dealing System) — IN PROGRESS
+Plan: 1 of 3 in phase
 Status: In progress
-Last activity: 2026-02-07 — Completed 02-04-PLAN.md (server WebSocket handlers)
+Last activity: 2026-02-07 — Completed 03-01-PLAN.md
 
-Progress: [███░░░░░░░] ~15% (1 phase complete + 4 plans of phase 2)
+Progress: [██░░░░░░░░] ~19% (9 plans complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 8
-- Average duration: 2.7 minutes
-- Total execution time: 0.35 hours
+- Total plans completed: 9
+- Average duration: 2.5 minutes
+- Total execution time: 0.39 hours
 
 **By Phase:**
 
@@ -29,10 +29,11 @@ Progress: [███░░░░░░░] ~15% (1 phase complete + 4 plans of p
 |-------|-------|-------|----------|
 | 01 | 4 | 706s | 177s |
 | 02 | 4 | 705s | 176s |
+| 03 | 1 | 140s | 140s |
 
 **Recent Trend:**
-- Last 5 plans: 02-01 (178s), 02-02 (190s), 02-03 (143s), 02-04 (194s)
-- Trend: Stable - maintaining ~2.8 min average, Phase 2 at 176s/plan
+- Last 5 plans: 02-02 (190s), 02-03 (143s), 02-04 (194s), 03-01 (140s)
+- Trend: Improving - Phase 3 start faster at 140s, below average
 
 *Updated after each plan completion*
 
@@ -107,6 +108,13 @@ Recent decisions affecting current work:
 - Pub/sub pattern: ws.publish for room broadcasts (excludes sender), ws.send for direct messages
 - Game start countdown: 3-second setTimeout before status change to 'playing'
 
+**From 03-01:**
+- Card discriminated union by 'kind' field (standard vs joker) for type safety
+- Jokers identified by numeric id (1 or 2) not by suit pattern
+- PlayerGameView hides face-down cards from player themselves (count only)
+- Opponent view shows only counts for hand and face-down cards
+- Schema-first pattern extended to game messages (card schemas, gameDealtSchema)
+
 ### Pending Todos
 
 1 pending — `/gsd:check-todos` to review
@@ -122,9 +130,9 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-07
-Stopped at: 02-05 checkpoint blocked — WebSocket connection cycling bug
-Resume file: .planning/phases/02-websocket-infrastructure-room-management/.continue-here.md
+Stopped at: Completed 03-01-PLAN.md
+Resume file: None
 
 ---
 *State initialized: 2026-02-07*
-*Last updated: 2026-02-07 after completing 02-04*
+*Last updated: 2026-02-07 after completing 03-01*
