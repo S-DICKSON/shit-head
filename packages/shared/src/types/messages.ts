@@ -14,7 +14,6 @@ import type {
   roomUpdatedSchema,
   playerLeftSchema,
   gameStartingSchema,
-  gameStartedSchema,
   gameDealtSchema,
   swapTimerTickSchema,
   playerReadySchema,
@@ -46,7 +45,6 @@ export type RoomJoinedMessage = z.infer<typeof roomJoinedSchema>;
 export type RoomUpdatedMessage = z.infer<typeof roomUpdatedSchema>;
 export type PlayerLeftMessage = z.infer<typeof playerLeftSchema>;
 export type GameStartingMessage = z.infer<typeof gameStartingSchema>;
-export type GameStartedMessage = z.infer<typeof gameStartedSchema>;
 export type GameDealtMessage = z.infer<typeof gameDealtSchema>;
 export type SwapTimerTickMessage = z.infer<typeof swapTimerTickSchema>;
 export type PlayerReadyMessage = z.infer<typeof playerReadySchema>;
