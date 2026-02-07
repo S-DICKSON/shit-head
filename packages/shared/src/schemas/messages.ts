@@ -78,6 +78,15 @@ export const readyUpSchema = z.object({
   type: z.literal('ready-up'),
 });
 
+export const playCardsSchema = z.object({
+  type: z.literal('play-cards'),
+  cardIndices: z.array(z.number().int().min(0)).min(1),
+});
+
+export const pickupPileSchema = z.object({
+  type: z.literal('pickup-pile'),
+});
+
 export const clientMessageSchema = z.discriminatedUnion('type', [
   createRoomSchema,
   joinRoomSchema,
@@ -85,6 +94,8 @@ export const clientMessageSchema = z.discriminatedUnion('type', [
   startGameSchema,
   swapCardsSchema,
   readyUpSchema,
+  playCardsSchema,
+  pickupPileSchema,
 ]);
 
 // Server-to-client message schemas
@@ -156,6 +167,31 @@ export const swapCardsUpdatedSchema = z.object({
   opponents: z.array(opponentViewSchema),
 });
 
+export const cardPlayedSchema = z.object({
+  type: z.literal('card-played'),
+  playerId: z.string(),
+  cards: z.array(cardSchema),
+  currentPlayerIndex: z.number(),
+  drawPileCount: z.number(),
+  discardPile: z.array(cardSchema),
+  hand: z.array(cardSchema).optional(),
+  opponents: z.array(opponentViewSchema).optional(),
+});
+
+export const pilePickupSchema = z.object({
+  type: z.literal('pile-pickup'),
+  playerId: z.string(),
+  currentPlayerIndex: z.number(),
+  discardPile: z.array(cardSchema),
+  hand: z.array(cardSchema).optional(),
+  opponents: z.array(opponentViewSchema).optional(),
+});
+
+export const turnChangedSchema = z.object({
+  type: z.literal('turn-changed'),
+  currentPlayerIndex: z.number(),
+});
+
 export const errorSchema = z.object({
   type: z.literal('error'),
   message: z.string(),
@@ -169,6 +205,7 @@ export const errorSchema = z.object({
     'INVALID_MESSAGE',
     'INVALID_ACTION',
     'PLAYER_NOT_FOUND',
+    'NOT_YOUR_TURN',
   ]),
 });
 
@@ -184,5 +221,8 @@ export const serverMessageSchema = z.discriminatedUnion('type', [
   playerReadySchema,
   swapPhaseCompleteSchema,
   swapCardsUpdatedSchema,
+  cardPlayedSchema,
+  pilePickupSchema,
+  turnChangedSchema,
   errorSchema,
 ]);
