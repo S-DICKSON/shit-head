@@ -9,19 +9,19 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 
 ## Current Position
 
-Phase: 4 of 12 (Pre-Game Swap Phase) — COMPLETE
-Plan: 5 of 5 in phase
-Status: Phase complete, ready for Phase 5
-Last activity: 2026-02-07 — Completed 04-05-PLAN.md (gap closure)
+Phase: 5 of 12 (Core Game Engine & Rules)
+Plan: 1 of 4 in phase
+Status: In progress
+Last activity: 2026-02-07 — Completed 05-01-PLAN.md
 
-Progress: [███░░░░░░░] ~33% (16 plans complete)
+Progress: [███░░░░░░░] ~35% (17 plans complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 16
+- Total plans completed: 17
 - Average duration: 2.3 minutes
-- Total execution time: 0.70 hours
+- Total execution time: 0.73 hours
 
 **By Phase:**
 
@@ -31,10 +31,11 @@ Progress: [███░░░░░░░] ~33% (16 plans complete)
 | 02 | 4 | 705s | 176s |
 | 03 | 3 | 503s | 168s |
 | 04 | 5 | 716s | 143s |
+| 05 | 1 | 131s | 131s |
 
 **Recent Trend:**
-- Last 5 plans: 04-02 (125s), 04-03 (197s), 04-04 (142s), 04-05 (102s)
-- Trend: Phase 4 complete with gap closure - 04-05 was fastest plan yet at 102s, phase averaged 143s
+- Last 5 plans: 04-03 (197s), 04-04 (142s), 04-05 (102s), 05-01 (131s)
+- Trend: Phase 5 started - 05-01 completed in 131s, continuing strong velocity
 
 *Updated after each plan completion*
 
@@ -161,6 +162,13 @@ Recent decisions affecting current work:
 - Navigate on game-started message (after countdown) not game-dealt (immediate) for smoother transition
 - Game.vue renders SwapPhase for both 'swapping' and 'transitioning' phases
 
+**From 05-01:**
+- Gameplay message schemas extend discriminated union pattern from earlier phases
+- playCardsSchema validates cardIndices as non-empty array of non-negative integers
+- card-played message carries optional hand/opponents for per-player state updates
+- pile-pickup message structure mirrors card-played for consistency
+- NOT_YOUR_TURN error code added for turn validation
+
 ### Pending Todos
 
 1 pending — `/gsd:check-todos` to review
@@ -175,10 +183,10 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-02-07T22:28:15Z
-Stopped at: Completed 04-05-PLAN.md (gap closure)
+Last session: 2026-02-07T22:42:11Z
+Stopped at: Completed 05-01-PLAN.md
 Resume file: None
 
 ---
 *State initialized: 2026-02-07*
-*Last updated: 2026-02-07 after completing 04-05*
+*Last updated: 2026-02-07 after completing 05-01*
