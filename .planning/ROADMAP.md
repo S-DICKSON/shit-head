@@ -110,10 +110,13 @@ Plans:
   4. Player automatically draws back up to 3 cards after playing (until draw pile empty)
   5. Player picks up entire discard pile when unable to play valid card
   6. Card value ordering is enforced: 3 < 4 < 5 < 6 < 7 < 9 < J < Q < K < A < Joker
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
-- [ ] (Plans will be created during /gsd:plan-phase 5)
+- [ ] 05-01-PLAN.md — Gameplay message schemas and types (play-cards, pickup-pile, card-played, pile-pickup, turn-changed)
+- [ ] 05-02-PLAN.md — Card rank comparison utilities and determineFirstPlayer (TDD)
+- [ ] 05-03-PLAN.md — GameEngine.playCards() and pickupPile() with validation and auto-draw (TDD)
+- [ ] 05-04-PLAN.md — Room gameplay methods and WebSocket handler integration
 
 ### Phase 6: Special Cards & Burn Mechanics
 **Goal**: Special cards (2, 7, 8, 10) and burn detection work correctly
@@ -230,7 +233,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 2. WebSocket Infrastructure & Room Management | 5/5 | Complete | 2026-02-07 |
 | 3. Deck & Dealing System | 3/3 | Complete | 2026-02-07 |
 | 4. Pre-Game Swap Phase | 0/TBD | Not started | - |
-| 5. Core Game Engine & Rules | 0/TBD | Not started | - |
+| 5. Core Game Engine & Rules | 0/4 | Not started | - |
 | 6. Special Cards & Burn Mechanics | 0/TBD | Not started | - |
 | 7. Endgame & Win Conditions | 0/TBD | Not started | - |
 | 8. Turn Timing & Auto-Pickup | 0/TBD | Not started | - |
