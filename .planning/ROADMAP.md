@@ -90,10 +90,13 @@ Plans:
   3. All players swap simultaneously in real-time
   4. Game automatically starts when timer expires
   5. Timer countdown is visible to all players
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
-- [ ] (Plans will be created during /gsd:plan-phase 4)
+- [ ] 04-01-PLAN.md — Swap-phase message schemas and types (shared package)
+- [ ] 04-02-PLAN.md — GameEngine.swapCards() server-side validation (TDD)
+- [ ] 04-03-PLAN.md — Room swap/ready/timer integration and WebSocket handlers
+- [ ] 04-04-PLAN.md — Client swap phase composable and UI component
 
 ### Phase 5: Core Game Engine & Rules
 **Goal**: Players can take turns playing cards following basic Shithead rules
