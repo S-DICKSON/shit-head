@@ -2,6 +2,10 @@ import type { Card, GameState, PlayerGameView, PlayerGameState, OpponentView } f
 import { createDeck } from '@shit-head/shared';
 import { shuffleDeck } from './Deck';
 
+type OperationResult<T = void> =
+  | { success: true; data?: T }
+  | { success: false; error: string; code: string };
+
 export class GameEngine {
   /**
    * Creates a new game with shuffled and dealt cards.
@@ -109,5 +113,88 @@ export class GameEngine {
    */
   static nextDealerIndex(currentDealerIndex: number, playerCount: number): number {
     return (currentDealerIndex + 1) % playerCount;
+  }
+
+  /**
+   * Swaps a hand card with a face-up card for a given player.
+   * @param state - Current game state
+   * @param playerId - ID of the player performing the swap
+   * @param handIndex - Index of the card in the player's hand
+   * @param faceUpIndex - Index of the card in the player's face-up cards
+   * @returns OperationResult with updated GameState on success
+   */
+  static swapCards(
+    state: GameState,
+    playerId: string,
+    handIndex: number,
+    faceUpIndex: number
+  ): OperationResult<GameState> {
+    // Validate phase
+    if (state.phase !== 'swapping') {
+      return {
+        success: false,
+        error: 'Can only swap cards during swapping phase',
+        code: 'INVALID_ACTION',
+      };
+    }
+
+    // Find player
+    const playerIndex = state.players.findIndex(p => p.playerId === playerId);
+    if (playerIndex === -1) {
+      return {
+        success: false,
+        error: 'Player not found',
+        code: 'PLAYER_NOT_FOUND',
+      };
+    }
+
+    const player = state.players[playerIndex];
+
+    // Validate indices
+    if (handIndex < 0 || handIndex >= player.hand.length) {
+      return {
+        success: false,
+        error: 'Invalid hand index',
+        code: 'INVALID_ACTION',
+      };
+    }
+
+    if (faceUpIndex < 0 || faceUpIndex >= player.faceUp.length) {
+      return {
+        success: false,
+        error: 'Invalid face-up index',
+        code: 'INVALID_ACTION',
+      };
+    }
+
+    // Perform the swap immutably
+    const updatedHand = [...player.hand];
+    const updatedFaceUp = [...player.faceUp];
+
+    const temp = updatedHand[handIndex];
+    updatedHand[handIndex] = updatedFaceUp[faceUpIndex];
+    updatedFaceUp[faceUpIndex] = temp;
+
+    // Create updated player state
+    const updatedPlayer: PlayerGameState = {
+      ...player,
+      hand: updatedHand,
+      faceUp: updatedFaceUp,
+    };
+
+    // Create new game state with updated player
+    const updatedPlayers = state.players.map((p, i) =>
+      i === playerIndex ? updatedPlayer : p
+    );
+
+    const newState: GameState = {
+      ...state,
+      players: updatedPlayers,
+    };
+
+    return {
+      success: true,
+      data: newState,
+    };
   }
 }
