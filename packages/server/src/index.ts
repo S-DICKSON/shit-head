@@ -1,8 +1,7 @@
 import { APP_VERSION } from '@shit-head/shared';
-
-type WebSocketData = {
-  userId: string;
-};
+import { handleMessage, handleClose, roomManager } from './websocket/handlers';
+import type { WebSocketData } from './websocket/handlers';
+import { nanoid } from 'nanoid';
 
 const server = Bun.serve<WebSocketData>({
   port: Number(process.env.PORT) || 3000,
@@ -24,11 +23,16 @@ const server = Bun.serve<WebSocketData>({
       );
     }
 
-    // WebSocket upgrade endpoint (scaffold)
+    // WebSocket upgrade endpoint
     if (url.pathname === '/ws') {
+      // TODO: Production - validate Origin header against ALLOWED_ORIGIN env var
+      const origin = req.headers.get('Origin');
+      console.log(`WebSocket upgrade request from origin: ${origin}`);
+
       const upgraded = server.upgrade(req, {
         data: {
-          userId: 'anonymous', // Placeholder - auth comes in Phase 2
+          playerId: nanoid(),
+          roomCode: null,
         },
       });
 
@@ -45,16 +49,17 @@ const server = Bun.serve<WebSocketData>({
 
   websocket: {
     open(ws) {
-      console.log('Client connected');
+      console.log(`Player ${ws.data.playerId} connected`);
     },
 
     message(ws, message) {
-      // Echo back for now (basic scaffold)
-      ws.send(message);
+      const msgStr = typeof message === 'string' ? message : new TextDecoder().decode(message);
+      handleMessage(ws, msgStr, roomManager);
     },
 
     close(ws) {
-      console.log('Client disconnected');
+      handleClose(ws, roomManager);
+      console.log(`Player ${ws.data.playerId} disconnected`);
     },
   },
 });
