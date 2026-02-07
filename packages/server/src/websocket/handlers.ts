@@ -213,6 +213,40 @@ export function handleMessage(
       setTimeout(() => {
         const room = manager.getRoom(roomCode);
         if (room) {
+          // Set up swap callbacks before starting game
+          room.setSwapCallbacks({
+            onTick: (timeRemaining) => {
+              // Broadcast timer tick to all players in room
+              const playerIds = room.getPlayerIds();
+              for (const pid of playerIds) {
+                const pWs = playerSockets.get(pid);
+                if (pWs) {
+                  sendMessage(pWs, { type: 'swap-timer-tick', timeRemaining });
+                }
+              }
+            },
+            onReady: (playerId, readyPlayers) => {
+              // Broadcast ready state to all players
+              const playerIds = room.getPlayerIds();
+              for (const pid of playerIds) {
+                const pWs = playerSockets.get(pid);
+                if (pWs) {
+                  sendMessage(pWs, { type: 'player-ready', playerId, readyPlayers });
+                }
+              }
+            },
+            onComplete: (reason) => {
+              // Broadcast swap phase complete to all players
+              const playerIds = room.getPlayerIds();
+              for (const pid of playerIds) {
+                const pWs = playerSockets.get(pid);
+                if (pWs) {
+                  sendMessage(pWs, { type: 'swap-phase-complete', reason });
+                }
+              }
+            },
+          });
+
           room.startGame();
 
           // Send player-specific game-dealt messages to each player
@@ -238,6 +272,93 @@ export function handleMessage(
           }
         }
       }, 3000);
+      break;
+    }
+
+    case 'swap-cards': {
+      const roomCode = ws.data.roomCode;
+
+      if (!roomCode) {
+        sendMessage(ws, {
+          type: 'error',
+          message: 'Not in a room',
+          code: 'ROOM_NOT_FOUND',
+        });
+        return;
+      }
+
+      const room = manager.getRoom(roomCode);
+
+      if (!room) {
+        sendMessage(ws, {
+          type: 'error',
+          message: 'Room not found',
+          code: 'ROOM_NOT_FOUND',
+        });
+        return;
+      }
+
+      const result = room.swapCards(ws.data.playerId, message.handIndex, message.faceUpIndex);
+
+      if (!result.success) {
+        sendMessage(ws, {
+          type: 'error',
+          message: result.error,
+          code: result.code,
+        });
+        return;
+      }
+
+      // Send per-player swap-cards-updated to ALL players
+      const playerIds = room.getPlayerIds();
+      for (const playerId of playerIds) {
+        const view = room.getPlayerView(playerId);
+        const playerWs = playerSockets.get(playerId);
+        if (view && playerWs) {
+          sendMessage(playerWs, {
+            type: 'swap-cards-updated',
+            hand: view.hand,
+            faceUp: view.faceUp,
+            opponents: view.opponents,
+          });
+        }
+      }
+      break;
+    }
+
+    case 'ready-up': {
+      const roomCode = ws.data.roomCode;
+
+      if (!roomCode) {
+        sendMessage(ws, {
+          type: 'error',
+          message: 'Not in a room',
+          code: 'ROOM_NOT_FOUND',
+        });
+        return;
+      }
+
+      const room = manager.getRoom(roomCode);
+
+      if (!room) {
+        sendMessage(ws, {
+          type: 'error',
+          message: 'Room not found',
+          code: 'ROOM_NOT_FOUND',
+        });
+        return;
+      }
+
+      const result = room.markPlayerReady(ws.data.playerId);
+
+      if (!result.success) {
+        sendMessage(ws, {
+          type: 'error',
+          message: result.error,
+          code: result.code,
+        });
+        return;
+      }
       break;
     }
   }
