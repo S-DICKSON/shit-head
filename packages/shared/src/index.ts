@@ -11,3 +11,6 @@ export const APP_VERSION = '0.0.1';
 export * from './schemas/messages';
 export * from './types/messages';
 export * from './types/room';
+
+// Phase 3: Deck, dealing, and game state types
+export * from './types/card';
