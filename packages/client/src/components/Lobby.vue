@@ -49,6 +49,12 @@ onMounted(() => {
 
 // Register message handlers
 const unregister = onMessage((msg) => {
+  if (msg.type === 'error' && msg.code === 'ROOM_NOT_FOUND') {
+    roomState.value = null;
+    router.push('/');
+    return;
+  }
+
   if (msg.type === 'game-starting') {
     countdown.value = msg.countdown;
     // Countdown timer

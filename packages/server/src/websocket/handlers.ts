@@ -128,8 +128,19 @@ export function handleMessage(
         return;
       }
 
-      // Get updated room state before leaving
+      // Check if leaving player is the host (room will be destroyed)
       const room = manager.getRoomByPlayerId(ws.data.playerId);
+      const isHost = room?.getState().hostId === ws.data.playerId;
+
+      // If host is leaving, notify others before destroying room
+      if (isHost) {
+        publishToRoom(ws, roomCode, {
+          type: 'error',
+          message: 'Host left — room closed',
+          code: 'ROOM_NOT_FOUND',
+        });
+      }
+
       const result = manager.leaveRoom(ws.data.playerId);
 
       if (!result.success) {
@@ -141,8 +152,8 @@ export function handleMessage(
         return;
       }
 
-      // Notify remaining players before unsubscribing
-      if (room) {
+      // Notify remaining players (non-host leave — room still exists)
+      if (!isHost) {
         const updatedRoom = manager.getRoom(roomCode);
         if (updatedRoom) {
           publishToRoom(ws, roomCode, {
@@ -217,14 +228,24 @@ export function handleClose(ws: ServerWebSocket<WebSocketData>, manager: RoomMan
   const roomCode = ws.data.roomCode;
 
   if (roomCode) {
-    // Get room state before leaving
+    // Check if disconnecting player is the host
     const room = manager.getRoomByPlayerId(ws.data.playerId);
+    const isHost = room?.getState().hostId === ws.data.playerId;
+
+    // If host is disconnecting, notify others before destroying room
+    if (isHost) {
+      ws.publish(roomCode, JSON.stringify({
+        type: 'error',
+        message: 'Host disconnected — room closed',
+        code: 'ROOM_NOT_FOUND',
+      }));
+    }
 
     manager.leaveRoom(ws.data.playerId);
     ws.unsubscribe(roomCode);
 
-    // If room still exists, notify remaining players
-    if (room) {
+    // Non-host disconnect — room still exists, notify remaining players
+    if (!isHost && room) {
       const updatedRoom = manager.getRoom(roomCode);
       if (updatedRoom) {
         ws.publish(roomCode, JSON.stringify({

@@ -92,6 +92,9 @@ function createGameSocket() {
       console.error('Failed to parse WebSocket message:', err);
       error.value = 'Invalid message received from server';
     }
+
+    // Reset so identical consecutive messages still trigger the watch
+    data.value = null;
   }));
 
   // Send typed message
