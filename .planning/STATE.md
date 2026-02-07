@@ -9,19 +9,19 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 
 ## Current Position
 
-Phase: 3 of 12 (Deck & Dealing System) — COMPLETE
-Plan: 3 of 3 in phase
-Status: Phase complete
-Last activity: 2026-02-07 — Completed 03-03-PLAN.md
+Phase: 4 of 12 (Pre-Game Swap Phase) — IN PROGRESS
+Plan: 1 of 3 in phase
+Status: In progress
+Last activity: 2026-02-07 — Completed 04-01-PLAN.md
 
-Progress: [██░░░░░░░░] ~23% (11 plans complete)
+Progress: [██░░░░░░░░] ~25% (12 plans complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 11
+- Total plans completed: 12
 - Average duration: 2.5 minutes
-- Total execution time: 0.48 hours
+- Total execution time: 0.53 hours
 
 **By Phase:**
 
@@ -30,10 +30,11 @@ Progress: [██░░░░░░░░] ~23% (11 plans complete)
 | 01 | 4 | 706s | 177s |
 | 02 | 4 | 705s | 176s |
 | 03 | 3 | 503s | 168s |
+| 04 | 1 | 150s | 150s |
 
 **Recent Trend:**
-- Last 5 plans: 02-04 (194s), 03-01 (140s), 03-02 (156s), 03-03 (207s)
-- Trend: Phase 3 complete - averaged 168s/plan, slightly below overall average
+- Last 5 plans: 03-01 (140s), 03-02 (156s), 03-03 (207s), 04-01 (150s)
+- Trend: Phase 4 started - 04-01 fast at 150s (schema-only plan)
 
 *Updated after each plan completion*
 
@@ -127,6 +128,13 @@ Recent decisions affecting current work:
 - Room.startGame() triggers dealing automatically (no separate deal step)
 - Room manages GameState lifecycle: null in lobby, populated on game start
 
+**From 04-01:**
+- Swap timer schema validates 30-second maximum (consistent with project decision)
+- Ready-up message is simple flag with no payload
+- Swap-cards-updated includes full opponent views for immediate UI refresh
+- Transitioning phase added between swapping and playing for clear state boundary
+- INVALID_ACTION and PLAYER_NOT_FOUND error codes added for swap-phase errors
+
 ### Pending Todos
 
 1 pending — `/gsd:check-todos` to review
@@ -142,9 +150,9 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-07
-Stopped at: Completed 03-03-PLAN.md (Phase 3 complete)
+Stopped at: Completed 04-01-PLAN.md (Phase 4 Plan 1 complete)
 Resume file: None
 
 ---
 *State initialized: 2026-02-07*
-*Last updated: 2026-02-07 after completing 03-03*
+*Last updated: 2026-02-07 after completing 04-01*
