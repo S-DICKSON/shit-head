@@ -127,9 +127,6 @@ export const gameStartingSchema = z.object({
   countdown: z.number(),
 });
 
-export const gameStartedSchema = z.object({
-  type: z.literal('game-started'),
-});
 
 export const gameDealtSchema = z.object({
   type: z.literal('game-dealt'),
@@ -215,7 +212,6 @@ export const serverMessageSchema = z.discriminatedUnion('type', [
   roomUpdatedSchema,
   playerLeftSchema,
   gameStartingSchema,
-  gameStartedSchema,
   gameDealtSchema,
   swapTimerTickSchema,
   playerReadySchema,
