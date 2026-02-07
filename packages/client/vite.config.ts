@@ -3,7 +3,6 @@ import vue from '@vitejs/plugin-vue'
 import tailwindcss from '@tailwindcss/vite'
 
 const serverUrl = process.env.VITE_SERVER_URL || 'http://localhost:3000'
-const wsUrl = serverUrl.replace(/^http/, 'ws')
 
 export default defineConfig({
   plugins: [vue(), tailwindcss()],
@@ -12,10 +11,9 @@ export default defineConfig({
     port: 5173,
     strictPort: true,
     hmr: {
-      path: '/__hmr',  // Avoid conflict with /ws game proxy
+      path: '/__hmr',  // Avoid conflict with game-ws proxy
     },
     proxy: {
-      '/ws': { target: wsUrl, ws: true },
       '/api': serverUrl,
     }
   }

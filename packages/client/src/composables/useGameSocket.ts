@@ -8,9 +8,11 @@ let socketInstance: ReturnType<typeof createGameSocket> | null = null;
 type MessageHandler = (msg: ServerMessage) => void;
 
 function createGameSocket() {
-  // Determine WebSocket URL dynamically based on environment
-  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  const wsUrl = `${protocol}//${window.location.host}/ws`;
+  // Determine WebSocket URL: use env var in development, derive from page URL in production
+  const serverUrl = import.meta.env.VITE_WS_URL;
+  const wsUrl = serverUrl
+    ? serverUrl
+    : `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/game-ws`;
 
   // Reactive state
   const playerId = ref<string | null>(null);

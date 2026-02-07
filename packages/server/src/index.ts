@@ -24,7 +24,7 @@ const server = Bun.serve<WebSocketData>({
     }
 
     // WebSocket upgrade endpoint
-    if (url.pathname === '/ws') {
+    if (url.pathname === '/game-ws') {
       // TODO: Production - validate Origin header against ALLOWED_ORIGIN env var
       const origin = req.headers.get('Origin');
       console.log(`WebSocket upgrade request from origin: ${origin}`);
