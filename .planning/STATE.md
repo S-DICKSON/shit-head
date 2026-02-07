@@ -10,29 +10,29 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 ## Current Position
 
 Phase: 2 of 12 (WebSocket Infrastructure & Room Management) — IN PROGRESS
-Plan: 3 of 5 in phase (client infrastructure complete, running 02-02 and 02-03 in parallel)
+Plan: 3 of 5 in phase (shared protocol, room engine, client infrastructure complete)
 Status: In progress
-Last activity: 2026-02-07 — Completed 02-03-PLAN.md
+Last activity: 2026-02-07 — Completed 02-02-PLAN.md and 02-03-PLAN.md (parallel execution)
 
-Progress: [███░░░░░░░] ~12% (1 phase complete + 3 plans of phase 2)
+Progress: [███░░░░░░░] ~14% (1 phase complete + 3 plans of phase 2)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 6
+- Total plans completed: 7
 - Average duration: 2.7 minutes
-- Total execution time: 0.27 hours
+- Total execution time: 0.32 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01 | 4 | 706s | 177s |
-| 02 | 2 | 321s | 161s |
+| 02 | 3 | 511s | 170s |
 
 **Recent Trend:**
-- Last 5 plans: 01-03 (214s), 01-04 (132s), 02-01 (178s), 02-03 (143s)
-- Trend: Improving - average trending down to ~2.5 min per plan
+- Last 5 plans: 01-04 (132s), 02-01 (178s), 02-02 (190s), 02-03 (143s)
+- Trend: Stable - maintaining ~2.8 min average, Phase 2 at 170s/plan
 
 *Updated after each plan completion*
 
@@ -84,6 +84,13 @@ Recent decisions affecting current work:
 - Nickname length constrained to 1-20 characters with trim
 - Max 4 players, min 2 players per room
 
+**From 02-02:**
+- Custom nanoid alphabet excludes confusable characters (0/O, 1/I/L, 5/S) for user-friendly room codes
+- Host leaving destroys entire room (no host transfer) - keeps lobby management simple
+- OperationResult discriminated union for error handling with typed error codes
+- Player-to-room index Map for O(1) lookup performance
+- TDD methodology: RED (failing tests) → GREEN (implementation) → REFACTOR (optional)
+
 **From 02-03:**
 - Singleton pattern for WebSocket composable to ensure all components share one connection
 - WebSocket URL determined dynamically from window.location (works in dev and production)
@@ -106,9 +113,9 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-07
-Stopped at: Completed 02-03-PLAN.md (client WebSocket infrastructure)
+Stopped at: Completed 02-02-PLAN.md (room management) and 02-03-PLAN.md (client infrastructure) in parallel
 Resume file: None
 
 ---
 *State initialized: 2026-02-07*
-*Last updated: 2026-02-07 after completing 02-03*
+*Last updated: 2026-02-07 after completing 02-02 and 02-03*
