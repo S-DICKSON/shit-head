@@ -2,6 +2,9 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import tailwindcss from '@tailwindcss/vite'
 
+const serverUrl = process.env.VITE_SERVER_URL || 'http://localhost:3000'
+const wsUrl = serverUrl.replace(/^http/, 'ws')
+
 export default defineConfig({
   plugins: [vue(), tailwindcss()],
   server: {
@@ -9,8 +12,8 @@ export default defineConfig({
     port: 5173,
     strictPort: true,
     proxy: {
-      '/api': 'http://localhost:3000',
-      '/ws': { target: 'ws://localhost:3000', ws: true }
+      '/api': serverUrl,
+      '/ws': { target: wsUrl, ws: true }
     }
   }
 })
