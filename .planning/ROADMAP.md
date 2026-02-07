@@ -90,13 +90,14 @@ Plans:
   3. All players swap simultaneously in real-time
   4. Game automatically starts when timer expires
   5. Timer countdown is visible to all players
-**Plans**: 4 plans
+**Plans**: 5 plans
 
 Plans:
 - [ ] 04-01-PLAN.md — Swap-phase message schemas and types (shared package)
 - [ ] 04-02-PLAN.md — GameEngine.swapCards() server-side validation (TDD)
 - [ ] 04-03-PLAN.md — Room swap/ready/timer integration and WebSocket handlers
 - [ ] 04-04-PLAN.md — Client swap phase composable and UI component
+- [ ] 04-05-PLAN.md — Wire SwapPhase into app (gap closure: Game.vue + routing)
 
 ### Phase 5: Core Game Engine & Rules
 **Goal**: Players can take turns playing cards following basic Shithead rules
