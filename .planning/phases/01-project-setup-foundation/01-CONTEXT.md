@@ -45,7 +45,7 @@ Development environment, build system, Docker containerization, CI/CD pipeline, 
 - **OpenTofu** (open-source Terraform) for infrastructure as code from day one
 - Render has an official Terraform provider (compatible with OpenTofu)
 - Research agent should investigate OpenTofu state management options and monorepo IaC patterns
-- **Three environments:** dev (local Docker), staging (Render), prod (Render)
+- **Two environments:** dev (local Docker), prod (Render) — add staging later when needed
 - Reusable configs so infrastructure can be ported to different providers if needed
 
 ### Claude's Discretion
