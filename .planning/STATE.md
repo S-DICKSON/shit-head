@@ -10,29 +10,29 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 ## Current Position
 
 Phase: 2 of 12 (WebSocket Infrastructure & Room Management) — IN PROGRESS
-Plan: 3 of 5 in phase (shared protocol, room engine, client infrastructure complete)
+Plan: 4 of 5 in phase (shared protocol, room engine, client infrastructure, server handlers complete)
 Status: In progress
-Last activity: 2026-02-07 — Completed 02-02-PLAN.md and 02-03-PLAN.md (parallel execution)
+Last activity: 2026-02-07 — Completed 02-04-PLAN.md (server WebSocket handlers)
 
-Progress: [███░░░░░░░] ~14% (1 phase complete + 3 plans of phase 2)
+Progress: [███░░░░░░░] ~15% (1 phase complete + 4 plans of phase 2)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 7
+- Total plans completed: 8
 - Average duration: 2.7 minutes
-- Total execution time: 0.32 hours
+- Total execution time: 0.35 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01 | 4 | 706s | 177s |
-| 02 | 3 | 511s | 170s |
+| 02 | 4 | 705s | 176s |
 
 **Recent Trend:**
-- Last 5 plans: 01-04 (132s), 02-01 (178s), 02-02 (190s), 02-03 (143s)
-- Trend: Stable - maintaining ~2.8 min average, Phase 2 at 170s/plan
+- Last 5 plans: 02-01 (178s), 02-02 (190s), 02-03 (143s), 02-04 (194s)
+- Trend: Stable - maintaining ~2.8 min average, Phase 2 at 176s/plan
 
 *Updated after each plan completion*
 
@@ -99,6 +99,14 @@ Recent decisions affecting current work:
 - Room code input auto-uppercase and sanitized to alphanumeric only
 - Hash history for router (GitHub Pages compatibility)
 
+**From 02-04:**
+- Singleton RoomManager pattern - single instance shared across all WebSocket connections
+- Conditional OperationResult type - void results don't require data property
+- Heartbeat ping/pong handled before JSON parsing for efficiency
+- Origin validation deferred to production with TODO comment
+- Pub/sub pattern: ws.publish for room broadcasts (excludes sender), ws.send for direct messages
+- Game start countdown: 3-second setTimeout before status change to 'playing'
+
 ### Pending Todos
 
 None yet.
@@ -113,9 +121,9 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-07
-Stopped at: Completed 02-02-PLAN.md (room management) and 02-03-PLAN.md (client infrastructure) in parallel
+Stopped at: Completed 02-04-PLAN.md (server WebSocket handlers)
 Resume file: None
 
 ---
 *State initialized: 2026-02-07*
-*Last updated: 2026-02-07 after completing 02-02 and 02-03*
+*Last updated: 2026-02-07 after completing 02-04*
