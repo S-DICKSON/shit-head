@@ -144,6 +144,66 @@ describe('Room', () => {
     room.startGame();
     expect(room.getState().status).toBe('playing');
   });
+
+  test('dealCards() creates game state with correct player count', () => {
+    const room = new Room('host-1', 'Alice');
+    room.addPlayer('player-2', 'Bob');
+    room.addPlayer('player-3', 'Charlie');
+
+    room.dealCards();
+
+    const gameState = room.getGameState();
+    expect(gameState).not.toBeNull();
+    expect(gameState?.players).toHaveLength(3);
+    expect(gameState?.players[0].playerId).toBe('host-1');
+    expect(gameState?.players[1].playerId).toBe('player-2');
+    expect(gameState?.players[2].playerId).toBe('player-3');
+  });
+
+  test('getPlayerView() returns view for valid player', () => {
+    const room = new Room('host-1', 'Alice');
+    room.addPlayer('player-2', 'Bob');
+    room.dealCards();
+
+    const view = room.getPlayerView('host-1');
+    expect(view).not.toBeNull();
+    expect(view?.hand).toHaveLength(3);
+    expect(view?.faceUp).toHaveLength(3);
+    expect(view?.faceDownCount).toBe(3);
+    expect(view?.opponents).toHaveLength(1);
+    expect(view?.opponents[0].playerId).toBe('player-2');
+  });
+
+  test('getPlayerView() returns null before dealing', () => {
+    const room = new Room('host-1', 'Alice');
+    room.addPlayer('player-2', 'Bob');
+
+    const view = room.getPlayerView('host-1');
+    expect(view).toBeNull();
+  });
+
+  test('startGame() triggers dealing', () => {
+    const room = new Room('host-1', 'Alice');
+    room.addPlayer('player-2', 'Bob');
+
+    room.startGame();
+
+    const gameState = room.getGameState();
+    expect(gameState).not.toBeNull();
+    expect(gameState?.players).toHaveLength(2);
+  });
+
+  test('getPlayerIds() returns all player ids', () => {
+    const room = new Room('host-1', 'Alice');
+    room.addPlayer('player-2', 'Bob');
+    room.addPlayer('player-3', 'Charlie');
+
+    const playerIds = room.getPlayerIds();
+    expect(playerIds).toHaveLength(3);
+    expect(playerIds).toContain('host-1');
+    expect(playerIds).toContain('player-2');
+    expect(playerIds).toContain('player-3');
+  });
 });
 
 describe('RoomManager', () => {

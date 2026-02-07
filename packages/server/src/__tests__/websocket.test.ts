@@ -1,5 +1,5 @@
 // WebSocket handler tests
-import { describe, it, expect, beforeEach, mock } from 'bun:test';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { handleMessage, handleClose } from '../websocket/handlers';
 import { RoomManager } from '../rooms/RoomManager';
 import type { WebSocketData } from '../websocket/handlers';
@@ -9,10 +9,10 @@ import type { ServerWebSocket } from 'bun';
 function createMockWebSocket(playerId: string, roomCode: string | null = null): ServerWebSocket<WebSocketData> {
   return {
     data: { playerId, roomCode },
-    send: mock(() => {}),
-    subscribe: mock(() => {}),
-    unsubscribe: mock(() => {}),
-    publish: mock(() => {}),
+    send: vi.fn(),
+    subscribe: vi.fn(),
+    unsubscribe: vi.fn(),
+    publish: vi.fn(),
   } as unknown as ServerWebSocket<WebSocketData>;
 }
 

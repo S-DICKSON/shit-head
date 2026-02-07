@@ -1,6 +1,7 @@
 // Room class - individual room state and logic
 import { customAlphabet } from 'nanoid';
-import type { RoomState, RoomStatus, LobbyPlayer, ErrorCode } from '@shit-head/shared';
+import type { RoomState, RoomStatus, LobbyPlayer, ErrorCode, GameState, PlayerGameView } from '@shit-head/shared';
+import { GameEngine } from '../game/GameEngine';
 
 // Custom alphabet excludes confusable characters: 0/O, 1/I/L, 5/S
 const ALPHABET = '2346789ABCDEFGHJKMNPQRTUVWXYZ';
@@ -17,6 +18,8 @@ export class Room {
   private status: RoomStatus;
   private readonly maxPlayers = 4;
   private readonly minPlayers = 2;
+  private gameState: GameState | null = null;
+  private dealerIndex: number = 0;
 
   constructor(hostId: string, hostNickname: string) {
     this.code = generateRoomCode();
@@ -92,6 +95,28 @@ export class Room {
 
   startGame(): void {
     this.status = 'playing';
+    this.dealCards();
+  }
+
+  dealCards(): void {
+    const players = Array.from(this.players.values()).map(p => ({
+      id: p.id,
+      nickname: p.nickname,
+    }));
+    this.gameState = GameEngine.createGame(players, this.dealerIndex);
+  }
+
+  getPlayerView(playerId: string): PlayerGameView | null {
+    if (!this.gameState) return null;
+    return GameEngine.getPlayerView(this.gameState, playerId);
+  }
+
+  getGameState(): GameState | null {
+    return this.gameState;
+  }
+
+  getPlayerIds(): string[] {
+    return Array.from(this.players.keys());
   }
 
   getState(): RoomState {
