@@ -1,0 +1,21 @@
+services:
+  client:
+    build:
+      context: .
+      dockerfile: packages/client/Dockerfile
+      target: production
+    ports:
+      - "8080:80"
+    environment:
+      - NODE_ENV=production
+
+  server:
+    build:
+      context: .
+      dockerfile: packages/server/Dockerfile
+      target: production
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000

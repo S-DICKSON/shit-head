@@ -1,0 +1,33 @@
+services:
+  client:
+    build:
+      context: .
+      dockerfile: packages/client/Dockerfile
+      target: dev
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./packages/client:/app/packages/client
+      - ./packages/shared:/app/packages/shared
+      - /app/node_modules
+      - /app/packages/client/node_modules
+    environment:
+      - NODE_ENV=development
+    depends_on:
+      - server
+
+  server:
+    build:
+      context: .
+      dockerfile: packages/server/Dockerfile
+      target: dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./packages/server:/app/packages/server
+      - ./packages/shared:/app/packages/shared
+      - /app/node_modules
+      - /app/packages/server/node_modules
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
