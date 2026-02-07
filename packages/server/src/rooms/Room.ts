@@ -26,6 +26,7 @@ export class Room {
   private onSwapTimerTick?: (timeRemaining: number) => void;
   private onPlayerReady?: (playerId: string, readyPlayers: string[]) => void;
   private onSwapPhaseComplete?: (reason: 'timer-expired' | 'all-ready') => void;
+  private onPlayPhaseStart?: (currentPlayerIndex: number) => void;
 
   constructor(hostId: string, hostNickname: string) {
     this.code = generateRoomCode();
@@ -148,10 +149,12 @@ export class Room {
     onTick: (timeRemaining: number) => void;
     onReady: (playerId: string, readyPlayers: string[]) => void;
     onComplete: (reason: 'timer-expired' | 'all-ready') => void;
+    onPlayPhaseStart: (currentPlayerIndex: number) => void;
   }): void {
     this.onSwapTimerTick = callbacks.onTick;
     this.onPlayerReady = callbacks.onReady;
     this.onSwapPhaseComplete = callbacks.onComplete;
+    this.onPlayPhaseStart = callbacks.onPlayPhaseStart;
   }
 
   swapCards(playerId: string, handIndex: number, faceUpIndex: number): OperationResult {
@@ -245,12 +248,52 @@ export class Room {
     // After 2.5s, transition to playing
     setTimeout(() => {
       if (this.gameState) {
-        this.gameState.phase = 'playing';
+        // Determine first player before setting phase to playing
+        const firstPlayer = GameEngine.determineFirstPlayer(this.gameState);
+        this.gameState = {
+          ...this.gameState,
+          phase: 'playing',
+          currentPlayerIndex: firstPlayer,
+        };
+        // Notify that playing phase has started with first player
+        this.onPlayPhaseStart?.(this.gameState.currentPlayerIndex);
       }
     }, 2500);
   }
 
   getReadyPlayers(): string[] {
     return Array.from(this.readyPlayers);
+  }
+
+  playCards(playerId: string, cardIndices: number[]): OperationResult {
+    if (!this.gameState) {
+      return { success: false, error: 'No game in progress', code: 'INVALID_ACTION' };
+    }
+    const result = GameEngine.playCards(this.gameState, playerId, cardIndices);
+    if (result.success && result.data) {
+      this.gameState = result.data;
+      return { success: true };
+    }
+    if (!result.success) {
+      // Forward error from GameEngine (code is string, cast to ErrorCode)
+      return { success: false, error: result.error, code: result.code as ErrorCode };
+    }
+    return { success: false, error: 'Unknown error', code: 'INVALID_ACTION' };
+  }
+
+  pickupPile(playerId: string): OperationResult {
+    if (!this.gameState) {
+      return { success: false, error: 'No game in progress', code: 'INVALID_ACTION' };
+    }
+    const result = GameEngine.pickupPile(this.gameState, playerId);
+    if (result.success && result.data) {
+      this.gameState = result.data;
+      return { success: true };
+    }
+    if (!result.success) {
+      // Forward error from GameEngine (code is string, cast to ErrorCode)
+      return { success: false, error: result.error, code: result.code as ErrorCode };
+    }
+    return { success: false, error: 'Unknown error', code: 'INVALID_ACTION' };
   }
 }
