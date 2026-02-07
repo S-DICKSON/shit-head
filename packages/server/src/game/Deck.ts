@@ -7,6 +7,14 @@ import type { Card } from '@shit-head/shared';
  * @returns A new shuffled array
  */
 export function shuffleDeck(cards: Card[]): Card[] {
-  // TODO: Implement Fisher-Yates shuffle
-  return [];
+  // Copy array to avoid mutation
+  const shuffled = [...cards];
+
+  // Fisher-Yates shuffle: iterate from end, swap with random index in [0, i]
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+
+  return shuffled;
 }

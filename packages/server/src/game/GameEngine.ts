@@ -1,4 +1,6 @@
-import type { Card, GameState, PlayerGameView } from '@shit-head/shared';
+import type { Card, GameState, PlayerGameView, PlayerGameState, OpponentView } from '@shit-head/shared';
+import { createDeck } from '@shit-head/shared';
+import { shuffleDeck } from './Deck';
 
 export class GameEngine {
   /**
@@ -11,8 +13,55 @@ export class GameEngine {
     players: { id: string; nickname: string }[],
     dealerIndex: number
   ): GameState {
-    // TODO: Implement game creation with dealing
-    throw new Error('Not implemented');
+    // Create and shuffle deck
+    const deck = createDeck();
+    const shuffled = shuffleDeck(deck);
+
+    // Initialize player states
+    const playerStates: PlayerGameState[] = [];
+    let cardIndex = 0;
+
+    // Deal cards sequentially: face-down, then face-up, then hand
+    // Each player gets 3 cards in each category
+
+    // Deal face-down cards (3 per player)
+    for (const player of players) {
+      playerStates.push({
+        playerId: player.id,
+        nickname: player.nickname,
+        faceDown: shuffled.slice(cardIndex, cardIndex + 3),
+        faceUp: [],
+        hand: [],
+      });
+      cardIndex += 3;
+    }
+
+    // Deal face-up cards (3 per player)
+    for (let i = 0; i < players.length; i++) {
+      playerStates[i].faceUp = shuffled.slice(cardIndex, cardIndex + 3);
+      cardIndex += 3;
+    }
+
+    // Deal hand cards (3 per player)
+    for (let i = 0; i < players.length; i++) {
+      playerStates[i].hand = shuffled.slice(cardIndex, cardIndex + 3);
+      cardIndex += 3;
+    }
+
+    // Remaining cards become draw pile
+    const drawPile = shuffled.slice(cardIndex);
+
+    // Calculate current player (next after dealer)
+    const currentPlayerIndex = (dealerIndex + 1) % players.length;
+
+    return {
+      phase: 'swapping',
+      players: playerStates,
+      drawPile,
+      discardPile: [],
+      currentPlayerIndex,
+      dealerIndex,
+    };
   }
 
   /**
@@ -22,8 +71,34 @@ export class GameEngine {
    * @returns Player-specific view with hidden information for opponents
    */
   static getPlayerView(state: GameState, playerId: string): PlayerGameView {
-    // TODO: Implement player view generation
-    throw new Error('Not implemented');
+    // Find the player
+    const player = state.players.find(p => p.playerId === playerId);
+    if (!player) {
+      throw new Error(`Player ${playerId} not found in game state`);
+    }
+
+    // Create opponent views (all players except the requesting player)
+    const opponents: OpponentView[] = state.players
+      .filter(p => p.playerId !== playerId)
+      .map(p => ({
+        playerId: p.playerId,
+        nickname: p.nickname,
+        faceDownCount: p.faceDown.length,
+        faceUp: p.faceUp,
+        handCount: p.hand.length,
+      }));
+
+    return {
+      phase: state.phase,
+      hand: player.hand,
+      faceUp: player.faceUp,
+      faceDownCount: player.faceDown.length,
+      opponents,
+      drawPileCount: state.drawPile.length,
+      discardPile: state.discardPile,
+      currentPlayerIndex: state.currentPlayerIndex,
+      dealerIndex: state.dealerIndex,
+    };
   }
 
   /**
@@ -33,7 +108,6 @@ export class GameEngine {
    * @returns Next dealer index
    */
   static nextDealerIndex(currentDealerIndex: number, playerCount: number): number {
-    // TODO: Implement dealer rotation
-    throw new Error('Not implemented');
+    return (currentDealerIndex + 1) % playerCount;
   }
 }
