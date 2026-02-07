@@ -7,10 +7,10 @@
 
 ### Room Management
 
-- [ ] **ROOM-01**: Player can create a room and receive a shareable 6-character code
-- [ ] **ROOM-02**: Player can join a room by entering a room code
-- [ ] **ROOM-03**: Player can enter a nickname before joining (no accounts)
-- [ ] **ROOM-04**: Room supports 2-4 players
+- [x] **ROOM-01**: Player can create a room and receive a shareable 6-character code
+- [x] **ROOM-02**: Player can join a room by entering a room code
+- [x] **ROOM-03**: Player can enter a nickname before joining (no accounts)
+- [x] **ROOM-04**: Room supports 2-4 players
 
 ### Deck & Dealing
 
@@ -59,8 +59,8 @@
 
 ### Multiplayer
 
-- [ ] **MULT-01**: Real-time game state sync via WebSocket
-- [ ] **MULT-02**: Server-authoritative game state (prevents cheating)
+- [x] **MULT-01**: Real-time game state sync via WebSocket
+- [x] **MULT-02**: Server-authoritative game state (prevents cheating)
 - [ ] **MULT-03**: Turn timer (30-60s) with auto-pickup on timeout
 - [ ] **MULT-04**: Player-specific state views (hide opponent hands and face-down cards)
 - [ ] **MULT-05**: Reconnection handling with brief wait period
@@ -107,10 +107,10 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ROOM-01 | Phase 2 | Pending |
-| ROOM-02 | Phase 2 | Pending |
-| ROOM-03 | Phase 2 | Pending |
-| ROOM-04 | Phase 2 | Pending |
+| ROOM-01 | Phase 2 | Complete |
+| ROOM-02 | Phase 2 | Complete |
+| ROOM-03 | Phase 2 | Complete |
+| ROOM-04 | Phase 2 | Complete |
 | DECK-01 | Phase 3 | Pending |
 | DECK-02 | Phase 3 | Pending |
 | DECK-03 | Phase 3 | Pending |
@@ -138,8 +138,8 @@
 | END-03 | Phase 7 | Pending |
 | END-04 | Phase 7 | Pending |
 | END-05 | Phase 7 | Pending |
-| MULT-01 | Phase 2 | Pending |
-| MULT-02 | Phase 2 | Pending |
+| MULT-01 | Phase 2 | Complete |
+| MULT-02 | Phase 2 | Complete |
 | MULT-03 | Phase 8 | Pending |
 | MULT-04 | Phase 9 | Pending |
 | MULT-05 | Phase 9 | Pending |

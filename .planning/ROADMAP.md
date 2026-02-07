@@ -13,7 +13,7 @@ This roadmap delivers a browser-based multiplayer Shithead card game from zero t
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Project Setup & Foundation** - Development environment, build system, deployment scaffold
-- [ ] **Phase 2: WebSocket Infrastructure & Room Management** - Real-time communication layer and lobby system
+- [x] **Phase 2: WebSocket Infrastructure & Room Management** - Real-time communication layer and lobby system
 - [ ] **Phase 3: Deck & Dealing System** - Card deck initialization and dealing logic
 - [ ] **Phase 4: Pre-Game Swap Phase** - 30-second simultaneous card swap before game start
 - [ ] **Phase 5: Core Game Engine & Rules** - Turn system, play validation, draw/pickup mechanics
@@ -57,11 +57,11 @@ Plans:
 **Plans**: 5 plans
 
 Plans:
-- [ ] 02-01-PLAN.md — Shared message protocol, room types, and Zod validation schemas
-- [ ] 02-02-PLAN.md — Server room management engine (TDD: RoomManager + Room)
-- [ ] 02-03-PLAN.md — Client WebSocket composable, Vue Router, and Landing page
-- [ ] 02-04-PLAN.md — Server WebSocket handlers and index.ts integration
-- [ ] 02-05-PLAN.md — Client Lobby page, RoomCode component, and integration verification
+- [x] 02-01-PLAN.md — Shared message protocol, room types, and Zod validation schemas
+- [x] 02-02-PLAN.md — Server room management engine (TDD: RoomManager + Room)
+- [x] 02-03-PLAN.md — Client WebSocket composable, Vue Router, and Landing page
+- [x] 02-04-PLAN.md — Server WebSocket handlers and index.ts integration
+- [x] 02-05-PLAN.md — Client Lobby page, RoomCode component, and integration verification
 
 ### Phase 3: Deck & Dealing System
 **Goal**: Cards are properly initialized and dealt to all players when game starts
@@ -223,7 +223,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Project Setup & Foundation | 4/4 | Complete | 2026-02-07 |
-| 2. WebSocket Infrastructure & Room Management | 0/5 | Not started | - |
+| 2. WebSocket Infrastructure & Room Management | 5/5 | Complete | 2026-02-07 |
 | 3. Deck & Dealing System | 0/3 | Not started | - |
 | 4. Pre-Game Swap Phase | 0/TBD | Not started | - |
 | 5. Core Game Engine & Rules | 0/TBD | Not started | - |
