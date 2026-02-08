@@ -9,5 +9,11 @@
     "dev": "make dev",
     "build": "make build",
     "test": "make test"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.0.0",
+    "globals": "^17.3.0",
+    "typescript-eslint": "^8.54.0"
   }
 }
