@@ -2,10 +2,11 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import tailwindcss from '@tailwindcss/vite'
 
-const serverUrl = process.env.VITE_SERVER_URL || 'http://localhost:3000'
-
 export default defineConfig({
   plugins: [vue(), tailwindcss()],
+  build: {
+    outDir: 'dist',  // Output for CF Pages deployment
+  },
   server: {
     host: '0.0.0.0',  // Required for Docker
     port: 5173,
@@ -15,7 +16,10 @@ export default defineConfig({
       path: '/__hmr',  // Avoid conflict with game-ws proxy
     },
     proxy: {
-      '/api': serverUrl,
+      '/api': {
+        target: 'http://host.docker.internal:3000',
+        changeOrigin: true,
+      },
       '/game-ws': {
         target: 'ws://host.docker.internal:3000',
         ws: true,
