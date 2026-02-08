@@ -351,6 +351,72 @@ export function handleMessage(
             },
           });
 
+          room.setDisconnectCallbacks({
+            onDisconnected: (disconnectedPlayerId, nickname) => {
+              const playerIds = room.getPlayerIds();
+              const graceTime = room.getDisconnectGraceRemaining(disconnectedPlayerId);
+              for (const pid of playerIds) {
+                if (pid === disconnectedPlayerId) continue;
+                const pWs = playerSockets.get(pid);
+                if (pWs) {
+                  sendMessage(pWs, {
+                    type: 'player-disconnected',
+                    playerId: disconnectedPlayerId,
+                    nickname,
+                    graceTimeRemaining: graceTime,
+                  });
+                }
+              }
+            },
+            onReconnected: (reconnectedPlayerId, nickname) => {
+              const playerIds = room.getPlayerIds();
+              for (const pid of playerIds) {
+                if (pid === reconnectedPlayerId) continue;
+                const pWs = playerSockets.get(pid);
+                if (pWs) {
+                  sendMessage(pWs, {
+                    type: 'player-reconnected',
+                    playerId: reconnectedPlayerId,
+                    nickname,
+                  });
+                }
+              }
+            },
+            onRemoved: (removedPlayerId, nickname, reason) => {
+              if (reason === 'host-left') {
+                const playerIds = room.getPlayerIds();
+                for (const pid of playerIds) {
+                  if (pid === removedPlayerId) continue;
+                  const pWs = playerSockets.get(pid);
+                  if (pWs) {
+                    sendMessage(pWs, {
+                      type: 'player-removed',
+                      playerId: removedPlayerId,
+                      nickname,
+                      reason: 'host-left',
+                    });
+                  }
+                }
+                manager.destroyRoom(room.code);
+              } else {
+                const playerIds = room.getPlayerIds();
+                for (const pid of playerIds) {
+                  if (pid === removedPlayerId) continue;
+                  const pWs = playerSockets.get(pid);
+                  if (pWs) {
+                    sendMessage(pWs, {
+                      type: 'player-removed',
+                      playerId: removedPlayerId,
+                      nickname,
+                      reason: 'timeout',
+                    });
+                  }
+                }
+                manager.removePlayerIndex(removedPlayerId);
+              }
+            },
+          });
+
           room.startGame();
 
           // Send player-specific game-dealt messages to each player
@@ -599,17 +665,27 @@ export function handleMessage(
 }
 
 export function handleClose(ws: ServerWebSocket<WebSocketData>, manager: RoomManager): void {
+  // Always remove from active sockets (the WebSocket connection is dead)
   playerSockets.delete(ws.data.playerId);
 
   const roomCode = ws.data.roomCode;
+  if (!roomCode) return;
 
-  if (roomCode) {
-    // Check if disconnecting player is the host
-    const room = manager.getRoomByPlayerId(ws.data.playerId);
-    const isHost = room?.getState().hostId === ws.data.playerId;
+  const room = manager.getRoomByPlayerId(ws.data.playerId);
+  if (!room) return;
 
-    // If host is disconnecting, notify others before destroying room
+  const gameState = room.getGameState();
+
+  if (gameState && gameState.phase !== 'finished') {
+    // In-game disconnect: delegate to Room's grace period logic
+    room.handlePlayerDisconnect(ws.data.playerId);
+    ws.unsubscribe(roomCode);
+  } else {
+    // Lobby or finished game: use existing immediate removal logic
+    const isHost = room.getState().hostId === ws.data.playerId;
+
     if (isHost) {
+      // Notify others before destroying room
       ws.publish(roomCode, JSON.stringify({
         type: 'error',
         message: 'Host disconnected — room closed',
@@ -621,7 +697,7 @@ export function handleClose(ws: ServerWebSocket<WebSocketData>, manager: RoomMan
     ws.unsubscribe(roomCode);
 
     // Non-host disconnect — room still exists, notify remaining players
-    if (!isHost && room) {
+    if (!isHost) {
       const updatedRoom = manager.getRoom(roomCode);
       if (updatedRoom) {
         ws.publish(roomCode, JSON.stringify({

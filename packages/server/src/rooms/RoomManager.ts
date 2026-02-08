@@ -144,4 +144,19 @@ export class RoomManager {
     }
     return this.rooms.get(roomCode);
   }
+
+  destroyRoom(code: string): void {
+    const room = this.rooms.get(code);
+    if (room) {
+      const state = room.getState();
+      state.players.forEach(player => {
+        this.playerRoomIndex.delete(player.id);
+      });
+      this.rooms.delete(code);
+    }
+  }
+
+  removePlayerIndex(playerId: string): void {
+    this.playerRoomIndex.delete(playerId);
+  }
 }
