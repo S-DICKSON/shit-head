@@ -19,9 +19,9 @@ Progress: [██████░░░░] ~67% (33 plans complete)
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 32
+- Total plans completed: 33
 - Average duration: 2.3 minutes
-- Total execution time: 1.33 hours
+- Total execution time: 1.35 hours
 
 **By Phase:**
 
@@ -35,11 +35,12 @@ Progress: [██████░░░░] ~67% (33 plans complete)
 | 06 | 2 | 356s | 178s |
 | 07 | 5 | 981s | 196s |
 | 08 | 3 | 701s | 234s |
+| 09 | 1 | 146s | 146s |
 | 13 | 1 | 118s | 118s |
 
 **Recent Trend:**
-- Last 5 plans: 13-01 (118s), 08-01 (241s), 08-03 (118s), 08-02 (224s), 08-03 (118s)
-- Trend: Phase 08 averaging 3.9min per plan, consistent with server integration work
+- Last 5 plans: 08-01 (241s), 08-03 (118s), 08-02 (224s), 08-03 (118s), 09-01 (146s)
+- Trend: Phase 09-01 at 2.4min, fast schema-only plan
 
 *Updated after each plan completion*
 
@@ -276,6 +277,12 @@ Recent decisions affecting current work:
 - Game.vue renders TurnTimer during playing phase, with finished and fallback phase handlers
 - Turn timer state (turnTimeRemaining, turnTimerPlayerIndex) synchronized via WebSocket
 
+**From 09-01:**
+- playerRemovedSchema uses enum reason: 'timeout' or 'host-left' for clear disconnect cause tracking
+- playerDisconnectedSchema includes graceTimeRemaining for UI countdown display
+- Disconnect lifecycle: player-disconnected (with grace time) → player-reconnected OR player-removed (with reason)
+- Reconnection message protocol extends discriminated union pattern from Phase 2
+
 ### Roadmap Evolution
 
 - Phase 13 added: ESLint Setup & Fixes — Install ESLint for server and client, add to Makefile, fix issues
@@ -295,9 +302,9 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Completed Phase 8 (Turn Timing & Auto-Pickup)
+Stopped at: Completed 09-01-PLAN.md (Reconnection message schemas)
 Resume file: None
 
 ---
 *State initialized: 2026-02-07*
-*Last updated: 2026-02-08 after Phase 08 execution*
+*Last updated: 2026-02-08 after Phase 09-01 execution*
