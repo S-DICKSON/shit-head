@@ -11,14 +11,24 @@ function createGameSocket() {
   // Detached scope so the WebSocket survives component unmounts
   const scope = effectScope(true);
 
+  // Check for existing playerId from previous session
+  const storedPlayerId = localStorage.getItem('shithead-player-id');
+  const storedRoomCode = localStorage.getItem('shithead-room-code');
+
   // Determine WebSocket URL: use env var in development, derive from page URL in production
   const serverUrl = import.meta.env.VITE_WS_URL;
-  const wsUrl = serverUrl
+  let wsUrl = serverUrl
     ? serverUrl
     : `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/game-ws`;
 
+  // Include stored playerId for reconnection
+  if (storedPlayerId) {
+    const separator = wsUrl.includes('?') ? '&' : '?';
+    wsUrl += `${separator}playerId=${encodeURIComponent(storedPlayerId)}`;
+  }
+
   // Reactive state
-  const playerId = ref<string | null>(null);
+  const playerId = ref<string | null>(storedPlayerId);
   const roomState = ref<RoomState | null>(null);
   const lastMessage = ref<ServerMessage | null>(null);
   const error = ref<string | null>(null);
@@ -53,6 +63,28 @@ function createGameSocket() {
       immediate: true,
     })
   )!;
+
+  // Persist playerId to localStorage
+  scope.run(() => watch(playerId, (newId) => {
+    if (newId) {
+      localStorage.setItem('shithead-player-id', newId);
+    }
+  }));
+
+  // Persist roomCode to localStorage when room state changes
+  scope.run(() => watch(roomState, (newRoom) => {
+    if (newRoom) {
+      localStorage.setItem('shithead-room-code', newRoom.code);
+    }
+  }));
+
+  // Auto-reconnect to room when WebSocket reopens
+  scope.run(() => watch(status, (newStatus) => {
+    if (newStatus === 'OPEN' && storedPlayerId && storedRoomCode) {
+      // Send reconnect message to rejoin room
+      wsSend(JSON.stringify({ type: 'reconnect', roomCode: storedRoomCode }));
+    }
+  }));
 
   // Watch for incoming messages (also inside detached scope)
   scope.run(() => watch(data, (rawData) => {
@@ -192,6 +224,25 @@ function createGameSocket() {
             };
           }
           break;
+        case 'player-disconnected':
+          // Another player disconnected — UI can show a banner/indicator
+          // Store for potential UI use (Phase 10/11 will consume this)
+          break;
+        case 'player-reconnected':
+          // Another player reconnected — UI can update indicator
+          break;
+        case 'player-removed':
+          if (message.reason === 'host-left') {
+            // Host left — room is destroyed. Clear stored state and navigate away.
+            localStorage.removeItem('shithead-room-code');
+            roomState.value = null;
+            gameView.value = null;
+            error.value = 'Host left — room closed';
+          } else {
+            // Another player was removed (timeout). Update opponent views if needed.
+            // The server will send updated state via other messages.
+          }
+          break;
         case 'error':
           error.value = message.message;
           break;
@@ -211,6 +262,10 @@ function createGameSocket() {
   // Send typed message
   const send = (msg: ClientMessage) => {
     error.value = null; // Clear previous errors
+    // Clear room code when deliberately leaving
+    if (msg.type === 'leave-room') {
+      localStorage.removeItem('shithead-room-code');
+    }
     wsSend(JSON.stringify(msg));
   };
 
