@@ -182,10 +182,13 @@ Plans:
   3. Player can rejoin game after disconnect with full state restoration
   4. After grace period expires, disconnected player is removed from game
   5. Game continues with remaining players if 2+ remain
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
-- [ ] (Plans will be created during /gsd:plan-phase 9)
+- [ ] 09-01-PLAN.md — Reconnection message schemas and types (shared package)
+- [ ] 09-02-PLAN.md — Room disconnect/reconnect lifecycle with grace period (TDD)
+- [ ] 09-03-PLAN.md — Client localStorage persistence and auto-reconnect logic
+- [ ] 09-04-PLAN.md — Server WebSocket handler integration (reconnect handler, handleClose update)
 
 ### Phase 10: Client UI & Card Interactions
 **Goal**: Players have a responsive UI to view and play cards on mobile and desktop
