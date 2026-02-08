@@ -259,10 +259,10 @@ Plans:
   2. WebSocket connections work through ngrok tunnel
   3. Mobile devices can connect and play the game via tunnel URL
   4. Simple command (Makefile target) to start tunneled dev server
-**Plans**: 0 plans
+**Plans**: 1 plan
 
 Plans:
-- [ ] (Plans will be created during /gsd:plan-phase 14)
+- [ ] 14-01-PLAN.md — Add Vite WebSocket proxy, remove VITE_WS_URL, add Makefile tunnel target
 
 ## Progress
 
