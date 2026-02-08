@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 ## Current Position
 
 Phase: 10 of 14 (Client UI Card Interactions)
-Plan: 1 of 3 complete
+Plan: 2 of 4 complete
 Status: In progress
-Last activity: 2026-02-08 — Completed 10-01-PLAN.md
+Last activity: 2026-02-08 — Completed 10-02-PLAN.md
 
-Progress: [████████░░] ~81% (41 plans complete)
+Progress: [████████░░] ~82% (42 plans complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 41
-- Average duration: 2.3 minutes
-- Total execution time: 1.61 hours
+- Total plans completed: 42
+- Average duration: 2.2 minutes
+- Total execution time: 1.63 hours
 
 **By Phase:**
 
@@ -36,12 +36,12 @@ Progress: [████████░░] ~81% (41 plans complete)
 | 07 | 5 | 981s | 196s |
 | 08 | 3 | 701s | 234s |
 | 09 | 6 | 1098s | 183s |
-| 10 | 1 | 145s | 145s |
+| 10 | 2 | 284s | 142s |
 | 13 | 1 | 118s | 118s |
 | 14 | 2 | 346s | 173s |
 
 **Recent Trend:**
-- Last 5 plans: 14-01 (93s), 14-02 (253s), 09-05 (242s), 09-06 (145s), 10-01 (145s)
+- Last 5 plans: 14-02 (253s), 09-05 (242s), 09-06 (145s), 10-01 (145s), 10-02 (139s)
 - Trend: Steady ~2-4min execution times — consistent productivity
 
 *Updated after each plan completion*
@@ -329,6 +329,13 @@ Recent decisions affecting current work:
 - Notification severity levels: warning (disconnect/timeout), success (reconnect), error (host-left)
 - Host-left notification delayed by 1.5s before state cleanup to ensure visibility before redirect
 - Global NotificationToast component mounted in App.vue for cross-route notifications
+
+**From 10-02:**
+- Discard pile shows top 3 cards with 3px offset stacking effect for visual depth
+- Draw pile uses blue card-back pattern with decorative inner border
+- Current turn highlight uses yellow ring with animated pulse dot (consistent with swap phase ready states)
+- Opponent card displays show face-up cards, hand count, face-down count, and disconnect indicator
+- Presentational component pattern: all game area components are props-only with no business logic
 - GameNotification interface with id/message/severity/timestamp for type-safe notification state
 
 ### Roadmap Evolution
@@ -351,9 +358,6 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Phase 10, plan 1 of 3 complete — usePlayingPhase and PlayerCards ready
+Stopped at: Completed 10-02-PLAN.md
 Resume file: None
 
----
-*State initialized: 2026-02-07*
-*Last updated: 2026-02-08 after Phase 9 gap closure execution*
