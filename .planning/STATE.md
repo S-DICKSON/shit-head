@@ -9,19 +9,19 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 
 ## Current Position
 
-Phase: 09 of 12 (Connection Management & Reconnection) — IN PROGRESS
-Plan: 2 of 4 complete
-Status: Server disconnect/reconnect lifecycle complete
-Last activity: 2026-02-08 — Completed 09-02-PLAN.md (Disconnect/reconnect lifecycle)
+Phase: 09 of 12 (Connection Management & Reconnection) — COMPLETE
+Plan: 4 of 4 complete
+Status: Full disconnect/reconnect lifecycle implemented
+Last activity: 2026-02-08 — Completed 09-04-PLAN.md (WebSocket disconnect/reconnect integration)
 
-Progress: [██████░░░░] ~67% (34 plans complete)
+Progress: [██████░░░░] ~69% (35 plans complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 34
+- Total plans completed: 35
 - Average duration: 2.4 minutes
-- Total execution time: 1.45 hours
+- Total execution time: 1.48 hours
 
 **By Phase:**
 
@@ -35,12 +35,12 @@ Progress: [██████░░░░] ~67% (34 plans complete)
 | 06 | 2 | 356s | 178s |
 | 07 | 5 | 981s | 196s |
 | 08 | 3 | 701s | 234s |
-| 09 | 2 | 546s | 273s |
+| 09 | 4 | 711s | 178s |
 | 13 | 1 | 118s | 118s |
 
 **Recent Trend:**
-- Last 5 plans: 08-02 (224s), 08-03 (118s), 09-01 (146s), 09-02 (400s), TBD
-- Trend: Phase 09-02 took longer (6.7min) due to comprehensive TDD with 13 test scenarios
+- Last 5 plans: 08-03 (118s), 09-01 (146s), 09-02 (400s), 09-03 (TBD), 09-04 (165s)
+- Trend: Phase 09-02 took longer (6.7min) due to comprehensive TDD with 13 test scenarios; 09-04 fast (2.75min)
 
 *Updated after each plan completion*
 
@@ -293,9 +293,19 @@ Recent decisions affecting current work:
 - Race condition protected: reconnect before timeout fires doesn't double-trigger
 - Host disconnect after timeout triggers 'host-left' reason, non-host triggers 'timeout'
 
+**From 09-04:**
+- handleClose checks game phase before deciding grace period vs immediate removal
+- In-game disconnect delegates to Room.handlePlayerDisconnect, lobby/finished use immediate removal
+- Disconnect callbacks wired during game start (after turn timer callbacks, before room.startGame)
+- onDisconnected/onReconnected/onRemoved broadcast player status to other players
+- Reconnect message handler validates room/player, restores ws.data, re-subscribes to topic
+- RoomManager.destroyRoom and removePlayerIndex clean up indices on player removal
+- Reconnected players receive room-joined with current state and game-dealt with player view
+
 ### Roadmap Evolution
 
 - Phase 13 added: ESLint Setup & Fixes — Install ESLint for server and client, add to Makefile, fix issues
+- Phase 14 added: Ngrok Local Dev Sharing — Ngrok tunnel so local dev can be shared and tested on mobile
 
 ### Pending Todos
 
@@ -312,9 +322,9 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Completed 09-02-PLAN.md (Disconnect/reconnect lifecycle)
+Stopped at: Completed 09-04-PLAN.md (WebSocket disconnect/reconnect integration)
 Resume file: None
 
 ---
 *State initialized: 2026-02-07*
-*Last updated: 2026-02-08 after Phase 09-02 execution*
+*Last updated: 2026-02-08 after Phase 09-04 execution*
