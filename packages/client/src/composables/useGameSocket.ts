@@ -205,6 +205,8 @@ function createGameSocket() {
               drawPileCount: message.drawPileCount,
               discardPile: message.discardPile,
               ...(message.hand ? { hand: message.hand } : {}),
+              ...(message.faceUp ? { faceUp: message.faceUp } : {}),
+              ...(message.faceDownCount !== undefined ? { faceDownCount: message.faceDownCount } : {}),
               ...(message.opponents ? { opponents: message.opponents } : {}),
             };
           }
@@ -216,6 +218,8 @@ function createGameSocket() {
               currentPlayerIndex: message.currentPlayerIndex,
               discardPile: message.discardPile,
               ...(message.hand ? { hand: message.hand } : {}),
+              ...(message.faceUp ? { faceUp: message.faceUp } : {}),
+              ...(message.faceDownCount !== undefined ? { faceDownCount: message.faceDownCount } : {}),
               ...(message.opponents ? { opponents: message.opponents } : {}),
             };
           }

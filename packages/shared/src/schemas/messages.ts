@@ -184,6 +184,8 @@ export const cardPlayedSchema = z.object({
   drawPileCount: z.number(),
   discardPile: z.array(cardSchema),
   hand: z.array(cardSchema).optional(),
+  faceUp: z.array(cardSchema).optional(),
+  faceDownCount: z.number().optional(),
   opponents: z.array(opponentViewSchema).optional(),
 });
 
@@ -193,6 +195,8 @@ export const pilePickupSchema = z.object({
   currentPlayerIndex: z.number(),
   discardPile: z.array(cardSchema),
   hand: z.array(cardSchema).optional(),
+  faceUp: z.array(cardSchema).optional(),
+  faceDownCount: z.number().optional(),
   opponents: z.array(opponentViewSchema).optional(),
 });
 

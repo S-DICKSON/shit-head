@@ -343,6 +343,8 @@ export function handleMessage(
                       drawPileCount: view.drawPileCount,
                       discardPile: view.discardPile,
                       hand: view.hand,
+                      faceUp: view.faceUp,
+                      faceDownCount: view.faceDownCount,
                       opponents: view.opponents,
                     });
                   }
@@ -571,6 +573,8 @@ export function handleMessage(
             drawPileCount: view.drawPileCount,
             discardPile: view.discardPile,
             hand: view.hand,
+            faceUp: view.faceUp,
+            faceDownCount: view.faceDownCount,
             opponents: view.opponents,
           });
         }
@@ -608,6 +612,8 @@ export function handleMessage(
             currentPlayerIndex: view.currentPlayerIndex,
             discardPile: view.discardPile,
             hand: view.hand,
+            faceUp: view.faceUp,
+            faceDownCount: view.faceDownCount,
             opponents: view.opponents,
           });
         }
