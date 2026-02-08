@@ -16,16 +16,24 @@ function createGameSocket() {
   const storedRoomCode = localStorage.getItem('shithead-room-code');
 
   // Determine WebSocket URL:
-  // - VITE_WS_URL override if set
-  // - localhost: connect directly to server on port 3000 (bypasses Vite proxy)
-  // - tunnel/production: use proxy path through current host
-  const serverUrl = import.meta.env.VITE_WS_URL;
+  // 1. VITE_SERVER_URL (production split deployment — e.g., wss://shit-head-server.fly.dev)
+  // 2. localhost: connect directly to server on port 3000 (bypasses Vite proxy)
+  // 3. tunnel/non-localhost: use proxy path through current host (ngrok, etc.)
+  const serverUrl = import.meta.env.VITE_SERVER_URL;
   const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  let wsUrl = serverUrl
-    ? serverUrl
-    : isLocalhost
-      ? `ws://${window.location.hostname}:3000/game-ws`
-      : `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/game-ws`;
+
+  let wsUrl: string;
+  if (serverUrl) {
+    // Split deployment: connect to separate server origin
+    // VITE_SERVER_URL should be like "wss://shit-head-server.fly.dev"
+    wsUrl = `${serverUrl}/game-ws`;
+  } else if (isLocalhost) {
+    // Local dev: connect directly to server (bypasses Vite proxy)
+    wsUrl = `ws://${window.location.hostname}:3000/game-ws`;
+  } else {
+    // Tunnel/proxy: use current host with protocol detection
+    wsUrl = `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/game-ws`;
+  }
 
   // Include stored playerId for reconnection
   if (storedPlayerId) {
