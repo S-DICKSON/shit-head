@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { GameEngine } from '../GameEngine';
-import type { GameState, Card, PlayerGameState } from '@shit-head/shared';
+import type { GameState } from '@shit-head/shared';
 
 describe('GameEngine.autoPlayOnTimeout', () => {
   // Helper to create minimal game state

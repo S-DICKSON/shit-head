@@ -10,6 +10,13 @@ type OperationResult<T = void> = T extends void
 
 export type BlindPlayResult = { state: GameState; card: Card; playable: boolean };
 
+export type AutoPlayResult = {
+  state: GameState;
+  wasBlindPlay: boolean;
+  blindCard?: Card;
+  blindPlayable?: boolean;
+};
+
 export class GameEngine {
   /**
    * Creates a new game with shuffled and dealt cards.
@@ -927,5 +934,150 @@ export class GameEngine {
         },
       };
     }
+  }
+
+  /**
+   * Automatically plays a random valid card for a player on timeout.
+   * If no valid cards exist, picks up the pile.
+   * Handles all three play sources: hand, face-up, face-down.
+   *
+   * @param state - Current game state
+   * @param playerId - ID of the player who timed out
+   * @returns OperationResult with AutoPlayResult (state, wasBlindPlay flag, optional blind card info)
+   */
+  static autoPlayOnTimeout(
+    state: GameState,
+    playerId: string
+  ): OperationResult<AutoPlayResult> {
+    // Validate phase
+    if (state.phase !== 'playing') {
+      return {
+        success: false,
+        error: 'Can only auto-play during playing phase',
+        code: 'INVALID_ACTION',
+      };
+    }
+
+    // Find player
+    const playerIndex = state.players.findIndex(p => p.playerId === playerId);
+    if (playerIndex === -1) {
+      return {
+        success: false,
+        error: 'Player not found',
+        code: 'PLAYER_NOT_FOUND',
+      };
+    }
+
+    const player = state.players[playerIndex];
+    const playSource = this.determinePlaySource(player, state.drawPile.length === 0);
+
+    if (playSource === 'hand') {
+      // Find all valid cards in hand
+      const validIndices: number[] = [];
+      for (let i = 0; i < player.hand.length; i++) {
+        if (canPlayOnPile(player.hand[i], state.discardPile)) {
+          validIndices.push(i);
+        }
+      }
+
+      if (validIndices.length > 0) {
+        // Pick random valid card
+        const randomIndex = validIndices[Math.floor(Math.random() * validIndices.length)];
+        const playResult = this.playCards(state, playerId, [randomIndex]);
+
+        if (!playResult.success) {
+          return playResult;
+        }
+
+        return {
+          success: true,
+          data: {
+            state: playResult.data,
+            wasBlindPlay: false,
+          },
+        };
+      } else {
+        // No valid cards - must pickup pile
+        const pickupResult = this.pickupPile(state, playerId);
+
+        if (!pickupResult.success) {
+          return pickupResult;
+        }
+
+        return {
+          success: true,
+          data: {
+            state: pickupResult.data,
+            wasBlindPlay: false,
+          },
+        };
+      }
+    } else if (playSource === 'face-up') {
+      // Find all valid face-up cards
+      const validIndices: number[] = [];
+      for (let i = 0; i < player.faceUp.length; i++) {
+        if (canPlayOnPile(player.faceUp[i], state.discardPile)) {
+          validIndices.push(i);
+        }
+      }
+
+      if (validIndices.length > 0) {
+        // Pick random valid face-up card
+        const randomIndex = validIndices[Math.floor(Math.random() * validIndices.length)];
+        const playResult = this.playFromFaceUp(state, playerId, [randomIndex]);
+
+        if (!playResult.success) {
+          return playResult;
+        }
+
+        return {
+          success: true,
+          data: {
+            state: playResult.data,
+            wasBlindPlay: false,
+          },
+        };
+      } else {
+        // No valid face-up cards - must pickup pile
+        const pickupResult = this.pickupPile(state, playerId);
+
+        if (!pickupResult.success) {
+          return pickupResult;
+        }
+
+        return {
+          success: true,
+          data: {
+            state: pickupResult.data,
+            wasBlindPlay: false,
+          },
+        };
+      }
+    } else if (playSource === 'face-down') {
+      // Random blind play (consistent with Phase 7 blind mechanics)
+      const randomIndex = Math.floor(Math.random() * player.faceDown.length);
+      const blindResult = this.playFaceDownBlind(state, playerId, randomIndex);
+
+      if (!blindResult.success) {
+        return blindResult;
+      }
+
+      return {
+        success: true,
+        data: {
+          state: blindResult.data.state,
+          wasBlindPlay: true,
+          blindCard: blindResult.data.card,
+          blindPlayable: blindResult.data.playable,
+        },
+      };
+    }
+
+    // Player eliminated (no cards) - should not happen during their turn
+    return {
+      success: false,
+      error: 'Player has no cards to play',
+      code: 'INVALID_ACTION',
+    };
   }
 }
