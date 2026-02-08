@@ -1,4 +1,4 @@
-import type { Card, GameState, PlayerGameView, PlayerGameState, OpponentView } from '@shit-head/shared';
+import type { Card, GameState, PlayerGameView, PlayerGameState, OpponentView, PlaySource } from '@shit-head/shared';
 import { createDeck } from '@shit-head/shared';
 import { shuffleDeck } from './Deck';
 import { RANK_ORDER, canPlayOn } from './CardComparison';
@@ -471,6 +471,279 @@ export class GameEngine {
       discardPile: [],
       currentPlayerIndex: nextPlayerIndex,
     };
+
+    return {
+      success: true,
+      data: newState,
+    };
+  }
+
+  /**
+   * Determines which card source a player should play from based on current state.
+   * Progression: hand → face-up → face-down → eliminated (null)
+   *
+   * @param player - Player's game state
+   * @param drawPileEmpty - Whether the draw pile is empty
+   * @returns PlaySource indicating where to play from, or null if eliminated
+   */
+  static determinePlaySource(player: PlayerGameState, drawPileEmpty: boolean): PlaySource | null {
+    // Hand has priority if not empty
+    if (player.hand.length > 0) {
+      return 'hand';
+    }
+
+    // If draw pile has cards, player must draw (not endgame yet)
+    if (!drawPileEmpty) {
+      return 'hand'; // Will auto-draw before playing
+    }
+
+    // Endgame progression: hand empty AND draw pile empty
+    if (player.faceUp.length > 0) {
+      return 'face-up';
+    }
+
+    if (player.faceDown.length > 0) {
+      return 'face-down';
+    }
+
+    // Player eliminated (no cards)
+    return null;
+  }
+
+  /**
+   * Checks if a player is eliminated (has no cards remaining).
+   *
+   * @param player - Player's game state
+   * @returns true if player has zero cards across all arrays
+   */
+  static checkPlayerElimination(player: PlayerGameState): boolean {
+    const totalCards =
+      player.hand.length +
+      player.faceUp.length +
+      player.faceDown.length;
+
+    return totalCards === 0;
+  }
+
+  /**
+   * Finds the next active player index, skipping eliminated players.
+   * Has loop limit to prevent infinite loops.
+   *
+   * @param state - Current game state
+   * @param currentIndex - Current player index
+   * @returns Next active player index, or current if all eliminated
+   */
+  static nextActivePlayerIndex(state: GameState, currentIndex: number): number {
+    const playerCount = state.players.length;
+    let nextIndex = (currentIndex + 1) % playerCount;
+    let attempts = 0;
+
+    while (attempts < playerCount) {
+      const player = state.players[nextIndex];
+      const isEliminated = this.checkPlayerElimination(player);
+
+      if (!isEliminated) {
+        return nextIndex; // Found active player
+      }
+
+      // This player eliminated, try next
+      nextIndex = (nextIndex + 1) % playerCount;
+      attempts++;
+    }
+
+    // All players eliminated except current - return current as fallback
+    return currentIndex;
+  }
+
+  /**
+   * Finds the shithead (loser) when only one player has cards remaining.
+   *
+   * @param state - Current game state
+   * @returns playerId of the last player with cards, or null if game continues
+   */
+  static findShithead(state: GameState): string | null {
+    const playersWithCards = state.players.filter(player => {
+      const totalCards = player.hand.length + player.faceUp.length + player.faceDown.length;
+      return totalCards > 0;
+    });
+
+    if (playersWithCards.length === 1) {
+      // Last player with cards is the shithead (loser)
+      return playersWithCards[0].playerId;
+    }
+
+    return null; // Game continues
+  }
+
+  /**
+   * Plays cards from player's face-up array onto the discard pile.
+   * Validates source is face-up, validates indices, moves cards to discard, checks elimination.
+   * Supports multi-card play (multiple same-rank face-up cards).
+   * Does NOT auto-draw (draw pile is empty by definition in endgame).
+   *
+   * @param state - Current game state
+   * @param playerId - ID of the player playing cards
+   * @param cardIndices - Array of indices of cards in player's faceUp to play
+   * @returns OperationResult with updated GameState on success
+   */
+  static playFromFaceUp(
+    state: GameState,
+    playerId: string,
+    cardIndices: number[]
+  ): OperationResult<GameState> {
+    // Validate phase
+    if (state.phase !== 'playing') {
+      return {
+        success: false,
+        error: 'Can only play cards during playing phase',
+        code: 'INVALID_ACTION',
+      };
+    }
+
+    // Find player
+    const playerIndex = state.players.findIndex(p => p.playerId === playerId);
+    if (playerIndex === -1) {
+      return {
+        success: false,
+        error: 'Player not found',
+        code: 'PLAYER_NOT_FOUND',
+      };
+    }
+
+    // Validate turn
+    if (playerIndex !== state.currentPlayerIndex) {
+      return {
+        success: false,
+        error: 'Not your turn',
+        code: 'NOT_YOUR_TURN',
+      };
+    }
+
+    const player = state.players[playerIndex];
+
+    // Validate play source is face-up
+    const playSource = this.determinePlaySource(player, state.drawPile.length === 0);
+    if (playSource !== 'face-up') {
+      return {
+        success: false,
+        error: 'Must play from correct source',
+        code: 'INVALID_ACTION',
+      };
+    }
+
+    // Validate cardIndices not empty
+    if (cardIndices.length === 0) {
+      return {
+        success: false,
+        error: 'Must play at least one card',
+        code: 'INVALID_ACTION',
+      };
+    }
+
+    // Validate all indices are within bounds
+    for (const idx of cardIndices) {
+      if (idx < 0 || idx >= player.faceUp.length) {
+        return {
+          success: false,
+          error: 'Invalid card index',
+          code: 'INVALID_ACTION',
+        };
+      }
+    }
+
+    // Validate no duplicate indices
+    const indicesSet = new Set(cardIndices);
+    if (indicesSet.size !== cardIndices.length) {
+      return {
+        success: false,
+        error: 'Duplicate card indices',
+        code: 'INVALID_ACTION',
+      };
+    }
+
+    // Get the cards being played
+    const cardsToPlay = cardIndices.map(idx => player.faceUp[idx]);
+
+    // Validate all cards have same rank (for multi-card plays)
+    if (cardsToPlay.length > 1) {
+      const firstRank = cardsToPlay[0].kind === 'standard' ? cardsToPlay[0].rank : null;
+      for (const card of cardsToPlay) {
+        const cardRank = card.kind === 'standard' ? card.rank : null;
+        if (cardRank !== firstRank) {
+          return {
+            success: false,
+            error: 'All cards must have same rank',
+            code: 'INVALID_ACTION',
+          };
+        }
+      }
+    }
+
+    // Validate play is legal using full special card rules
+    const firstPlayedCard = cardsToPlay[0]; // All cards same rank, just check first
+    if (!canPlayOnPile(firstPlayedCard, state.discardPile)) {
+      return {
+        success: false,
+        error: 'Card cannot be played on current pile',
+        code: 'INVALID_ACTION',
+      };
+    }
+
+    // All validations passed - perform the play
+
+    // Remove played cards from faceUp (use filter with Set for O(1) lookup)
+    const indicesSetForFilter = new Set(cardIndices);
+    const updatedFaceUp = player.faceUp.filter((_, idx) => !indicesSetForFilter.has(idx));
+
+    // Add played cards to discard pile
+    let updatedDiscardPile = [...state.discardPile, ...cardsToPlay];
+
+    // Check for burn after cards are added to pile
+    const burnResult = detectBurn(updatedDiscardPile);
+    let finalDiscardPile = updatedDiscardPile;
+    let nextPlayerIndex: number;
+
+    // Update player state
+    const updatedPlayer: PlayerGameState = {
+      ...player,
+      faceUp: updatedFaceUp,
+    };
+
+    // Check if player eliminated after play
+    const isEliminated = this.checkPlayerElimination(updatedPlayer);
+
+    if (burnResult.isBurn) {
+      // Clear pile and same player goes again
+      finalDiscardPile = [];
+      nextPlayerIndex = playerIndex; // Same player (no advancement)
+    } else if (isEliminated) {
+      // Player eliminated, skip to next active player
+      nextPlayerIndex = this.nextActivePlayerIndex(state, playerIndex);
+    } else {
+      // Normal turn advancement
+      nextPlayerIndex = this.nextActivePlayerIndex(state, playerIndex);
+    }
+
+    // Create new game state
+    const updatedPlayers = state.players.map((p, i) =>
+      i === playerIndex ? updatedPlayer : p
+    );
+
+    let newState: GameState = {
+      ...state,
+      players: updatedPlayers,
+      discardPile: finalDiscardPile,
+      currentPlayerIndex: nextPlayerIndex,
+    };
+
+    // Check for game end
+    const shitheadId = this.findShithead(newState);
+    if (shitheadId) {
+      newState = {
+        ...newState,
+        phase: 'finished',
+      };
+    }
 
     return {
       success: true,
