@@ -87,6 +87,11 @@ export const pickupPileSchema = z.object({
   type: z.literal('pickup-pile'),
 });
 
+export const playFaceDownSchema = z.object({
+  type: z.literal('play-face-down'),
+  faceDownIndex: z.number().int().min(0),
+});
+
 export const clientMessageSchema = z.discriminatedUnion('type', [
   createRoomSchema,
   joinRoomSchema,
@@ -96,6 +101,7 @@ export const clientMessageSchema = z.discriminatedUnion('type', [
   readyUpSchema,
   playCardsSchema,
   pickupPileSchema,
+  playFaceDownSchema,
 ]);
 
 // Server-to-client message schemas
@@ -189,6 +195,31 @@ export const turnChangedSchema = z.object({
   currentPlayerIndex: z.number(),
 });
 
+export const faceDownResultSchema = z.object({
+  type: z.literal('face-down-result'),
+  playerId: z.string(),
+  card: cardSchema,
+  playable: z.boolean(),
+  currentPlayerIndex: z.number(),
+  discardPile: z.array(cardSchema),
+  hand: z.array(cardSchema).optional(),
+  faceDownCount: z.number().optional(),
+  opponents: z.array(opponentViewSchema).optional(),
+});
+
+export const playerEliminatedSchema = z.object({
+  type: z.literal('player-eliminated'),
+  playerId: z.string(),
+  nickname: z.string(),
+  currentPlayerIndex: z.number(),
+});
+
+export const gameOverSchema = z.object({
+  type: z.literal('game-over'),
+  shitheadId: z.string(),
+  shitheadNickname: z.string(),
+});
+
 export const errorSchema = z.object({
   type: z.literal('error'),
   message: z.string(),
@@ -203,6 +234,7 @@ export const errorSchema = z.object({
     'INVALID_ACTION',
     'PLAYER_NOT_FOUND',
     'NOT_YOUR_TURN',
+    'GAME_OVER',
   ]),
 });
 
@@ -220,5 +252,8 @@ export const serverMessageSchema = z.discriminatedUnion('type', [
   cardPlayedSchema,
   pilePickupSchema,
   turnChangedSchema,
+  faceDownResultSchema,
+  playerEliminatedSchema,
+  gameOverSchema,
   errorSchema,
 ]);

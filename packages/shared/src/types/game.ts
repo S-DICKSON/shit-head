@@ -4,6 +4,12 @@ import type { Card } from './card';
 export type GamePhase = 'dealing' | 'swapping' | 'transitioning' | 'playing' | 'finished';
 
 /**
+ * Where a player must play from based on their current card state.
+ * Phase 7 card progression: hand → face-up → face-down
+ */
+export type PlaySource = 'hand' | 'face-up' | 'face-down';
+
+/**
  * Per-player card state (server-side authoritative view).
  * Server knows all cards for all players.
  */
