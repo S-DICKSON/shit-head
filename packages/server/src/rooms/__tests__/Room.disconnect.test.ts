@@ -243,6 +243,26 @@ describe('Room disconnect/reconnect lifecycle', () => {
       const gameState = room.getGameState();
       expect(gameState?.phase).toBe('finished');
     });
+
+    test('ends game during swap phase when fewer than 2 players remain after removal', () => {
+      const { room, callbacks } = createRoomWithGame(2);
+
+      room.startGame();
+      // Game is now in 'swapping' phase (30-second swap timer active)
+      // Do NOT advance past swap phase - stay in 'swapping'
+
+      // Disconnect player-2 (non-host) immediately during swap
+      room.handlePlayerDisconnect('player-2');
+
+      // Advance past grace period (90 seconds)
+      vi.advanceTimersByTime(90000);
+
+      // Game should end (only 1 player left) - even though still in swapping phase
+      expect(callbacks.onGameOver).toHaveBeenCalled();
+
+      const gameState = room.getGameState();
+      expect(gameState?.phase).toBe('finished');
+    });
   });
 
   describe('Turn timer interaction', () => {
