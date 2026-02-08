@@ -20,7 +20,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 6: Special Cards & Burn Mechanics** - 2s, 7s, 8s, 10s, and burn detection
 - [x] **Phase 7: Endgame & Win Conditions** - Hand to face-up to face-down progression and winner detection
 - [x] **Phase 8: Turn Timing & Auto-Pickup** - Turn timer with timeout handling
-- [ ] **Phase 9: Connection Management & Reconnection** - Disconnect detection and reconnection flow
+- [x] **Phase 9: Connection Management & Reconnection** - Disconnect detection and reconnection flow
 - [ ] **Phase 10: Client UI & Card Interactions** - React UI with card hand display and play actions
 - [ ] **Phase 11: Game Feedback & Turn Indicators** - Turn state display and visual cues
 - [ ] **Phase 12: Deployment & Production Polish** - Production build, hosting, and monitoring
@@ -190,8 +190,8 @@ Plans:
 - [x] 09-02-PLAN.md — Room disconnect/reconnect lifecycle with grace period (TDD)
 - [x] 09-03-PLAN.md — Client localStorage persistence and auto-reconnect logic
 - [x] 09-04-PLAN.md — Server WebSocket handler integration (reconnect handler, handleClose update)
-- [ ] 09-05-PLAN.md — Fix page reload reconnect flow and swap phase navigation race (gap closure)
-- [ ] 09-06-PLAN.md — Add disconnect/reconnect/removal notification toasts (gap closure)
+- [x] 09-05-PLAN.md — Fix page reload reconnect flow and swap phase navigation race (gap closure)
+- [x] 09-06-PLAN.md — Add disconnect/reconnect/removal notification toasts (gap closure)
 
 ### Phase 10: Client UI & Card Interactions
 **Goal**: Players have a responsive UI to view and play cards on mobile and desktop
@@ -284,7 +284,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 6. Special Cards & Burn Mechanics | 2/2 | Complete | 2026-02-08 |
 | 7. Endgame & Win Conditions | 5/5 | Complete | 2026-02-08 |
 | 8. Turn Timing & Auto-Pickup | 3/3 | Complete | 2026-02-08 |
-| 9. Connection Management & Reconnection | 4/6 | Gap closure | 2026-02-08 |
+| 9. Connection Management & Reconnection | 6/6 | Complete | 2026-02-08 |
 | 10. Client UI & Card Interactions | 0/3 | Not started | - |
 | 11. Game Feedback & Turn Indicators | 0/TBD | Not started | - |
 | 12. Deployment & Production Polish | 0/TBD | Not started | - |
@@ -293,4 +293,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 
 ---
 *Roadmap created: 2026-02-07*
-*Last updated: 2026-02-08 after Phase 14 gap closure execution*
+*Last updated: 2026-02-08 after Phase 9 gap closure execution*
