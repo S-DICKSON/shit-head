@@ -287,6 +287,70 @@ export function handleMessage(
             },
           });
 
+          room.setTurnTimerCallbacks({
+            onTick: (timeRemaining, currentPlayerIndex) => {
+              // Broadcast turn timer tick to ALL players
+              const playerIds = room.getPlayerIds();
+              for (const pid of playerIds) {
+                const pWs = playerSockets.get(pid);
+                if (pWs) {
+                  sendMessage(pWs, {
+                    type: 'turn-timer-tick',
+                    timeRemaining,
+                    currentPlayerIndex,
+                  });
+                }
+              }
+            },
+            onTimeout: (timedOutPlayerId) => {
+              // Execute auto-play for the timed-out player
+              const result = room.autoPlayOnTimeout(timedOutPlayerId);
+              if (!result.success) return;
+
+              const autoPlayData = result.data;
+              const playerIds = room.getPlayerIds();
+
+              if (autoPlayData.wasBlindPlay) {
+                // Face-down auto-play: broadcast face-down-result to all players
+                for (const pid of playerIds) {
+                  const view = room.getPlayerView(pid);
+                  const pWs = playerSockets.get(pid);
+                  if (view && pWs) {
+                    sendMessage(pWs, {
+                      type: 'face-down-result',
+                      playerId: timedOutPlayerId,
+                      card: autoPlayData.blindCard!,
+                      playable: autoPlayData.blindPlayable!,
+                      currentPlayerIndex: view.currentPlayerIndex,
+                      discardPile: view.discardPile,
+                      hand: view.hand,
+                      faceDownCount: view.faceDownCount,
+                      opponents: view.opponents,
+                    });
+                  }
+                }
+              } else {
+                // Hand or face-up auto-play: broadcast card-played with updated state
+                for (const pid of playerIds) {
+                  const view = room.getPlayerView(pid);
+                  const pWs = playerSockets.get(pid);
+                  if (view && pWs) {
+                    sendMessage(pWs, {
+                      type: 'card-played',
+                      playerId: timedOutPlayerId,
+                      cards: [],
+                      currentPlayerIndex: view.currentPlayerIndex,
+                      drawPileCount: view.drawPileCount,
+                      discardPile: view.discardPile,
+                      hand: view.hand,
+                      opponents: view.opponents,
+                    });
+                  }
+                }
+              }
+            },
+          });
+
           room.startGame();
 
           // Send player-specific game-dealt messages to each player
