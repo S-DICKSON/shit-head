@@ -236,10 +236,12 @@ Plans:
   3. Rooms persist as long as game is active
   4. Basic monitoring shows active games and connected players
   5. Abandoned rooms are cleaned up after 24 hours
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] (Plans will be created during /gsd:plan-phase 12)
+- [ ] 12-01-PLAN.md — Server production hardening (Origin validation, health metrics, graceful shutdown, room cleanup)
+- [ ] 12-02-PLAN.md — Client split deployment URL (VITE_SERVER_URL support, Vite build config)
+- [ ] 12-03-PLAN.md — Deployment infrastructure (Dockerfile, fly.toml, deploy/rollback workflows, OpenTofu IaC)
 
 ### Phase 13: ESLint Setup & Fixes
 **Goal**: ESLint is configured for all packages with consistent rules and all issues are resolved
@@ -305,7 +307,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 9. Connection Management & Reconnection | 7/7 | Complete | 2026-02-08 |
 | 10. Client UI & Card Interactions | 3/3 | Complete | 2026-02-08 |
 | 11. Game Feedback & Turn Indicators | 0/1 | Not started | - |
-| 12. Deployment & Production Polish | 0/TBD | Not started | - |
+| 12. Deployment & Production Polish | 0/3 | Not started | - |
 | 13. ESLint Setup & Fixes | 1/1 | Complete | 2026-02-08 |
 | 14. Ngrok Local Dev Sharing | 2/2 | Complete | 2026-02-08 |
 | 15. Mobile UX Improvements | 0/TBD | Not started | - |
