@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-07)
 
 **Core value:** Friends can play a complete, rule-accurate game of Shithead together online with zero friction
-**Current focus:** Phase 9 complete — all gap closures verified, ready for Phase 10 execution
+**Current focus:** Phase 10 complete — playing phase UI with card interactions
 
 ## Current Position
 
-Phase: 9 of 14 (Connection Management & Reconnection)
-Plan: 7 of 7 complete
-Status: Phase complete (verified)
-Last activity: 2026-02-08 — Phase 9 verified, all 7 plans complete
+Phase: 10 of 14 (Client UI & Card Interactions) — COMPLETE
+Plan: 3/3 complete
+Status: Phase complete (verified, gap closure applied)
+Last activity: 2026-02-08 — Phase 10 verified with human UAT, endgame bug fixed, layout redesigned
 
-Progress: [████████░░] ~84% (44 plans complete)
+Progress: [████████░░] ~88% (47 plans complete)
 
 ## Performance Metrics
 
@@ -351,6 +351,11 @@ Recent decisions affecting current work:
 - Game.vue conditionally renders phase-specific components (SwapPhase, PlayingPhase, finished)
 - isOpponentCurrentTurn helper determines turn indicator for opponent displays
 
+**From 10 gap closure (UAT):**
+- card-played and pile-pickup messages must include faceUp and faceDownCount — without these, endgame face-down progression never activates on client
+- Face-down cards stacked visually underneath face-up cards in "Table" section — saves vertical space and provides natural reveal effect
+- PlayingPhase uses h-screen with overflow-hidden to prevent scrolling on laptop
+
 ### Roadmap Evolution
 
 - Phase 13 added: ESLint Setup & Fixes — Install ESLint for server and client, add to Makefile, fix issues
@@ -371,6 +376,6 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Phase 9 complete and verified (all 7 plans, gap closure done)
+Stopped at: Phase 10 complete — playing phase UI with gap closure (endgame fix + layout redesign)
 Resume file: None
 

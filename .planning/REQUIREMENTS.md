@@ -68,11 +68,11 @@
 
 ### User Interface
 
-- [ ] **UI-01**: Responsive layout works on mobile and desktop browsers
-- [ ] **UI-02**: Functional card animations (deal, play, burn)
+- [x] **UI-01**: Responsive layout works on mobile and desktop browsers
+- [x] **UI-02**: Functional card animations (deal, play, burn)
 - [ ] **UI-03**: Clear turn indicators showing whose turn it is
 - [ ] **UI-04**: Turn timer countdown visible to all players
-- [ ] **UI-05**: Card hand display with clear selection state
+- [x] **UI-05**: Card hand display with clear selection state
 
 ## v2 Requirements
 
@@ -144,11 +144,11 @@
 | MULT-04 | Phase 9 | Complete |
 | MULT-05 | Phase 9 | Complete |
 | MULT-06 | Phase 9 | Complete |
-| UI-01 | Phase 10 | Pending |
-| UI-02 | Phase 10 | Pending |
+| UI-01 | Phase 10 | Complete |
+| UI-02 | Phase 10 | Complete |
 | UI-03 | Phase 11 | Pending |
 | UI-04 | Phase 11 | Pending |
-| UI-05 | Phase 10 | Pending |
+| UI-05 | Phase 10 | Complete |
 
 **Coverage:**
 - v1 requirements: 42 total
