@@ -242,7 +242,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 13-01-PLAN.md — Install ESLint 9 flat config with typescript-eslint v8, fix all errors, update Makefile and CI
+- [ ] 13-01-PLAN.md — Install ESLint 9 flat config with typescript-eslint v8 per-package configs, fix all errors, update Makefile and CI
 
 ## Progress
 
