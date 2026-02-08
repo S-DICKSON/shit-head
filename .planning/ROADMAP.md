@@ -154,7 +154,7 @@ Plans:
 - [x] 07-02-PLAN.md — Endgame utilities and playFromFaceUp (TDD)
 - [x] 07-03-PLAN.md — Blind face-down play mechanic (TDD)
 - [x] 07-04-PLAN.md — Wire endgame into Room and WebSocket handlers
-- [ ] 07-05-PLAN.md — Fix TypeScript type errors: OperationResult alignment and test narrowing (gap closure)
+- [x] 07-05-PLAN.md — Fix TypeScript type errors: OperationResult alignment and test narrowing (gap closure)
 
 ### Phase 8: Turn Timing & Auto-Pickup
 **Goal**: Turns have time limits with automatic pile pickup on timeout
@@ -257,7 +257,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 4. Pre-Game Swap Phase | 6/6 | Complete | 2026-02-07 |
 | 5. Core Game Engine & Rules | 4/4 | Complete | 2026-02-07 |
 | 6. Special Cards & Burn Mechanics | 2/2 | Complete | 2026-02-08 |
-| 7. Endgame & Win Conditions | 4/5 | Gap closure | 2026-02-08 |
+| 7. Endgame & Win Conditions | 5/5 | Complete | 2026-02-08 |
 | 8. Turn Timing & Auto-Pickup | 0/TBD | Not started | - |
 | 9. Connection Management & Reconnection | 0/TBD | Not started | - |
 | 10. Client UI & Card Interactions | 0/TBD | Not started | - |
