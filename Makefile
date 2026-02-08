@@ -28,7 +28,7 @@ lint: ## Run linter
 	docker compose run --rm client bunx eslint .
 
 type-check: ## Run TypeScript type checking (all packages)
-	docker compose run --rm server bunx tsc --noEmit -p packages/shared/tsconfig.json
+	docker compose run --rm server bunx tsc --build packages/shared/tsconfig.json
 	docker compose run --rm server bunx tsc --noEmit -p packages/server/tsconfig.json
 	docker compose run --rm client bunx vue-tsc --noEmit
 
@@ -36,6 +36,7 @@ type-check-shared: ## Run shared package type checking
 	docker compose run --rm server bunx tsc --noEmit -p packages/shared/tsconfig.json
 
 type-check-server: ## Run server type checking
+	docker compose run --rm server bunx tsc --build packages/shared/tsconfig.json
 	docker compose run --rm server bunx tsc --noEmit -p packages/server/tsconfig.json
 
 clean: ## Clean up containers, volumes, and images

@@ -254,6 +254,7 @@ describe('Room', () => {
         completeCalled = true;
         expect(reason).toBe('all-ready');
       },
+      onPlayPhaseStart: () => {},
     });
 
     room.startGame();

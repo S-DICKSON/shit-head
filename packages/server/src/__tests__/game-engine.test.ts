@@ -3,6 +3,12 @@ import { GameEngine } from '../game/GameEngine';
 import { cardEquals } from '@shit-head/shared';
 import type { Card, PlayerGameState, GameState, Rank, Suit } from '@shit-head/shared';
 
+// Helper function to safely extract rank from a card (tests only use standard cards)
+const cardRank = (card: Card): string => {
+  if (card.kind === 'joker') throw new Error('Expected standard card');
+  return card.rank;
+};
+
 describe('GameEngine', () => {
   const players2 = [
     { id: 'p1', nickname: 'Alice' },
@@ -571,19 +577,21 @@ describe('GameEngine', () => {
       expect(result1.success).toBe(true);
 
       // Second swap on the result of the first
-      const result2 = GameEngine.swapCards(result1.data!, 'p1', 1, 1);
-      expect(result2.success).toBe(true);
+      if (result1.success) {
+        const result2 = GameEngine.swapCards(result1.data, 'p1', 1, 1);
+        expect(result2.success).toBe(true);
 
-      if (result2.success) {
-        const finalPlayer = result2.data!.players[0];
-        // hand[0] should now be originalFaceUp0 (from first swap)
-        expect(cardEquals(finalPlayer.hand[0], originalFaceUp0)).toBe(true);
-        // faceUp[0] should now be originalHand0 (from first swap)
-        expect(cardEquals(finalPlayer.faceUp[0], originalHand0)).toBe(true);
-        // hand[1] should now be originalFaceUp1 (from second swap)
-        expect(cardEquals(finalPlayer.hand[1], originalFaceUp1)).toBe(true);
-        // faceUp[1] should now be originalHand1 (from second swap)
-        expect(cardEquals(finalPlayer.faceUp[1], originalHand1)).toBe(true);
+        if (result2.success) {
+          const finalPlayer = result2.data.players[0];
+          // hand[0] should now be originalFaceUp0 (from first swap)
+          expect(cardEquals(finalPlayer.hand[0], originalFaceUp0)).toBe(true);
+          // faceUp[0] should now be originalHand0 (from first swap)
+          expect(cardEquals(finalPlayer.faceUp[0], originalHand0)).toBe(true);
+          // hand[1] should now be originalFaceUp1 (from second swap)
+          expect(cardEquals(finalPlayer.hand[1], originalFaceUp1)).toBe(true);
+          // faceUp[1] should now be originalHand1 (from second swap)
+          expect(cardEquals(finalPlayer.faceUp[1], originalHand1)).toBe(true);
+        }
       }
     });
 
@@ -1055,8 +1063,8 @@ describe('GameEngine', () => {
 
         expect(result.success).toBe(true);
         if (result.success) {
-          expect(result.data!.discardPile).toHaveLength(2);
-          expect(result.data!.discardPile[1].rank).toBe('2');
+          expect(result.data.discardPile).toHaveLength(2);
+          expect(cardRank(result.data.discardPile[1])).toBe('2');
         }
       });
 
@@ -1172,9 +1180,9 @@ describe('GameEngine', () => {
         expect(result.success).toBe(true);
         if (result.success) {
           // 8 should be on pile
-          expect(result.data!.discardPile[result.data!.discardPile.length - 1].rank).toBe('8');
+          expect(cardRank(result.data.discardPile[result.data.discardPile.length - 1])).toBe('8');
           // Turn advances normally
-          expect(result.data!.currentPlayerIndex).toBe(1);
+          expect(result.data.currentPlayerIndex).toBe(1);
         }
       });
 
@@ -1649,11 +1657,11 @@ describe('GameEngine', () => {
           expect(result1.data!.currentPlayerIndex).toBe(0);
 
           // P1 plays low card (3) on empty pile
-          const result2 = GameEngine.playCards(result1.data!, 'p1', [0]);
+          const result2 = GameEngine.playCards(result1.data, 'p1', [0]);
           expect(result2.success).toBe(true);
           if (result2.success) {
-            expect(result2.data!.discardPile).toHaveLength(1);
-            expect(result2.data!.discardPile[0].rank).toBe('3');
+            expect(result2.data.discardPile).toHaveLength(1);
+            expect(cardRank(result2.data.discardPile[0])).toBe('3');
           }
         }
       });
