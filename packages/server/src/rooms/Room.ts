@@ -7,9 +7,9 @@ import { GameEngine, type BlindPlayResult } from '../game/GameEngine';
 const ALPHABET = '2346789ABCDEFGHJKMNPQRTUVWXYZ';
 const generateRoomCode = customAlphabet(ALPHABET, 6);
 
-type OperationResult<T = void> =
-  | { success: true; data?: T }
-  | { success: false; error: string; code: ErrorCode };
+type OperationResult<T = void> = T extends void
+  ? { success: true } | { success: false; error: string; code: ErrorCode }
+  : { success: true; data: T } | { success: false; error: string; code: ErrorCode };
 
 export class Room {
   public readonly code: string;

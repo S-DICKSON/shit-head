@@ -1,12 +1,12 @@
-import type { Card, GameState, PlayerGameView, PlayerGameState, OpponentView, PlaySource } from '@shit-head/shared';
+import type { Card, GameState, PlayerGameView, PlayerGameState, OpponentView, PlaySource, ErrorCode } from '@shit-head/shared';
 import { createDeck } from '@shit-head/shared';
 import { shuffleDeck } from './Deck';
 import { RANK_ORDER, canPlayOn } from './CardComparison';
 import { canPlayOnPile, detectBurn } from './CardRules';
 
-type OperationResult<T = void> =
-  | { success: true; data?: T }
-  | { success: false; error: string; code: string };
+type OperationResult<T = void> = T extends void
+  ? { success: true } | { success: false; error: string; code: ErrorCode }
+  : { success: true; data: T } | { success: false; error: string; code: ErrorCode };
 
 export type BlindPlayResult = { state: GameState; card: Card; playable: boolean };
 
