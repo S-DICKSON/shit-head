@@ -183,7 +183,7 @@ Plans:
   3. Player can rejoin game after disconnect with full state restoration
   4. After grace period expires, disconnected player is removed from game
   5. Game continues with remaining players if 2+ remain
-**Plans**: 6 plans
+**Plans**: 7 plans
 
 Plans:
 - [x] 09-01-PLAN.md — Reconnection message schemas and types (shared package)
@@ -192,6 +192,7 @@ Plans:
 - [x] 09-04-PLAN.md — Server WebSocket handler integration (reconnect handler, handleClose update)
 - [x] 09-05-PLAN.md — Fix page reload reconnect flow and swap phase navigation race (gap closure)
 - [x] 09-06-PLAN.md — Add disconnect/reconnect/removal notification toasts (gap closure)
+- [ ] 09-07-PLAN.md — Fix game-end detection for all active phases (gap closure)
 
 ### Phase 10: Client UI & Card Interactions
 **Goal**: Players have a responsive UI to view and play cards on mobile and desktop
@@ -284,7 +285,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 6. Special Cards & Burn Mechanics | 2/2 | Complete | 2026-02-08 |
 | 7. Endgame & Win Conditions | 5/5 | Complete | 2026-02-08 |
 | 8. Turn Timing & Auto-Pickup | 3/3 | Complete | 2026-02-08 |
-| 9. Connection Management & Reconnection | 6/6 | Complete | 2026-02-08 |
+| 9. Connection Management & Reconnection | 6/7 | In progress | - |
 | 10. Client UI & Card Interactions | 0/3 | Not started | - |
 | 11. Game Feedback & Turn Indicators | 0/TBD | Not started | - |
 | 12. Deployment & Production Polish | 0/TBD | Not started | - |
@@ -293,4 +294,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 
 ---
 *Roadmap created: 2026-02-07*
-*Last updated: 2026-02-08 after Phase 9 gap closure execution*
+*Last updated: 2026-02-08 after Phase 9 gap closure planning*
