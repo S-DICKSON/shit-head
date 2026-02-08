@@ -51,11 +51,11 @@
 
 ### Endgame
 
-- [ ] **END-01**: When hand empty and draw pile empty, player plays face-up cards
-- [ ] **END-02**: When face-up cards gone, player plays face-down cards blindly
-- [ ] **END-03**: If blind face-down card unplayable, player picks up pile (returns to hand phase)
-- [ ] **END-04**: Player who empties all cards drops out of game
-- [ ] **END-05**: Last player with cards is the shithead and deals next hand
+- [x] **END-01**: When hand empty and draw pile empty, player plays face-up cards
+- [x] **END-02**: When face-up cards gone, player plays face-down cards blindly
+- [x] **END-03**: If blind face-down card unplayable, player picks up pile (returns to hand phase)
+- [x] **END-04**: Player who empties all cards drops out of game
+- [x] **END-05**: Last player with cards is the shithead and deals next hand
 
 ### Multiplayer
 
@@ -133,11 +133,11 @@
 | BURN-01 | Phase 6 | Complete |
 | BURN-02 | Phase 6 | Complete |
 | BURN-03 | Phase 6 | Complete |
-| END-01 | Phase 7 | Pending |
-| END-02 | Phase 7 | Pending |
-| END-03 | Phase 7 | Pending |
-| END-04 | Phase 7 | Pending |
-| END-05 | Phase 7 | Pending |
+| END-01 | Phase 7 | Complete |
+| END-02 | Phase 7 | Complete |
+| END-03 | Phase 7 | Complete |
+| END-04 | Phase 7 | Complete |
+| END-05 | Phase 7 | Complete |
 | MULT-01 | Phase 2 | Complete |
 | MULT-02 | Phase 2 | Complete |
 | MULT-03 | Phase 8 | Pending |
@@ -157,4 +157,4 @@
 
 ---
 *Requirements defined: 2026-02-07*
-*Last updated: 2026-02-08 after Phase 6 completion*
+*Last updated: 2026-02-08 after Phase 7 completion*

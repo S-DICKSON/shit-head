@@ -18,7 +18,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 4: Pre-Game Swap Phase** - 30-second simultaneous card swap before game start
 - [x] **Phase 5: Core Game Engine & Rules** - Turn system, play validation, draw/pickup mechanics
 - [x] **Phase 6: Special Cards & Burn Mechanics** - 2s, 7s, 8s, 10s, and burn detection
-- [ ] **Phase 7: Endgame & Win Conditions** - Hand to face-up to face-down progression and winner detection
+- [x] **Phase 7: Endgame & Win Conditions** - Hand to face-up to face-down progression and winner detection
 - [ ] **Phase 8: Turn Timing & Auto-Pickup** - Turn timer with timeout handling
 - [ ] **Phase 9: Connection Management & Reconnection** - Disconnect detection and reconnection flow
 - [ ] **Phase 10: Client UI & Card Interactions** - React UI with card hand display and play actions
@@ -149,10 +149,10 @@ Plans:
 **Plans**: 4 plans
 
 Plans:
-- [ ] 07-01-PLAN.md — Endgame message schemas and PlaySource type (shared package)
-- [ ] 07-02-PLAN.md — Endgame utilities and playFromFaceUp (TDD)
-- [ ] 07-03-PLAN.md — Blind face-down play mechanic (TDD)
-- [ ] 07-04-PLAN.md — Wire endgame into Room and WebSocket handlers
+- [x] 07-01-PLAN.md — Endgame message schemas and PlaySource type (shared package)
+- [x] 07-02-PLAN.md — Endgame utilities and playFromFaceUp (TDD)
+- [x] 07-03-PLAN.md — Blind face-down play mechanic (TDD)
+- [x] 07-04-PLAN.md — Wire endgame into Room and WebSocket handlers
 
 ### Phase 8: Turn Timing & Auto-Pickup
 **Goal**: Turns have time limits with automatic pile pickup on timeout
@@ -240,7 +240,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 4. Pre-Game Swap Phase | 6/6 | Complete | 2026-02-07 |
 | 5. Core Game Engine & Rules | 4/4 | Complete | 2026-02-07 |
 | 6. Special Cards & Burn Mechanics | 2/2 | Complete | 2026-02-08 |
-| 7. Endgame & Win Conditions | 0/TBD | Not started | - |
+| 7. Endgame & Win Conditions | 4/4 | Complete | 2026-02-08 |
 | 8. Turn Timing & Auto-Pickup | 0/TBD | Not started | - |
 | 9. Connection Management & Reconnection | 0/TBD | Not started | - |
 | 10. Client UI & Card Interactions | 0/TBD | Not started | - |
@@ -249,4 +249,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 
 ---
 *Roadmap created: 2026-02-07*
-*Last updated: 2026-02-08 after Phase 6 execution*
+*Last updated: 2026-02-08 after Phase 7 execution*
