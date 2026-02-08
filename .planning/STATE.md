@@ -9,19 +9,19 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 
 ## Current Position
 
-Phase: 10 of 14 (Client UI Card Interactions)
-Plan: 3 of 3 complete
-Status: Phase complete
-Last activity: 2026-02-08 — Completed 10-03-PLAN.md
+Phase: 09 of 14 (Connection Management & Reconnection)
+Plan: 7 of 7 complete (gap closure)
+Status: Gap closure complete
+Last activity: 2026-02-08 — Completed 09-07-PLAN.md (gap closure)
 
-Progress: [████████░░] ~83% (43 plans complete)
+Progress: [████████░░] ~84% (44 plans complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 43
-- Average duration: 2.2 minutes
-- Total execution time: 1.68 hours
+- Total plans completed: 44
+- Average duration: 2.3 minutes
+- Total execution time: 1.71 hours
 
 **By Phase:**
 
@@ -35,14 +35,14 @@ Progress: [████████░░] ~83% (43 plans complete)
 | 06 | 2 | 356s | 178s |
 | 07 | 5 | 981s | 196s |
 | 08 | 3 | 701s | 234s |
-| 09 | 6 | 1098s | 183s |
+| 09 | 7 | 1204s | 172s |
 | 10 | 3 | 451s | 150s |
 | 13 | 1 | 118s | 118s |
 | 14 | 2 | 346s | 173s |
 
 **Recent Trend:**
-- Last 5 plans: 09-06 (145s), 10-01 (145s), 10-02 (139s), 10-03 (167s)
-- Trend: Steady ~2-3min execution times — consistent productivity
+- Last 5 plans: 10-01 (145s), 10-02 (139s), 10-03 (167s), 09-07 (106s)
+- Trend: Steady ~2-3min execution times — gap closure was faster (1.8min)
 
 *Updated after each plan completion*
 
@@ -330,6 +330,12 @@ Recent decisions affecting current work:
 - Host-left notification delayed by 1.5s before state cleanup to ensure visibility before redirect
 - Global NotificationToast component mounted in App.vue for cross-route notifications
 
+**From 09-07:**
+- Game-end check is phase-independent and applies to all active game phases (swapping, transitioning, playing)
+- Turn advancement remains phase-specific (playing phase only)
+- Critical game state checks should be phase-independent when they apply to all active phases
+- Gap closure fixed UAT Test 5: games properly end when players disconnect during swap/transition phases
+
 **From 10-02:**
 - Discard pile shows top 3 cards with 3px offset stacking effect for visual depth
 - Draw pile uses blue card-back pattern with decorative inner border
@@ -365,6 +371,6 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Completed 10-03-PLAN.md (Phase 10 complete)
+Stopped at: Completed 09-07-PLAN.md (gap closure - game-end detection fix)
 Resume file: None
 
