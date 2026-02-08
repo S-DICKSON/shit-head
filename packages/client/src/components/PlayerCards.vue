@@ -8,9 +8,64 @@
       Your Turn!
     </div>
 
+    <!-- Table cards: face-down underneath face-up (stacked) -->
+    <div
+      v-if="faceUp.length > 0 || faceDownCount > 0"
+      class="mb-3"
+    >
+      <div class="text-center mb-1">
+        <span class="text-xs text-green-300 uppercase tracking-wide">Table</span>
+      </div>
+      <div class="flex justify-center gap-3 sm:gap-4 flex-wrap">
+        <!-- Each table position is a stack: face-down card on bottom, face-up card on top -->
+        <div
+          v-for="i in Math.max(faceUp.length, faceDownCount)"
+          :key="'table-' + i"
+          class="relative w-14 h-21 sm:w-16 sm:h-24"
+        >
+          <!-- Face-down card (bottom layer) -->
+          <button
+            v-if="i <= faceDownCount"
+            class="absolute inset-0 w-14 h-21 sm:w-16 sm:h-24 bg-blue-800 rounded border-2 border-blue-600 flex items-center justify-center text-lg text-blue-300 transition-all"
+            :class="[
+              i <= faceUp.length ? 'translate-y-1 translate-x-0.5' : '',
+              activeSource === 'face-down' ? 'cursor-pointer hover:border-blue-400' : 'opacity-60 cursor-not-allowed'
+            ]"
+            :style="{ zIndex: 0 }"
+            @click="$emit('select-face-down', i - 1)"
+          >
+            ?
+          </button>
+          <!-- Face-up card (top layer, overlays the face-down) -->
+          <button
+            v-if="i <= faceUp.length"
+            class="absolute inset-0 w-14 h-21 sm:w-16 sm:h-24 bg-white text-black rounded border-2 flex flex-col items-center justify-center text-xs sm:text-sm transition-all"
+            :class="[
+              selectedFaceUpIndex === (i - 1)
+                ? 'ring-2 ring-yellow-400 -translate-y-2 border-yellow-400 shadow-lg'
+                : 'border-gray-300',
+              activeSource !== 'face-up'
+                ? 'opacity-40 cursor-not-allowed'
+                : 'cursor-pointer hover:border-gray-400'
+            ]"
+            :style="{ zIndex: 1 }"
+            @click="$emit('select-face-up', i - 1)"
+          >
+            <span class="font-bold">{{ faceUp[i - 1].kind === 'standard' ? faceUp[i - 1].rank : 'JKR' }}</span>
+            <span :class="suitColor(faceUp[i - 1])">
+              {{ faceUp[i - 1].kind === 'standard' ? suitSymbol(faceUp[i - 1].suit) : '★' }}
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Hand cards section -->
-    <div class="mb-4">
-      <div class="text-center mb-2">
+    <div
+      v-if="hand.length > 0"
+      class="mb-3"
+    >
+      <div class="text-center mb-1">
         <span class="text-xs text-green-300 uppercase tracking-wide">Hand ({{ hand.length }})</span>
       </div>
       <TransitionGroup
@@ -40,54 +95,8 @@
       </TransitionGroup>
     </div>
 
-    <!-- Face-up cards section -->
-    <div class="mb-4">
-      <div class="text-center mb-2">
-        <span class="text-xs text-green-300 uppercase tracking-wide">Face Up ({{ faceUp.length }})</span>
-      </div>
-      <div class="flex justify-center gap-1 sm:gap-2 flex-wrap">
-        <button
-          v-for="(card, i) in faceUp"
-          :key="cardKey(card)"
-          class="w-14 h-21 sm:w-16 sm:h-24 bg-white text-black rounded border-2 flex flex-col items-center justify-center text-xs sm:text-sm transition-all"
-          :class="[
-            selectedFaceUpIndex === i
-              ? 'ring-2 ring-yellow-400 -translate-y-2 border-yellow-400 shadow-lg'
-              : 'border-gray-300',
-            activeSource !== 'face-up'
-              ? 'opacity-40 cursor-not-allowed'
-              : 'cursor-pointer hover:border-gray-400'
-          ]"
-          @click="$emit('select-face-up', i)"
-        >
-          <span class="font-bold">{{ card.kind === 'standard' ? card.rank : 'JKR' }}</span>
-          <span :class="suitColor(card)">
-            {{ card.kind === 'standard' ? suitSymbol(card.suit) : '★' }}
-          </span>
-        </button>
-      </div>
-    </div>
-
-    <!-- Face-down cards section -->
-    <div class="mb-4">
-      <div class="text-center mb-2">
-        <span class="text-xs text-green-300 uppercase tracking-wide">Face Down ({{ faceDownCount }})</span>
-      </div>
-      <div class="flex justify-center gap-1 sm:gap-2 flex-wrap">
-        <button
-          v-for="n in faceDownCount"
-          :key="'fd-' + n"
-          class="w-14 h-21 sm:w-16 sm:h-24 bg-blue-800 rounded border-2 border-blue-600 flex items-center justify-center text-lg text-blue-300 transition-all"
-          :class="activeSource !== 'face-down' ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:border-blue-400'"
-          @click="$emit('select-face-down', n - 1)"
-        >
-          ?
-        </button>
-      </div>
-    </div>
-
     <!-- Action buttons -->
-    <div class="flex justify-center gap-4 mt-2">
+    <div class="flex justify-center gap-4 mt-1">
       <button
         v-if="hasSelection"
         class="px-6 py-2 bg-yellow-500 text-black font-bold rounded-lg disabled:opacity-50 hover:bg-yellow-400 transition-colors"

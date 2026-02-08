@@ -30,39 +30,33 @@ function isOpponentCurrentTurn(opponentPlayerId: string): boolean {
 </script>
 
 <template>
-  <div class="flex flex-col min-h-screen bg-green-900 text-white">
-    <!-- Top bar: Turn Timer (centered) -->
-    <div class="flex justify-center py-2">
-      <TurnTimer
-        :time-remaining="turnTimeRemaining"
-        :total-time="45"
-      />
+  <div class="flex flex-col h-screen bg-green-900 text-white overflow-hidden">
+    <!-- Top bar: Turn Timer + Opponents -->
+    <div class="flex-shrink-0 pt-2">
+      <div class="flex justify-center mb-1">
+        <TurnTimer
+          :time-remaining="turnTimeRemaining"
+          :total-time="45"
+        />
+      </div>
+      <div class="flex flex-wrap justify-center gap-2 sm:gap-4 px-2 mb-1">
+        <OpponentCards
+          v-for="opponent in gameView?.opponents"
+          :key="opponent.playerId"
+          :opponent="opponent"
+          :is-current-turn="isOpponentCurrentTurn(opponent.playerId)"
+        />
+      </div>
     </div>
 
-    <!-- Opponents row (scrollable horizontally if many) -->
-    <div class="flex flex-wrap justify-center gap-2 sm:gap-4 px-2 mb-2">
-      <OpponentCards
-        v-for="opponent in gameView?.opponents"
-        :key="opponent.playerId"
-        :opponent="opponent"
-        :is-current-turn="isOpponentCurrentTurn(opponent.playerId)"
-      />
-    </div>
-
-    <!-- Spacer to push game area toward center -->
-    <div class="flex-1" />
-
-    <!-- Center game area: Draw Pile + Discard Pile side by side -->
-    <div class="flex justify-center items-end gap-6 sm:gap-8 px-4 mb-4">
+    <!-- Center game area: Draw Pile + Discard Pile -->
+    <div class="flex-1 flex items-center justify-center gap-6 sm:gap-8 px-4">
       <DrawPile :count="gameView?.drawPileCount ?? 0" />
       <DiscardPile :cards="gameView?.discardPile ?? []" />
     </div>
 
-    <!-- Spacer -->
-    <div class="flex-1" />
-
-    <!-- Player's cards area (bottom of screen) -->
-    <div class="px-2 pb-4">
+    <!-- Player's cards area (bottom of screen, no scroll needed) -->
+    <div class="flex-shrink-0 px-2 pb-3">
       <PlayerCards
         :hand="gameView?.hand ?? []"
         :face-up="gameView?.faceUp ?? []"
