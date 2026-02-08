@@ -1,7 +1,7 @@
 // Room class - individual room state and logic
 import { customAlphabet } from 'nanoid';
 import type { RoomState, RoomStatus, LobbyPlayer, ErrorCode, GameState, PlayerGameView } from '@shit-head/shared';
-import { GameEngine, type BlindPlayResult } from '../game/GameEngine';
+import { GameEngine, type BlindPlayResult, type AutoPlayResult } from '../game/GameEngine';
 
 // Custom alphabet excludes confusable characters: 0/O, 1/I/L, 5/S
 const ALPHABET = '2346789ABCDEFGHJKMNPQRTUVWXYZ';
@@ -23,12 +23,19 @@ export class Room {
   private readyPlayers: Set<string> = new Set();
   private swapTimer: ReturnType<typeof setInterval> | null = null;
   private swapTimeRemaining: number = 30;
+  private turnTimer: ReturnType<typeof setInterval> | null = null;
+  private turnTimerDelay: ReturnType<typeof setTimeout> | null = null;
+  private turnTimeRemaining: number = 45;
+  private readonly TURN_DURATION = 45;
+  private readonly TURN_START_DELAY = 1500; // 1.5 seconds per Claude's discretion
   private onSwapTimerTick?: (timeRemaining: number) => void;
   private onPlayerReady?: (playerId: string, readyPlayers: string[]) => void;
   private onSwapPhaseComplete?: (reason: 'timer-expired' | 'all-ready') => void;
   private onPlayPhaseStart?: (currentPlayerIndex: number) => void;
   private onPlayerEliminated?: (playerId: string, nickname: string, currentPlayerIndex: number) => void;
   private onGameOver?: (shitheadId: string, shitheadNickname: string) => void;
+  private onTurnTimerTick?: (timeRemaining: number, currentPlayerIndex: number) => void;
+  private onTurnTimeout?: (playerId: string) => void;
 
   constructor(hostId: string, hostNickname: string) {
     this.code = generateRoomCode();
@@ -167,6 +174,14 @@ export class Room {
     this.onGameOver = callbacks.onGameOver;
   }
 
+  setTurnTimerCallbacks(callbacks: {
+    onTick: (timeRemaining: number, currentPlayerIndex: number) => void;
+    onTimeout: (playerId: string) => void;
+  }): void {
+    this.onTurnTimerTick = callbacks.onTick;
+    this.onTurnTimeout = callbacks.onTimeout;
+  }
+
   swapCards(playerId: string, handIndex: number, faceUpIndex: number): OperationResult {
     // Validate game exists
     if (!this.gameState) {
@@ -267,12 +282,60 @@ export class Room {
         };
         // Notify that playing phase has started with first player
         this.onPlayPhaseStart?.(this.gameState.currentPlayerIndex);
+        // Start turn timer for first player
+        this.startTurnTimer(this.gameState.currentPlayerIndex);
       }
     }, 2500);
   }
 
   getReadyPlayers(): string[] {
     return Array.from(this.readyPlayers);
+  }
+
+  startTurnTimer(playerIndex: number): void {
+    this.clearTurnTimer();
+    this.turnTimeRemaining = this.TURN_DURATION;
+
+    this.turnTimerDelay = setTimeout(() => {
+      // Fire initial tick with full time
+      this.onTurnTimerTick?.(this.turnTimeRemaining, playerIndex);
+
+      // Start interval
+      this.turnTimer = setInterval(() => {
+        this.turnTimeRemaining--;
+        this.onTurnTimerTick?.(this.turnTimeRemaining, playerIndex);
+
+        if (this.turnTimeRemaining <= 0) {
+          this.handleTurnTimeout();
+        }
+      }, 1000);
+    }, this.TURN_START_DELAY);
+  }
+
+  clearTurnTimer(): void {
+    if (this.turnTimerDelay) {
+      clearTimeout(this.turnTimerDelay);
+      this.turnTimerDelay = null;
+    }
+    if (this.turnTimer) {
+      clearInterval(this.turnTimer);
+      this.turnTimer = null;
+    }
+  }
+
+  private handleTurnTimeout(): void {
+    this.clearTurnTimer();
+
+    if (!this.gameState || this.gameState.phase !== 'playing') {
+      return;
+    }
+
+    const currentPlayer = this.gameState.players[this.gameState.currentPlayerIndex];
+    if (!currentPlayer) {
+      return;
+    }
+
+    this.onTurnTimeout?.(currentPlayer.playerId);
   }
 
   private checkPostPlayState(playerId: string): void {
@@ -301,6 +364,7 @@ export class Room {
   }
 
   playCards(playerId: string, cardIndices: number[]): OperationResult {
+    this.clearTurnTimer();
     if (!this.gameState) {
       return { success: false, error: 'No game in progress', code: 'INVALID_ACTION' };
     }
@@ -308,6 +372,9 @@ export class Room {
     if (result.success && result.data) {
       this.gameState = result.data;
       this.checkPostPlayState(playerId);
+      if (this.gameState.phase === 'playing') {
+        this.startTurnTimer(this.gameState.currentPlayerIndex);
+      }
       return { success: true };
     }
     if (!result.success) {
@@ -318,12 +385,16 @@ export class Room {
   }
 
   pickupPile(playerId: string): OperationResult {
+    this.clearTurnTimer();
     if (!this.gameState) {
       return { success: false, error: 'No game in progress', code: 'INVALID_ACTION' };
     }
     const result = GameEngine.pickupPile(this.gameState, playerId);
     if (result.success && result.data) {
       this.gameState = result.data;
+      if (this.gameState.phase === 'playing') {
+        this.startTurnTimer(this.gameState.currentPlayerIndex);
+      }
       return { success: true };
     }
     if (!result.success) {
@@ -334,6 +405,7 @@ export class Room {
   }
 
   playFromFaceUp(playerId: string, cardIndices: number[]): OperationResult {
+    this.clearTurnTimer();
     if (!this.gameState) {
       return { success: false, error: 'No game in progress', code: 'INVALID_ACTION' };
     }
@@ -343,6 +415,9 @@ export class Room {
     if (result.success && result.data) {
       this.gameState = result.data;
       this.checkPostPlayState(playerId);
+      if (this.gameState.phase === 'playing') {
+        this.startTurnTimer(this.gameState.currentPlayerIndex);
+      }
       return { success: true };
     }
 
@@ -350,6 +425,7 @@ export class Room {
   }
 
   playFaceDownBlind(playerId: string, faceDownIndex: number): OperationResult<BlindPlayResult> {
+    this.clearTurnTimer();
     if (!this.gameState) {
       return { success: false, error: 'No game in progress', code: 'INVALID_ACTION' };
     }
@@ -359,6 +435,28 @@ export class Room {
     if (result.success && result.data) {
       this.gameState = result.data.state;
       this.checkPostPlayState(playerId);
+      if (this.gameState.phase === 'playing') {
+        this.startTurnTimer(this.gameState.currentPlayerIndex);
+      }
+      return { success: true, data: result.data };
+    }
+
+    return result;
+  }
+
+  autoPlayOnTimeout(playerId: string): OperationResult<AutoPlayResult> {
+    if (!this.gameState) {
+      return { success: false, error: 'No game in progress', code: 'INVALID_ACTION' };
+    }
+
+    const result = GameEngine.autoPlayOnTimeout(this.gameState, playerId);
+
+    if (result.success && result.data) {
+      this.gameState = result.data.state;
+      this.checkPostPlayState(playerId);
+      if (this.gameState.phase === 'playing') {
+        this.startTurnTimer(this.gameState.currentPlayerIndex);
+      }
       return { success: true, data: result.data };
     }
 
