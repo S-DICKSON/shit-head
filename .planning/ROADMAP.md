@@ -24,6 +24,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 10: Client UI & Card Interactions** - React UI with card hand display and play actions
 - [ ] **Phase 11: Game Feedback & Turn Indicators** - Turn state display and visual cues
 - [ ] **Phase 12: Deployment & Production Polish** - Production build, hosting, and monitoring
+- [ ] **Phase 13: ESLint Setup & Fixes** - Install ESLint for server and client, add to Makefile, fix issues
 
 ## Phase Details
 
@@ -146,13 +147,14 @@ Plans:
   3. If blind face-down card is unplayable, player picks up pile (returns to hand phase)
   4. Player who empties all cards drops out of the game
   5. Last player with cards is declared the shithead and deals next hand
-**Plans**: 4 plans
+**Plans**: 5 plans
 
 Plans:
 - [x] 07-01-PLAN.md — Endgame message schemas and PlaySource type (shared package)
 - [x] 07-02-PLAN.md — Endgame utilities and playFromFaceUp (TDD)
 - [x] 07-03-PLAN.md — Blind face-down play mechanic (TDD)
 - [x] 07-04-PLAN.md — Wire endgame into Room and WebSocket handlers
+- [ ] 07-05-PLAN.md — Fix TypeScript type errors: OperationResult alignment and test narrowing (gap closure)
 
 ### Phase 8: Turn Timing & Auto-Pickup
 **Goal**: Turns have time limits with automatic pile pickup on timeout
@@ -227,10 +229,25 @@ Plans:
 Plans:
 - [ ] (Plans will be created during /gsd:plan-phase 12)
 
+### Phase 13: ESLint Setup & Fixes
+**Goal**: ESLint is configured for all packages with consistent rules and all issues are resolved
+**Depends on**: Phase 12
+**Requirements**: None (developer tooling)
+**Success Criteria** (what must be TRUE):
+  1. ESLint is installed and configured for server, client, and shared packages
+  2. TypeScript-aware ESLint rules are enabled across the monorepo
+  3. Makefile has `lint` and `lint-fix` targets
+  4. CI pipeline runs linting on every PR
+  5. All existing code passes ESLint with zero errors
+**Plans**: TBD
+
+Plans:
+- [ ] (Plans will be created during /gsd:plan-phase 13)
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10 -> 11 -> 12
+Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -240,13 +257,14 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 4. Pre-Game Swap Phase | 6/6 | Complete | 2026-02-07 |
 | 5. Core Game Engine & Rules | 4/4 | Complete | 2026-02-07 |
 | 6. Special Cards & Burn Mechanics | 2/2 | Complete | 2026-02-08 |
-| 7. Endgame & Win Conditions | 4/4 | Complete | 2026-02-08 |
+| 7. Endgame & Win Conditions | 4/5 | Gap closure | 2026-02-08 |
 | 8. Turn Timing & Auto-Pickup | 0/TBD | Not started | - |
 | 9. Connection Management & Reconnection | 0/TBD | Not started | - |
 | 10. Client UI & Card Interactions | 0/TBD | Not started | - |
 | 11. Game Feedback & Turn Indicators | 0/TBD | Not started | - |
 | 12. Deployment & Production Polish | 0/TBD | Not started | - |
+| 13. ESLint Setup & Fixes | 0/TBD | Not started | - |
 
 ---
 *Roadmap created: 2026-02-07*
-*Last updated: 2026-02-08 after Phase 7 execution*
+*Last updated: 2026-02-08 after Phase 7 gap closure planning*
