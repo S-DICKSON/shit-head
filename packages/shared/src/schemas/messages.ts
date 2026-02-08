@@ -92,6 +92,11 @@ export const playFaceDownSchema = z.object({
   faceDownIndex: z.number().int().min(0),
 });
 
+export const reconnectSchema = z.object({
+  type: z.literal('reconnect'),
+  roomCode: z.string().length(6),
+});
+
 export const clientMessageSchema = z.discriminatedUnion('type', [
   createRoomSchema,
   joinRoomSchema,
@@ -102,6 +107,7 @@ export const clientMessageSchema = z.discriminatedUnion('type', [
   playCardsSchema,
   pickupPileSchema,
   playFaceDownSchema,
+  reconnectSchema,
 ]);
 
 // Server-to-client message schemas
@@ -226,6 +232,26 @@ export const turnTimerTickSchema = z.object({
   currentPlayerIndex: z.number().int().min(0),
 });
 
+export const playerDisconnectedSchema = z.object({
+  type: z.literal('player-disconnected'),
+  playerId: z.string(),
+  nickname: z.string(),
+  graceTimeRemaining: z.number(),
+});
+
+export const playerReconnectedSchema = z.object({
+  type: z.literal('player-reconnected'),
+  playerId: z.string(),
+  nickname: z.string(),
+});
+
+export const playerRemovedSchema = z.object({
+  type: z.literal('player-removed'),
+  playerId: z.string(),
+  nickname: z.string(),
+  reason: z.enum(['timeout', 'host-left']),
+});
+
 export const errorSchema = z.object({
   type: z.literal('error'),
   message: z.string(),
@@ -259,6 +285,9 @@ export const serverMessageSchema = z.discriminatedUnion('type', [
   pilePickupSchema,
   turnChangedSchema,
   turnTimerTickSchema,
+  playerDisconnectedSchema,
+  playerReconnectedSchema,
+  playerRemovedSchema,
   faceDownResultSchema,
   playerEliminatedSchema,
   gameOverSchema,
