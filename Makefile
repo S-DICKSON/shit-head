@@ -1,4 +1,4 @@
-.PHONY: help dev start build test test-server test-client clean lint lint-fix type-check type-check-server type-check-shared
+.PHONY: help dev start build test test-server test-client clean lint lint-fix type-check type-check-server type-check-shared tunnel
 
 .DEFAULT_GOAL := help
 
@@ -49,3 +49,9 @@ type-check-server: ## Run server type checking
 clean: ## Clean up containers, volumes, and images
 	docker compose down -v --rmi local
 	docker compose -f docker-compose.prod.yml down -v --rmi local
+
+tunnel: ## Start ngrok tunnel for mobile testing (run make dev first)
+	@echo "Starting ngrok tunnel on port 5173..."
+	@echo "Share the https URL with mobile devices to test"
+	@echo ""
+	ngrok http 5173
