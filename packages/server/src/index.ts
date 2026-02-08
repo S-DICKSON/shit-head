@@ -29,9 +29,12 @@ const server = Bun.serve<WebSocketData>({
       const origin = req.headers.get('Origin');
       console.log(`WebSocket upgrade request from origin: ${origin}`);
 
+      // Check for reconnection playerId in query params
+      const reconnectPlayerId = url.searchParams.get('playerId');
+
       const upgraded = server.upgrade(req, {
         data: {
-          playerId: nanoid(),
+          playerId: reconnectPlayerId || nanoid(),
           roomCode: null,
         },
       });
