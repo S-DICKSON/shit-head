@@ -28,6 +28,11 @@ export class Room {
   private turnTimeRemaining: number = 45;
   private readonly TURN_DURATION = 45;
   private readonly TURN_START_DELAY = 1500; // 1.5 seconds per Claude's discretion
+  private disconnectedPlayers: Map<string, {
+    disconnectTime: number;
+    gracePeriodTimer: ReturnType<typeof setTimeout> | null;
+  }> = new Map();
+  private readonly DISCONNECT_GRACE_PERIOD = 90000; // 90 seconds
   private onSwapTimerTick?: (timeRemaining: number) => void;
   private onPlayerReady?: (playerId: string, readyPlayers: string[]) => void;
   private onSwapPhaseComplete?: (reason: 'timer-expired' | 'all-ready') => void;
@@ -36,6 +41,9 @@ export class Room {
   private onGameOver?: (shitheadId: string, shitheadNickname: string) => void;
   private onTurnTimerTick?: (timeRemaining: number, currentPlayerIndex: number) => void;
   private onTurnTimeout?: (playerId: string) => void;
+  private onPlayerDisconnected?: (playerId: string, nickname: string) => void;
+  private onPlayerReconnected?: (playerId: string, nickname: string) => void;
+  private onPlayerRemoved?: (playerId: string, nickname: string, reason: 'timeout' | 'host-left') => void;
 
   constructor(hostId: string, hostNickname: string) {
     this.code = generateRoomCode();
@@ -180,6 +188,16 @@ export class Room {
   }): void {
     this.onTurnTimerTick = callbacks.onTick;
     this.onTurnTimeout = callbacks.onTimeout;
+  }
+
+  setDisconnectCallbacks(callbacks: {
+    onDisconnected: (playerId: string, nickname: string) => void;
+    onReconnected: (playerId: string, nickname: string) => void;
+    onRemoved: (playerId: string, nickname: string, reason: 'timeout' | 'host-left') => void;
+  }): void {
+    this.onPlayerDisconnected = callbacks.onDisconnected;
+    this.onPlayerReconnected = callbacks.onReconnected;
+    this.onPlayerRemoved = callbacks.onRemoved;
   }
 
   swapCards(playerId: string, handIndex: number, faceUpIndex: number): OperationResult {
@@ -461,5 +479,153 @@ export class Room {
     }
 
     return result;
+  }
+
+  handlePlayerDisconnect(playerId: string): void {
+    const player = this.players.get(playerId);
+    if (!player) return;
+
+    // If no active game (lobby or finished), remove immediately
+    if (!this.gameState || this.gameState.phase === 'finished') {
+      const isHost = playerId === this.hostId;
+      this.removePlayer(playerId);
+      this.onPlayerRemoved?.(playerId, player.nickname, isHost ? 'host-left' : 'timeout');
+      return;
+    }
+
+    // Active game - start grace period
+    const gracePeriodTimer = setTimeout(() => {
+      this.removePlayerAfterTimeout(playerId);
+    }, this.DISCONNECT_GRACE_PERIOD);
+
+    this.disconnectedPlayers.set(playerId, {
+      disconnectTime: Date.now(),
+      gracePeriodTimer,
+    });
+
+    this.onPlayerDisconnected?.(playerId, player.nickname);
+
+    // Turn timer interaction: pause if it's the disconnected player's turn
+    if (
+      this.gameState.phase === 'playing' &&
+      this.gameState.players[this.gameState.currentPlayerIndex]?.playerId === playerId
+    ) {
+      this.clearTurnTimer();
+    }
+  }
+
+  handlePlayerReconnect(playerId: string): void {
+    const disconnectData = this.disconnectedPlayers.get(playerId);
+    if (!disconnectData) return; // Player wasn't disconnected
+
+    // Clear grace period timer
+    if (disconnectData.gracePeriodTimer) {
+      clearTimeout(disconnectData.gracePeriodTimer);
+    }
+
+    // Remove from disconnected players map
+    this.disconnectedPlayers.delete(playerId);
+
+    const player = this.players.get(playerId);
+    if (player) {
+      this.onPlayerReconnected?.(playerId, player.nickname);
+
+      // Turn timer interaction: resume if it's the reconnected player's turn
+      if (
+        this.gameState?.phase === 'playing' &&
+        this.gameState.players[this.gameState.currentPlayerIndex]?.playerId === playerId
+      ) {
+        this.startTurnTimer(this.gameState.currentPlayerIndex);
+      }
+    }
+  }
+
+  private removePlayerAfterTimeout(playerId: string): void {
+    // Race condition safety: player may have reconnected just before timeout fires
+    if (!this.disconnectedPlayers.has(playerId)) return;
+
+    this.disconnectedPlayers.delete(playerId);
+
+    const player = this.players.get(playerId);
+    if (!player) return;
+
+    const isHost = playerId === this.hostId;
+
+    // If host, notify and return (room destruction handled by handler layer)
+    if (isHost) {
+      this.onPlayerRemoved?.(playerId, player.nickname, 'host-left');
+      return;
+    }
+
+    // Non-host: remove player
+    this.removePlayer(playerId);
+    this.onPlayerRemoved?.(playerId, player.nickname, 'timeout');
+
+    // If game in progress, mark player as eliminated in game state
+    if (this.gameState) {
+      const gamePlayer = this.gameState.players.find(p => p.playerId === playerId);
+      if (gamePlayer) {
+        // Clear all cards to mark as eliminated
+        gamePlayer.hand = [];
+        gamePlayer.faceUp = [];
+        gamePlayer.faceDown = [];
+      }
+
+      if (this.gameState.phase === 'playing') {
+        const currentPlayer = this.gameState.players[this.gameState.currentPlayerIndex];
+
+        if (currentPlayer?.playerId === playerId) {
+          // Advance to next active player
+          this.gameState.currentPlayerIndex = GameEngine.nextActivePlayerIndex(
+            this.gameState,
+            this.gameState.currentPlayerIndex
+          );
+
+          // Clear and restart turn timer
+          this.clearTurnTimer();
+          this.startTurnTimer(this.gameState.currentPlayerIndex);
+
+          // Notify play phase start for new current player
+          this.onPlayPhaseStart?.(this.gameState.currentPlayerIndex);
+        }
+
+        // Check if game should end (fewer than 2 connected players remain)
+        // Count players still in the room (not disconnected and removed)
+        const connectedPlayerCount = this.players.size;
+
+        if (connectedPlayerCount < 2) {
+          this.gameState.phase = 'finished';
+          this.clearTurnTimer();
+
+          // Find remaining player
+          const remainingPlayerIds = Array.from(this.players.keys());
+          if (remainingPlayerIds.length === 1) {
+            const remainingPlayerId = remainingPlayerIds[0];
+            const remainingGamePlayer = this.gameState.players.find(p => p.playerId === remainingPlayerId);
+            if (remainingGamePlayer) {
+              this.onGameOver?.(remainingGamePlayer.playerId, remainingGamePlayer.nickname);
+            }
+          } else if (remainingPlayerIds.length === 0 && this.gameState.players.length > 0) {
+            // Edge case: all players disconnected, use first from game state
+            const fallbackPlayer = this.gameState.players[0];
+            this.onGameOver?.(fallbackPlayer.playerId, fallbackPlayer.nickname);
+          }
+        }
+      }
+    }
+  }
+
+  isPlayerDisconnected(playerId: string): boolean {
+    return this.disconnectedPlayers.has(playerId);
+  }
+
+  getDisconnectGraceRemaining(playerId: string): number {
+    const disconnectData = this.disconnectedPlayers.get(playerId);
+    if (!disconnectData) return 0;
+
+    return Math.max(
+      0,
+      this.DISCONNECT_GRACE_PERIOD - (Date.now() - disconnectData.disconnectTime)
+    );
   }
 }

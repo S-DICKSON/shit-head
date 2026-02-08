@@ -1,6 +1,5 @@
 import { describe, expect, test, beforeEach, afterEach, vi } from 'vitest';
 import { Room } from '../Room';
-import type { GameState } from '@shit-head/shared';
 
 describe('Room disconnect/reconnect lifecycle', () => {
   beforeEach(() => {
@@ -194,16 +193,19 @@ describe('Room disconnect/reconnect lifecycle', () => {
 
   describe('Turn advancement when disconnected player removed', () => {
     test('advances turn when removed player was current player', () => {
-      const { room, callbacks } = createRoomWithGame(3);
+      const { room } = createRoomWithGame(3);
 
       room.startGame();
-      vi.advanceTimersByTime(2500); // Complete swap phase
+      // Advance past swap phase (30s swap timer will expire) and transition (2.5s)
+      vi.advanceTimersByTime(30000 + 2500);
 
       // Get initial game state
       const gameState = room.getGameState();
       expect(gameState).not.toBeNull();
 
       if (gameState) {
+        expect(gameState.phase).toBe('playing');
+
         // Manually set player-2 as current player (index 1)
         gameState.currentPlayerIndex = 1;
 
@@ -247,16 +249,22 @@ describe('Room disconnect/reconnect lifecycle', () => {
     test('pauses turn timer when current player disconnects', () => {
       const { room } = createRoomWithGame(3);
 
-      // Spy on clearTurnTimer
-      const clearSpy = vi.spyOn(room, 'clearTurnTimer');
-
       room.startGame();
-      vi.advanceTimersByTime(2500); // Complete swap phase
+      // Advance past swap phase (30s swap timer will expire) and transition (2.5s)
+      vi.advanceTimersByTime(30000 + 2500);
 
       const gameState = room.getGameState();
       if (gameState) {
+        expect(gameState.phase).toBe('playing');
+
         const currentPlayerIndex = gameState.currentPlayerIndex;
         const currentPlayerId = gameState.players[currentPlayerIndex].playerId;
+
+        // Advance past turn timer delay to ensure timer is running
+        vi.advanceTimersByTime(2000);
+
+        // Spy on clearTurnTimer AFTER timer has started
+        const clearSpy = vi.spyOn(room, 'clearTurnTimer');
 
         // Disconnect the current player
         room.handlePlayerDisconnect(currentPlayerId);
@@ -269,22 +277,22 @@ describe('Room disconnect/reconnect lifecycle', () => {
     test('resumes turn timer when current player reconnects', () => {
       const { room } = createRoomWithGame(3);
 
-      // Spy on startTurnTimer
-      const startSpy = vi.spyOn(room, 'startTurnTimer');
-
       room.startGame();
-      vi.advanceTimersByTime(2500); // Complete swap phase
+      // Advance past swap phase (30s swap timer will expire) and transition (2.5s)
+      vi.advanceTimersByTime(30000 + 2500);
 
       const gameState = room.getGameState();
       if (gameState) {
+        expect(gameState.phase).toBe('playing');
+
         const currentPlayerIndex = gameState.currentPlayerIndex;
         const currentPlayerId = gameState.players[currentPlayerIndex].playerId;
 
         // Disconnect the current player
         room.handlePlayerDisconnect(currentPlayerId);
 
-        // Clear spy call history from disconnect
-        startSpy.mockClear();
+        // Spy on startTurnTimer AFTER disconnect
+        const startSpy = vi.spyOn(room, 'startTurnTimer');
 
         // Reconnect
         room.handlePlayerReconnect(currentPlayerId);
