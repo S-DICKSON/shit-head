@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 ## Current Position
 
 Phase: 09 of 12 (Connection Management & Reconnection) — IN PROGRESS
-Plan: 2 of [TBD] complete
-Status: Client reconnection with localStorage persistence complete
-Last activity: 2026-02-08 — Completed 09-03-PLAN.md (Client localStorage reconnection)
+Plan: 2 of 4 complete
+Status: Server disconnect/reconnect lifecycle complete
+Last activity: 2026-02-08 — Completed 09-02-PLAN.md (Disconnect/reconnect lifecycle)
 
-Progress: [██████░░░░] ~69% (34 plans complete)
+Progress: [██████░░░░] ~67% (34 plans complete)
 
 ## Performance Metrics
 
 **Velocity:**
 - Total plans completed: 34
-- Average duration: 2.3 minutes
-- Total execution time: 1.38 hours
+- Average duration: 2.4 minutes
+- Total execution time: 1.45 hours
 
 **By Phase:**
 
@@ -35,12 +35,12 @@ Progress: [██████░░░░] ~69% (34 plans complete)
 | 06 | 2 | 356s | 178s |
 | 07 | 5 | 981s | 196s |
 | 08 | 3 | 701s | 234s |
-| 09 | 2 | 293s | 147s |
+| 09 | 2 | 546s | 273s |
 | 13 | 1 | 118s | 118s |
 
 **Recent Trend:**
-- Last 5 plans: 08-03 (118s), 08-02 (224s), 08-03 (118s), 09-01 (146s), 09-03 (147s)
-- Trend: Phase 09 maintaining ~2.5min average, consistent with schema/client pattern work
+- Last 5 plans: 08-02 (224s), 08-03 (118s), 09-01 (146s), 09-02 (400s), TBD
+- Trend: Phase 09-02 took longer (6.7min) due to comprehensive TDD with 13 test scenarios
 
 *Updated after each plan completion*
 
@@ -283,12 +283,15 @@ Recent decisions affecting current work:
 - Disconnect lifecycle: player-disconnected (with grace time) → player-reconnected OR player-removed (with reason)
 - Reconnection message protocol extends discriminated union pattern from Phase 2
 
-**From 09-03:**
-- localStorage persistence pattern for playerId and roomCode enables seamless reconnection across page reloads
-- WebSocket URL includes playerId query param for server to reuse player identity on reconnect
-- Auto-reconnect watcher on WebSocket status sends reconnect message when connection reopens with stored room code
-- Clear roomCode on deliberate leave-room or host-left, preserve on network drops for auto-rejoin
-- Server reuses playerId from query param during WebSocket upgrade, falls back to nanoid() for new connections
+**From 09-02:**
+- Grace period: 90 seconds for in-game disconnects, immediate removal for lobby disconnects
+- Disconnected players marked as eliminated (cards cleared) to enable turn advancement
+- Turn timer pauses when current player disconnects, resumes when they reconnect
+- Game ends when fewer than 2 connected players remain after disconnect timeout
+- Room.handlePlayerDisconnect, handlePlayerReconnect, removePlayerAfterTimeout implement lifecycle
+- setDisconnectCallbacks follows callback pattern from swap timer and turn timer
+- Race condition protected: reconnect before timeout fires doesn't double-trigger
+- Host disconnect after timeout triggers 'host-left' reason, non-host triggers 'timeout'
 
 ### Roadmap Evolution
 
@@ -309,9 +312,9 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Completed 09-03-PLAN.md (Client localStorage reconnection)
+Stopped at: Completed 09-02-PLAN.md (Disconnect/reconnect lifecycle)
 Resume file: None
 
 ---
 *State initialized: 2026-02-07*
-*Last updated: 2026-02-08 after Phase 09-03 execution*
+*Last updated: 2026-02-08 after Phase 09-02 execution*
