@@ -239,10 +239,10 @@ Plans:
   3. Makefile has `lint` and `lint-fix` targets
   4. CI pipeline runs linting on every PR
   5. All existing code passes ESLint with zero errors
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] (Plans will be created during /gsd:plan-phase 13)
+- [ ] 13-01-PLAN.md — Install ESLint 9 flat config with typescript-eslint v8, fix all errors, update Makefile and CI
 
 ## Progress
 
@@ -263,8 +263,8 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 10. Client UI & Card Interactions | 0/TBD | Not started | - |
 | 11. Game Feedback & Turn Indicators | 0/TBD | Not started | - |
 | 12. Deployment & Production Polish | 0/TBD | Not started | - |
-| 13. ESLint Setup & Fixes | 0/TBD | Not started | - |
+| 13. ESLint Setup & Fixes | 0/1 | Not started | - |
 
 ---
 *Roadmap created: 2026-02-07*
-*Last updated: 2026-02-08 after Phase 7 gap closure planning*
+*Last updated: 2026-02-08 after Phase 13 planning*
