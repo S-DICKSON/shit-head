@@ -31,6 +31,10 @@ function createGameSocket() {
   const swapPhaseComplete = ref<boolean>(false);
   const swapPhaseReason = ref<'timer-expired' | 'all-ready' | null>(null);
 
+  // Turn timer state
+  const turnTimeRemaining = ref<number>(45);
+  const turnTimerPlayerIndex = ref<number>(-1);
+
   // Run WebSocket and watchers inside detached scope
   const { status, data, send: wsSend, close, open } = scope.run(() =>
     useWebSocket(wsUrl, {
@@ -124,6 +128,70 @@ function createGameSocket() {
           swapPhaseComplete.value = true;
           swapPhaseReason.value = message.reason;
           break;
+        case 'turn-timer-tick':
+          turnTimeRemaining.value = message.timeRemaining;
+          turnTimerPlayerIndex.value = message.currentPlayerIndex;
+          break;
+        case 'card-played':
+          if (gameView.value) {
+            gameView.value = {
+              ...gameView.value,
+              currentPlayerIndex: message.currentPlayerIndex,
+              drawPileCount: message.drawPileCount,
+              discardPile: message.discardPile,
+              ...(message.hand ? { hand: message.hand } : {}),
+              ...(message.opponents ? { opponents: message.opponents } : {}),
+            };
+          }
+          break;
+        case 'pile-pickup':
+          if (gameView.value) {
+            gameView.value = {
+              ...gameView.value,
+              currentPlayerIndex: message.currentPlayerIndex,
+              discardPile: message.discardPile,
+              ...(message.hand ? { hand: message.hand } : {}),
+              ...(message.opponents ? { opponents: message.opponents } : {}),
+            };
+          }
+          break;
+        case 'face-down-result':
+          if (gameView.value) {
+            gameView.value = {
+              ...gameView.value,
+              currentPlayerIndex: message.currentPlayerIndex,
+              discardPile: message.discardPile,
+              ...(message.hand ? { hand: message.hand } : {}),
+              ...(message.faceDownCount !== undefined ? { faceDownCount: message.faceDownCount } : {}),
+              ...(message.opponents ? { opponents: message.opponents } : {}),
+            };
+          }
+          break;
+        case 'turn-changed':
+          if (gameView.value) {
+            gameView.value = {
+              ...gameView.value,
+              phase: 'playing',
+              currentPlayerIndex: message.currentPlayerIndex,
+            };
+          }
+          break;
+        case 'player-eliminated':
+          if (gameView.value) {
+            gameView.value = {
+              ...gameView.value,
+              currentPlayerIndex: message.currentPlayerIndex,
+            };
+          }
+          break;
+        case 'game-over':
+          if (gameView.value) {
+            gameView.value = {
+              ...gameView.value,
+              phase: 'finished',
+            };
+          }
+          break;
         case 'error':
           error.value = message.message;
           break;
@@ -174,6 +242,9 @@ function createGameSocket() {
     readyPlayers,
     swapPhaseComplete,
     swapPhaseReason,
+    // Turn timer state
+    turnTimeRemaining,
+    turnTimerPlayerIndex,
   };
 }
 
