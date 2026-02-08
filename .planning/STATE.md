@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 ## Current Position
 
 Phase: 7 of 12 (Endgame & Win Conditions) — IN PROGRESS
-Plan: 1 of 3 complete
+Plan: 2 of 3 complete
 Status: In progress
-Last activity: 2026-02-08 — Completed 07-01-PLAN.md
+Last activity: 2026-02-08 — Completed 07-02-PLAN.md
 
-Progress: [█████░░░░░] ~49% (24 plans complete)
+Progress: [█████░░░░░] ~51% (25 plans complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 24
-- Average duration: 2.2 minutes
-- Total execution time: 1.04 hours
+- Total plans completed: 25
+- Average duration: 2.3 minutes
+- Total execution time: 1.08 hours
 
 **By Phase:**
 
@@ -33,11 +33,11 @@ Progress: [█████░░░░░] ~49% (24 plans complete)
 | 04 | 6 | 866s | 144s |
 | 05 | 4 | 668s | 167s |
 | 06 | 2 | 356s | 178s |
-| 07 | 1 | 196s | 196s |
+| 07 | 2 | 376s | 188s |
 
 **Recent Trend:**
-- Last 5 plans: 04-06 (150s), 06-01 (116s), 06-02 (240s), 07-01 (196s)
-- Trend: Schema-only plans fast (~3min), TDD/integration slower (~4min)
+- Last 5 plans: 06-01 (116s), 06-02 (240s), 07-01 (196s), 07-02 (180s)
+- Trend: Schema plans fast (~3min), TDD utility plans fast (~3min), integration plans slower (~4min)
 
 *Updated after each plan completion*
 
@@ -215,6 +215,14 @@ Recent decisions affecting current work:
 - game-over message identifies shithead with both ID and nickname
 - GAME_OVER error code added for attempts to play after game completion
 
+**From 07-02:**
+- Eliminated players stay in array with zero cards (maintains indices, no removal)
+- determinePlaySource is server-authoritative (client cannot choose source)
+- nextActivePlayerIndex has loop limit equal to playerCount (prevents infinite loops)
+- findShithead returns playerId of last player WITH cards (shithead is loser, not first eliminated)
+- playFromFaceUp does NOT auto-draw (draw pile empty by definition in endgame)
+- Turn advancement via nextActivePlayerIndex replaces simple modular arithmetic in endgame
+
 ### Pending Todos
 
 2 pending — `/gsd:check-todos` to review
@@ -231,7 +239,7 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Completed 07-01-PLAN.md
+Stopped at: Completed 07-02-PLAN.md
 Resume file: None
 
 ---
