@@ -25,7 +25,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 11: Game Feedback & Turn Indicators** - Turn state display and visual cues
 - [ ] **Phase 12: Deployment & Production Polish** - Production build, hosting, and monitoring
 - [x] **Phase 13: ESLint Setup & Fixes** - Install ESLint for server and client, add to Makefile, fix issues
-- [ ] **Phase 14: Ngrok Local Dev Sharing** - Ngrok tunnel so local dev can be shared and tested on mobile
+- [x] **Phase 14: Ngrok Local Dev Sharing** - Ngrok tunnel so local dev can be shared and tested on mobile
 
 ## Phase Details
 
@@ -262,7 +262,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 14-01-PLAN.md — Add Vite WebSocket proxy, remove VITE_WS_URL, add Makefile tunnel target
+- [x] 14-01-PLAN.md — Add Vite WebSocket proxy, remove VITE_WS_URL, add Makefile tunnel target
 
 ## Progress
 
@@ -284,8 +284,8 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 11. Game Feedback & Turn Indicators | 0/TBD | Not started | - |
 | 12. Deployment & Production Polish | 0/TBD | Not started | - |
 | 13. ESLint Setup & Fixes | 1/1 | Complete | 2026-02-08 |
-| 14. Ngrok Local Dev Sharing | 0/TBD | Not started | - |
+| 14. Ngrok Local Dev Sharing | 1/1 | Complete | 2026-02-08 |
 
 ---
 *Roadmap created: 2026-02-07*
-*Last updated: 2026-02-08 after Phase 9 execution*
+*Last updated: 2026-02-08 after Phase 14 execution*
