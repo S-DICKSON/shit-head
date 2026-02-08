@@ -49,6 +49,30 @@ function createGameSocket() {
   const turnTimeRemaining = ref<number>(45);
   const turnTimerPlayerIndex = ref<number>(-1);
 
+  // Notification state
+  interface GameNotification {
+    id: number;
+    message: string;
+    severity: 'info' | 'warning' | 'success' | 'error';
+    timestamp: number;
+  }
+
+  let notificationId = 0;
+  const notifications = ref<GameNotification[]>([]);
+
+  const addNotification = (message: string, severity: GameNotification['severity']) => {
+    notifications.value.push({
+      id: ++notificationId,
+      message,
+      severity,
+      timestamp: Date.now(),
+    });
+  };
+
+  const dismissNotification = (id: number) => {
+    notifications.value = notifications.value.filter(n => n.id !== id);
+  };
+
   // Run WebSocket and watchers inside detached scope
   const { status, data, send: wsSend, close, open } = scope.run(() =>
     useWebSocket(wsUrl, {
@@ -234,22 +258,23 @@ function createGameSocket() {
           }
           break;
         case 'player-disconnected':
-          // Another player disconnected — UI can show a banner/indicator
-          // Store for potential UI use (Phase 10/11 will consume this)
+          addNotification(`${message.nickname} disconnected`, 'warning');
           break;
         case 'player-reconnected':
-          // Another player reconnected — UI can update indicator
+          addNotification(`${message.nickname} reconnected`, 'success');
           break;
         case 'player-removed':
           if (message.reason === 'host-left') {
-            // Host left — room is destroyed. Clear stored state and navigate away.
-            localStorage.removeItem('shithead-room-code');
-            roomState.value = null;
-            gameView.value = null;
-            error.value = 'Host left — room closed';
+            // Show notification BEFORE clearing state so user sees it
+            addNotification('Host left — room closing', 'error');
+            // Short delay so user sees the notification before redirect
+            setTimeout(() => {
+              localStorage.removeItem('shithead-room-code');
+              roomState.value = null;
+              gameView.value = null;
+            }, 1500);
           } else {
-            // Another player was removed (timeout). Update opponent views if needed.
-            // The server will send updated state via other messages.
+            addNotification(`${message.nickname} was removed (timed out)`, 'warning');
           }
           break;
         case 'error':
@@ -319,6 +344,10 @@ function createGameSocket() {
     // Reconnection state
     reconnecting,
     reconnectTarget,
+    // Notification state
+    notifications,
+    addNotification,
+    dismissNotification,
   };
 }
 
