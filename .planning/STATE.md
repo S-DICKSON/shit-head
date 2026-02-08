@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-07)
 
 **Core value:** Friends can play a complete, rule-accurate game of Shithead together online with zero friction
-**Current focus:** Phase 9 complete — Ready for Phase 10
+**Current focus:** Phase 14 complete — Ngrok tunnel for mobile testing
 
 ## Current Position
 
-Phase: 09 of 12 (Connection Management & Reconnection) — COMPLETE (verified)
-Plan: 4/4 complete
-Status: Phase verified — 5/5 must-haves passed
-Last activity: 2026-02-08 — Phase 9 execution complete
+Phase: 14 of 14 (Ngrok Local Dev Sharing) — COMPLETE
+Plan: 1/1 complete
+Status: Phase complete
+Last activity: 2026-02-08 — Completed 14-01-PLAN.md
 
-Progress: [███████░░░] ~72% (36 plans complete)
+Progress: [████████░░] ~75% (37 plans complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 35
-- Average duration: 2.4 minutes
-- Total execution time: 1.48 hours
+- Total plans completed: 37
+- Average duration: 2.3 minutes
+- Total execution time: 1.51 hours
 
 **By Phase:**
 
@@ -37,10 +37,11 @@ Progress: [███████░░░] ~72% (36 plans complete)
 | 08 | 3 | 701s | 234s |
 | 09 | 4 | 711s | 178s |
 | 13 | 1 | 118s | 118s |
+| 14 | 1 | 93s | 93s |
 
 **Recent Trend:**
-- Last 5 plans: 08-03 (118s), 09-01 (146s), 09-02 (400s), 09-03 (TBD), 09-04 (165s)
-- Trend: Phase 09-02 took longer (6.7min) due to comprehensive TDD with 13 test scenarios; 09-04 fast (2.75min)
+- Last 5 plans: 09-01 (146s), 09-02 (400s), 09-03 (TBD), 09-04 (165s), 14-01 (93s)
+- Trend: Phase 14-01 very fast (1.5min) — simple config changes only
 
 *Updated after each plan completion*
 
@@ -302,6 +303,13 @@ Recent decisions affecting current work:
 - RoomManager.destroyRoom and removePlayerIndex clean up indices on player removal
 - Reconnected players receive room-joined with current state and game-dealt with player view
 
+**From 14-01:**
+- Vite proxy handles WebSocket upgrade with ws: true config
+- Remove VITE_WS_URL to rely on window.location-based WebSocket URL derivation
+- Single ngrok tunnel on port 5173 serves both client and proxied WebSocket
+- WebSocket proxy pattern: Vite forwards /game-ws to server with ws: true
+- Environment-agnostic WebSocket URLs: window.location.host + /game-ws works for localhost and ngrok
+
 ### Roadmap Evolution
 
 - Phase 13 added: ESLint Setup & Fixes — Install ESLint for server and client, add to Makefile, fix issues
@@ -322,9 +330,9 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Phase 9 complete — ready for Phase 10 planning
+Stopped at: Phase 14 complete — Ngrok tunnel ready for mobile testing
 Resume file: None
 
 ---
 *State initialized: 2026-02-07*
-*Last updated: 2026-02-08 after Phase 09 execution*
+*Last updated: 2026-02-08 after Phase 14 execution*
