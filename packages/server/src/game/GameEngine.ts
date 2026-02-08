@@ -2,6 +2,7 @@ import type { Card, GameState, PlayerGameView, PlayerGameState, OpponentView } f
 import { createDeck } from '@shit-head/shared';
 import { shuffleDeck } from './Deck';
 import { RANK_ORDER, canPlayOn } from './CardComparison';
+import { canPlayOnPile, detectBurn } from './CardRules';
 
 type OperationResult<T = void> =
   | { success: true; data?: T }
@@ -326,18 +327,14 @@ export class GameEngine {
       }
     }
 
-    // Validate card can be played on top of discard pile
-    if (state.discardPile.length > 0) {
-      const topCard = state.discardPile[state.discardPile.length - 1];
-      const playedCard = cardsToPlay[0];
-
-      if (!canPlayOn(playedCard, topCard)) {
-        return {
-          success: false,
-          error: 'Card value too low',
-          code: 'INVALID_ACTION',
-        };
-      }
+    // Validate play is legal using full special card rules
+    const firstPlayedCard = cardsToPlay[0]; // All cards same rank, just check first
+    if (!canPlayOnPile(firstPlayedCard, state.discardPile)) {
+      return {
+        success: false,
+        error: 'Card cannot be played on current pile',
+        code: 'INVALID_ACTION',
+      };
     }
 
     // All validations passed - perform the play
@@ -350,7 +347,7 @@ export class GameEngine {
     }
 
     // Add played cards to discard pile
-    const updatedDiscardPile = [...state.discardPile, ...cardsToPlay];
+    let updatedDiscardPile = [...state.discardPile, ...cardsToPlay];
 
     // Auto-draw: if hand < 3 and draw pile has cards, draw until hand is 3 or pile empty
     let updatedDrawPile = [...state.drawPile];
@@ -359,14 +356,25 @@ export class GameEngine {
       updatedHand.push(drawnCard);
     }
 
+    // Check for burn after cards are added to pile
+    const burnResult = detectBurn(updatedDiscardPile);
+    let finalDiscardPile = updatedDiscardPile;
+    let nextPlayerIndex: number;
+
+    if (burnResult.isBurn) {
+      // Clear pile and same player goes again
+      finalDiscardPile = [];
+      nextPlayerIndex = playerIndex; // Same player (no advancement)
+    } else {
+      // Normal turn advancement
+      nextPlayerIndex = (state.currentPlayerIndex + 1) % state.players.length;
+    }
+
     // Update player state
     const updatedPlayer: PlayerGameState = {
       ...player,
       hand: updatedHand,
     };
-
-    // Advance turn
-    const nextPlayerIndex = (state.currentPlayerIndex + 1) % state.players.length;
 
     // Create new game state
     const updatedPlayers = state.players.map((p, i) =>
@@ -376,7 +384,7 @@ export class GameEngine {
     const newState: GameState = {
       ...state,
       players: updatedPlayers,
-      discardPile: updatedDiscardPile,
+      discardPile: finalDiscardPile,
       drawPile: updatedDrawPile,
       currentPlayerIndex: nextPlayerIndex,
     };
