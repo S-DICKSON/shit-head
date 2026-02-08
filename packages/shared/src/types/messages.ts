@@ -23,6 +23,7 @@ import type {
   cardPlayedSchema,
   pilePickupSchema,
   turnChangedSchema,
+  turnTimerTickSchema,
   faceDownResultSchema,
   playerEliminatedSchema,
   gameOverSchema,
@@ -58,6 +59,7 @@ export type SwapCardsUpdatedMessage = z.infer<typeof swapCardsUpdatedSchema>;
 export type CardPlayedMessage = z.infer<typeof cardPlayedSchema>;
 export type PilePickupMessage = z.infer<typeof pilePickupSchema>;
 export type TurnChangedMessage = z.infer<typeof turnChangedSchema>;
+export type TurnTimerTickMessage = z.infer<typeof turnTimerTickSchema>;
 export type FaceDownResultMessage = z.infer<typeof faceDownResultSchema>;
 export type PlayerEliminatedMessage = z.infer<typeof playerEliminatedSchema>;
 export type GameOverMessage = z.infer<typeof gameOverSchema>;

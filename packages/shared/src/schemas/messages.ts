@@ -220,6 +220,12 @@ export const gameOverSchema = z.object({
   shitheadNickname: z.string(),
 });
 
+export const turnTimerTickSchema = z.object({
+  type: z.literal('turn-timer-tick'),
+  timeRemaining: z.number().int().min(0).max(45),
+  currentPlayerIndex: z.number().int().min(0),
+});
+
 export const errorSchema = z.object({
   type: z.literal('error'),
   message: z.string(),
@@ -252,6 +258,7 @@ export const serverMessageSchema = z.discriminatedUnion('type', [
   cardPlayedSchema,
   pilePickupSchema,
   turnChangedSchema,
+  turnTimerTickSchema,
   faceDownResultSchema,
   playerEliminatedSchema,
   gameOverSchema,
