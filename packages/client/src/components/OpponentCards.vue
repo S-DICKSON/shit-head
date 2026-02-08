@@ -5,11 +5,16 @@
   >
     <!-- Nickname row -->
     <div class="flex items-center justify-center gap-1 mb-1">
-      <span class="text-sm font-medium truncate max-w-[100px]">{{ opponent.nickname }}</span>
       <span
-        v-if="isCurrentTurn"
-        class="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"
-      />
+        class="text-sm font-medium truncate max-w-[100px]"
+        :class="isCurrentTurn ? 'text-yellow-300 font-semibold' : ''"
+      >{{ opponent.nickname }}</span>
+      <Transition name="dot">
+        <span
+          v-if="isCurrentTurn"
+          class="w-2 h-2 bg-yellow-400 rounded-full animate-pulse motion-reduce:animate-none"
+        />
+      </Transition>
       <span
         v-if="isDisconnected"
         class="text-red-400 text-xs"
@@ -67,3 +72,22 @@ function cardKey(card: Card): string {
   return card.kind === 'standard' ? `${card.suit}-${card.rank}` : `joker-${card.id}`;
 }
 </script>
+
+<style scoped>
+.dot-enter-active,
+.dot-leave-active {
+  transition: opacity 200ms ease;
+}
+
+.dot-enter-from,
+.dot-leave-to {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dot-enter-active,
+  .dot-leave-active {
+    transition-duration: 0ms;
+  }
+}
+</style>
