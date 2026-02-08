@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router';
 import { useGameSocket } from '../composables/useGameSocket';
 
 const router = useRouter();
-const { send, onMessage, status, roomState, error: socketError } = useGameSocket();
+const { send, onMessage, status, roomState, gameView, error: socketError } = useGameSocket();
 
 // Form state
 const nickname = ref('');
@@ -40,8 +40,12 @@ watch(socketError, (err) => {
 // Watch for successful room creation/join
 watch(roomState, (state) => {
   if (state && state.code) {
-    // Successfully joined or created room, navigate to lobby
-    router.push(`/room/${state.code}`);
+    // If game is in progress, skip lobby and go directly to game
+    if (gameView.value) {
+      router.push('/game');
+    } else {
+      router.push(`/room/${state.code}`);
+    }
   }
 });
 

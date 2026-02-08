@@ -5,7 +5,7 @@ import { useGameSocket } from '../composables/useGameSocket';
 import RoomCode from './RoomCode.vue';
 
 const router = useRouter();
-const { send, onMessage, roomState, playerId } = useGameSocket();
+const { send, onMessage, roomState, playerId, gameView } = useGameSocket();
 
 // Component state
 const countdown = ref<number | null>(null);
@@ -42,6 +42,12 @@ onMounted(() => {
   if (!roomState.value || !playerId.value) {
     // No room state, redirect to landing
     router.push('/');
+    return;
+  }
+  // Gap 5 fix: If game is already in progress (reconnect race condition),
+  // navigate forward to /game immediately
+  if (gameView.value) {
+    router.push('/game');
   }
 });
 
