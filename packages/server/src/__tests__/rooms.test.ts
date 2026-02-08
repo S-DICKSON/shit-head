@@ -241,7 +241,7 @@ describe('Room', () => {
     expect(readyPlayers).toContain('host-1');
   });
 
-  test('markPlayerReady() triggers onComplete when all players ready', (done) => {
+  test('markPlayerReady() triggers onComplete when all players ready', () => {
     const room = new Room('host-1', 'Alice');
     room.addPlayer('player-2', 'Bob');
 
@@ -253,7 +253,6 @@ describe('Room', () => {
       onComplete: (reason) => {
         completeCalled = true;
         expect(reason).toBe('all-ready');
-        done();
       },
     });
 

@@ -3,7 +3,7 @@ status: complete
 phase: 06-special-cards-burn-mechanics
 source: 06-01-SUMMARY.md, 06-02-SUMMARY.md
 started: 2026-02-08T11:00:00Z
-updated: 2026-02-08T11:10:00Z
+updated: 2026-02-08T11:15:00Z
 ---
 
 ## Current Test
@@ -14,9 +14,10 @@ updated: 2026-02-08T11:10:00Z
 
 ### 1. Playing a 2 resets the pile
 expected: Playing a 2 on any pile is valid and resets it. Run `make test-server` — tests pass including 2-reset scenarios.
-result: issue
+result: issue → fixed
 reported: "5 test suites fail to load — TypeError: undefined is not an object (evaluating 'z.object') in shared/src/schemas/messages.ts:7. Zod v4 does not export named 'z' from 'zod'. card-rules.test.ts and card-comparison.test.ts pass (71 tests)."
 severity: blocker
+fix: "Changed `import { z } from 'zod'` to `import * as z from 'zod'` in shared/schemas/messages.ts and shared/types/messages.ts. Also removed deprecated done() callback in rooms.test.ts. All 223 tests now pass. Commit: 4a5193e"
 
 ### 2. Playing a 7 constrains the next player
 expected: After a 7 is played, the next player must play 7 or lower. Higher cards are rejected. Verified by test suite.
@@ -45,19 +46,11 @@ result: pass
 ## Summary
 
 total: 7
-passed: 6
-issues: 1
+passed: 7
+issues: 0 (1 found, 1 fixed inline)
 pending: 0
 skipped: 0
 
 ## Gaps
 
-- truth: "All server test suites load and pass, including 2-reset scenarios"
-  status: failed
-  reason: "User reported: 5 test suites fail to load — TypeError: undefined is not an object (evaluating 'z.object') in shared/src/schemas/messages.ts:7. Zod v4 does not export named 'z' from 'zod'."
-  severity: blocker
-  test: 1
-  root_cause: ""
-  artifacts: []
-  missing: []
-  debug_session: ""
+[all resolved — Zod import fix committed as 4a5193e]

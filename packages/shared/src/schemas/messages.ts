@@ -1,5 +1,5 @@
 // Zod validation schemas for WebSocket messages
-import { z } from 'zod';
+import * as z from 'zod';
 import type { RoomState } from '../types/room';
 import type { OpponentView } from '../types/game';
 

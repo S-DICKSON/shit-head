@@ -1,5 +1,5 @@
 // WebSocket message types - inferred from Zod schemas
-import type { z } from 'zod';
+import * as z from 'zod';
 import type {
   createRoomSchema,
   joinRoomSchema,
