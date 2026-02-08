@@ -1,4 +1,4 @@
-.PHONY: help dev start build test clean lint type-check
+.PHONY: help dev start build test test-server test-client clean lint type-check type-check-server type-check-shared
 
 .DEFAULT_GOAL := help
 
@@ -18,11 +18,25 @@ test: ## Run all tests
 	docker compose run --rm client bunx vitest run
 	docker compose run --rm server bunx vitest run
 
+test-server: ## Run server tests only
+	docker compose run --rm server bunx vitest run
+
+test-client: ## Run client tests only
+	docker compose run --rm client bunx vitest run
+
 lint: ## Run linter
 	docker compose run --rm client bunx eslint .
 
-type-check: ## Run TypeScript type checking
+type-check: ## Run TypeScript type checking (all packages)
+	docker compose run --rm server bunx tsc --noEmit -p packages/shared/tsconfig.json
+	docker compose run --rm server bunx tsc --noEmit -p packages/server/tsconfig.json
 	docker compose run --rm client bunx vue-tsc --noEmit
+
+type-check-shared: ## Run shared package type checking
+	docker compose run --rm server bunx tsc --noEmit -p packages/shared/tsconfig.json
+
+type-check-server: ## Run server type checking
+	docker compose run --rm server bunx tsc --noEmit -p packages/server/tsconfig.json
 
 clean: ## Clean up containers, volumes, and images
 	docker compose down -v --rmi local
