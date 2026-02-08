@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-07)
 
 **Core value:** Friends can play a complete, rule-accurate game of Shithead together online with zero friction
-**Current focus:** Phase 4 gap closure complete — Phase 5 verified, ready for Phase 6
+**Current focus:** Phase 6 — Special cards & burn mechanics
 
 ## Current Position
 
-Phase: 5 of 12 (Core Game Engine & Rules) — COMPLETE
-Plan: Gap closure 04-06 just completed
-Status: Phase 4 gap closed, Phase 5 verified ✓
-Last activity: 2026-02-07 — Completed gap closure 04-06-PLAN.md
+Phase: 6 of 12 (Special Cards & Burn Mechanics)
+Plan: 01 of 3 (just completed)
+Status: In progress
+Last activity: 2026-02-08 — Completed 06-01-PLAN.md
 
-Progress: [████░░░░░░] ~43% (21 plans complete)
+Progress: [████░░░░░░] ~45% (22 plans complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 21
-- Average duration: 2.3 minutes
-- Total execution time: 0.91 hours
+- Total plans completed: 22
+- Average duration: 2.2 minutes
+- Total execution time: 0.94 hours
 
 **By Phase:**
 
@@ -32,10 +32,11 @@ Progress: [████░░░░░░] ~43% (21 plans complete)
 | 03 | 3 | 503s | 168s |
 | 04 | 6 | 866s | 144s |
 | 05 | 4 | 668s | 167s |
+| 06 | 1 | 116s | 116s |
 
 **Recent Trend:**
-- Last 5 plans: 05-02 (174s), 05-03 (180s), 05-04 (183s), 04-06 (150s)
-- Trend: Gap closure fast execution (150s) - navigation fix straightforward
+- Last 5 plans: 05-03 (180s), 05-04 (183s), 04-06 (150s), 06-01 (116s)
+- Trend: TDD plan fast execution (116s) - clean implementation, no issues
 
 *Updated after each plan completion*
 
@@ -193,6 +194,13 @@ Recent decisions affecting current work:
 - All players receive per-player views after any gameplay action (card-played, pile-pickup)
 - Turn changes are broadcast via turn-changed message with currentPlayerIndex
 
+**From 06-01:**
+- isSpecialCard returns true only for ranks 2, 8, 10 (7 is NOT a special card, follows normal ordering)
+- getEffectiveTopCard returns null for empty pile or all-8s pile (any card playable)
+- canPlayOnPile implements precedence: empty pile → special cards → effective top null → 7-constraint → normal ordering
+- detectBurn treats 8s as invisible when counting four-of-a-kind for non-8 ranks, but 8s count themselves
+- Pure stateless functions for game rules with no side effects (composable, testable)
+
 ### Pending Todos
 
 1 pending — `/gsd:check-todos` to review
@@ -207,10 +215,10 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-02-07T23:10:52Z
-Stopped at: Completed 04-06-PLAN.md (gap closure)
+Last session: 2026-02-08T10:17:16Z
+Stopped at: Completed 06-01-PLAN.md
 Resume file: None
 
 ---
 *State initialized: 2026-02-07*
-*Last updated: 2026-02-07 after completing 04-06 (gap closure)*
+*Last updated: 2026-02-08 after completing 06-01*
