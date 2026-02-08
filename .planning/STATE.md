@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-07)
 
 **Core value:** Friends can play a complete, rule-accurate game of Shithead together online with zero friction
-**Current focus:** Phase 7 complete — Ready for Phase 8
+**Current focus:** Phase 9 — Connection management & reconnection
 
 ## Current Position
 
-Phase: 08 of 12 (Turn Timing & Auto-Pickup) — IN PROGRESS
-Plan: 2/3 complete
-Status: Turn timer server integration complete
-Last activity: 2026-02-08 — Completed 08-02-PLAN.md (Turn timer lifecycle & auto-play broadcasting)
+Phase: 09 of 12 (Connection Management & Reconnection) — IN PROGRESS
+Plan: 1 of [TBD] complete
+Status: Reconnection message protocol defined
+Last activity: 2026-02-08 — Completed 09-01-PLAN.md (Reconnection message schemas)
 
-Progress: [██████░░░░] ~64% (31 plans complete)
+Progress: [██████░░░░] ~67% (33 plans complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 31
+- Total plans completed: 32
 - Average duration: 2.3 minutes
-- Total execution time: 1.31 hours
+- Total execution time: 1.33 hours
 
 **By Phase:**
 
@@ -34,12 +34,12 @@ Progress: [██████░░░░] ~64% (31 plans complete)
 | 05 | 4 | 668s | 167s |
 | 06 | 2 | 356s | 178s |
 | 07 | 5 | 981s | 196s |
-| 08 | 2 | 583s | 292s |
+| 08 | 3 | 701s | 234s |
 | 13 | 1 | 118s | 118s |
 
 **Recent Trend:**
-- Last 5 plans: 13-01 (118s), 08-01 (241s), 08-03 (118s), 08-02 (224s)
-- Trend: Phase 08 averaging 4min per plan, consistent with server integration work
+- Last 5 plans: 13-01 (118s), 08-01 (241s), 08-03 (118s), 08-02 (224s), 08-03 (118s)
+- Trend: Phase 08 averaging 3.9min per plan, consistent with server integration work
 
 *Updated after each plan completion*
 
@@ -295,9 +295,9 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Completed 08-02-PLAN.md (Turn timer lifecycle & auto-play broadcasting)
+Stopped at: Completed Phase 8 (Turn Timing & Auto-Pickup)
 Resume file: None
 
 ---
 *State initialized: 2026-02-07*
-*Last updated: 2026-02-08 after Phase 08-02 execution*
+*Last updated: 2026-02-08 after Phase 08 execution*

@@ -19,7 +19,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 5: Core Game Engine & Rules** - Turn system, play validation, draw/pickup mechanics
 - [x] **Phase 6: Special Cards & Burn Mechanics** - 2s, 7s, 8s, 10s, and burn detection
 - [x] **Phase 7: Endgame & Win Conditions** - Hand to face-up to face-down progression and winner detection
-- [ ] **Phase 8: Turn Timing & Auto-Pickup** - Turn timer with timeout handling
+- [x] **Phase 8: Turn Timing & Auto-Pickup** - Turn timer with timeout handling
 - [ ] **Phase 9: Connection Management & Reconnection** - Disconnect detection and reconnection flow
 - [ ] **Phase 10: Client UI & Card Interactions** - React UI with card hand display and play actions
 - [ ] **Phase 11: Game Feedback & Turn Indicators** - Turn state display and visual cues
@@ -168,9 +168,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 08-01-PLAN.md — Turn timer tick schema and GameEngine.autoPlayOnTimeout (TDD)
-- [ ] 08-02-PLAN.md — Room turn timer lifecycle and WebSocket handler integration
-- [ ] 08-03-PLAN.md — Client TurnTimer component and gameView state updates
+- [x] 08-01-PLAN.md — Turn timer tick schema and GameEngine.autoPlayOnTimeout (TDD)
+- [x] 08-02-PLAN.md — Room turn timer lifecycle and WebSocket handler integration
+- [x] 08-03-PLAN.md — Client TurnTimer component and gameView state updates
 
 ### Phase 9: Connection Management & Reconnection
 **Goal**: Players can reconnect after disconnect and games handle disconnects gracefully
@@ -263,7 +263,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 5. Core Game Engine & Rules | 4/4 | Complete | 2026-02-07 |
 | 6. Special Cards & Burn Mechanics | 2/2 | Complete | 2026-02-08 |
 | 7. Endgame & Win Conditions | 5/5 | Complete | 2026-02-08 |
-| 8. Turn Timing & Auto-Pickup | 0/3 | Not started | - |
+| 8. Turn Timing & Auto-Pickup | 3/3 | Complete | 2026-02-08 |
 | 9. Connection Management & Reconnection | 0/TBD | Not started | - |
 | 10. Client UI & Card Interactions | 0/TBD | Not started | - |
 | 11. Game Feedback & Turn Indicators | 0/TBD | Not started | - |
@@ -272,4 +272,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 
 ---
 *Roadmap created: 2026-02-07*
-*Last updated: 2026-02-08 after Phase 13 execution*
+*Last updated: 2026-02-08 after Phase 8 execution*
