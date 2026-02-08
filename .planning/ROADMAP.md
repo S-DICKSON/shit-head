@@ -26,6 +26,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 12: Deployment & Production Polish** - Production build, hosting, and monitoring
 - [x] **Phase 13: ESLint Setup & Fixes** - Install ESLint for server and client, add to Makefile, fix issues
 - [x] **Phase 14: Ngrok Local Dev Sharing** - Ngrok tunnel so local dev can be shared and tested on mobile
+- [ ] **Phase 15: Mobile UX Improvements** - Pickup pile safety, turn indicators, timer relocation, 8-card visibility, hand card grouping
 
 ## Phase Details
 
@@ -220,10 +221,10 @@ Plans:
   2. Turn timer countdown is prominently displayed
   3. Players can distinguish whose turn it is at a glance
   4. Turn transitions are clear and immediate
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] (Plans will be created during /gsd:plan-phase 11)
+- [ ] 11-01-PLAN.md — Turn banner, enhanced opponent indicators, and ARIA accessibility
 
 ### Phase 12: Deployment & Production Polish
 **Goal**: Game is deployed to production and ready for real players
@@ -270,10 +271,26 @@ Plans:
 - [x] 14-01-PLAN.md — Add Vite WebSocket proxy, remove VITE_WS_URL, add Makefile tunnel target
 - [x] 14-02-PLAN.md — Fix WebSocket proxy handshake and ngrok hostname blocking (gap closure)
 
+### Phase 15: Mobile UX Improvements
+**Goal**: Address mobile playtesting feedback — safer pickup interaction, clearer turn indicators, compact timer, 8-card transparency, and grouped hand cards
+**Depends on**: Phase 14
+**Requirements**: UI-01, UI-02, UI-05 (mobile UX refinement)
+**Success Criteria** (what must be TRUE):
+  1. Pickup pile requires double-tap (not single tap) to prevent accidental pickups, with instruction text explaining the interaction
+  2. Current player's turn is clearly indicated with prominent visual cue or sound notification
+  3. Turn timer is compact and positioned in bottom-right corner (not taking up significant screen space)
+  4. When an 8 is played, it appears semi-transparent/ghost-like on the pile so players can see the effective card underneath
+  5. When holding many cards, the play card button remains accessible (not pushed off screen)
+  6. Hand cards are grouped by rank (e.g., "2x 7s", "3x 3s") with a mobile-friendly selector for choosing how many to play
+**Plans**: TBD
+
+Plans:
+- [ ] (Plans will be created during /gsd:plan-phase 15)
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14
+Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 -> 15
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -287,11 +304,12 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 8. Turn Timing & Auto-Pickup | 3/3 | Complete | 2026-02-08 |
 | 9. Connection Management & Reconnection | 7/7 | Complete | 2026-02-08 |
 | 10. Client UI & Card Interactions | 3/3 | Complete | 2026-02-08 |
-| 11. Game Feedback & Turn Indicators | 0/TBD | Not started | - |
+| 11. Game Feedback & Turn Indicators | 0/1 | Not started | - |
 | 12. Deployment & Production Polish | 0/TBD | Not started | - |
 | 13. ESLint Setup & Fixes | 1/1 | Complete | 2026-02-08 |
 | 14. Ngrok Local Dev Sharing | 2/2 | Complete | 2026-02-08 |
+| 15. Mobile UX Improvements | 0/TBD | Not started | - |
 
 ---
 *Roadmap created: 2026-02-07*
-*Last updated: 2026-02-08 after Phase 10 execution*
+*Last updated: 2026-02-08 after Phase 11 planning*
