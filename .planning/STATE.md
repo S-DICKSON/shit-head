@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-07)
 
 **Core value:** Friends can play a complete, rule-accurate game of Shithead together online with zero friction
-**Current focus:** Phase 6 complete — Ready for Phase 7
+**Current focus:** Phase 7 (Endgame & Win Conditions) — In progress
 
 ## Current Position
 
-Phase: 6 of 12 (Special Cards & Burn Mechanics) — COMPLETE
-Plan: 2/2 complete
-Status: Phase 6 verified ✓
-Last activity: 2026-02-08 — Phase 6 execution complete
+Phase: 7 of 12 (Endgame & Win Conditions) — IN PROGRESS
+Plan: 1 of 3 complete
+Status: In progress
+Last activity: 2026-02-08 — Completed 07-01-PLAN.md
 
-Progress: [████░░░░░░] ~47% (23 plans complete)
+Progress: [█████░░░░░] ~49% (24 plans complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 23
-- Average duration: 2.3 minutes
-- Total execution time: 1.01 hours
+- Total plans completed: 24
+- Average duration: 2.2 minutes
+- Total execution time: 1.04 hours
 
 **By Phase:**
 
@@ -33,10 +33,11 @@ Progress: [████░░░░░░] ~47% (23 plans complete)
 | 04 | 6 | 866s | 144s |
 | 05 | 4 | 668s | 167s |
 | 06 | 2 | 356s | 178s |
+| 07 | 1 | 196s | 196s |
 
 **Recent Trend:**
-- Last 5 plans: 05-04 (183s), 04-06 (150s), 06-01 (116s), 06-02 (240s)
-- Trend: TDD plans vary - simple validation fast (116s), complex integration slower (240s)
+- Last 5 plans: 04-06 (150s), 06-01 (116s), 06-02 (240s), 07-01 (196s)
+- Trend: Schema-only plans fast (~3min), TDD/integration slower (~4min)
 
 *Updated after each plan completion*
 
@@ -208,6 +209,12 @@ Recent decisions affecting current work:
 - On no burn: turn advances normally via (currentPlayerIndex + 1) % players.length
 - Player cannot win on a 10 because they get another turn after burn (will be enforced in Phase 8)
 
+**From 07-01:**
+- PlaySource type represents card progression: 'hand' → 'face-up' → 'face-down'
+- face-down-result reveals flipped card to all players (transparency after blind play)
+- game-over message identifies shithead with both ID and nickname
+- GAME_OVER error code added for attempts to play after game completion
+
 ### Pending Todos
 
 2 pending — `/gsd:check-todos` to review
@@ -224,9 +231,9 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Phase 6 complete — verified ✓
+Stopped at: Completed 07-01-PLAN.md
 Resume file: None
 
 ---
 *State initialized: 2026-02-07*
-*Last updated: 2026-02-08 after Phase 6 execution*
+*Last updated: 2026-02-08 after 07-01 execution*
