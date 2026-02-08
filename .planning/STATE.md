@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 ## Current Position
 
 Phase: 6 of 12 (Special Cards & Burn Mechanics)
-Plan: 01 of 3 (just completed)
+Plan: 02 of 3 (just completed)
 Status: In progress
-Last activity: 2026-02-08 — Completed 06-01-PLAN.md
+Last activity: 2026-02-08 — Completed 06-02-PLAN.md
 
-Progress: [████░░░░░░] ~45% (22 plans complete)
+Progress: [████░░░░░░] ~47% (23 plans complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 22
-- Average duration: 2.2 minutes
-- Total execution time: 0.94 hours
+- Total plans completed: 23
+- Average duration: 2.3 minutes
+- Total execution time: 1.01 hours
 
 **By Phase:**
 
@@ -32,11 +32,11 @@ Progress: [████░░░░░░] ~45% (22 plans complete)
 | 03 | 3 | 503s | 168s |
 | 04 | 6 | 866s | 144s |
 | 05 | 4 | 668s | 167s |
-| 06 | 1 | 116s | 116s |
+| 06 | 2 | 356s | 178s |
 
 **Recent Trend:**
-- Last 5 plans: 05-03 (180s), 05-04 (183s), 04-06 (150s), 06-01 (116s)
-- Trend: TDD plan fast execution (116s) - clean implementation, no issues
+- Last 5 plans: 05-04 (183s), 04-06 (150s), 06-01 (116s), 06-02 (240s)
+- Trend: TDD plans vary - simple validation fast (116s), complex integration slower (240s)
 
 *Updated after each plan completion*
 
@@ -201,6 +201,13 @@ Recent decisions affecting current work:
 - detectBurn treats 8s as invisible when counting four-of-a-kind for non-8 ranks, but 8s count themselves
 - Pure stateless functions for game rules with no side effects (composable, testable)
 
+**From 06-02:**
+- GameEngine.playCards uses canPlayOnPile instead of canPlayOn for card validation (supports all special card rules)
+- Burn detection happens AFTER all cards are added to pile (handles multi-card plays correctly)
+- On burn (10 or four-of-a-kind): pile clears to empty array, currentPlayerIndex stays same (player goes again)
+- On no burn: turn advances normally via (currentPlayerIndex + 1) % players.length
+- Player cannot win on a 10 because they get another turn after burn (will be enforced in Phase 8)
+
 ### Pending Todos
 
 2 pending — `/gsd:check-todos` to review
@@ -216,10 +223,10 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-02-08T10:17:16Z
-Stopped at: Completed 06-01-PLAN.md
+Last session: 2026-02-08T10:25:39Z
+Stopped at: Completed 06-02-PLAN.md
 Resume file: None
 
 ---
 *State initialized: 2026-02-07*
-*Last updated: 2026-02-08 after completing 06-01*
+*Last updated: 2026-02-08 after completing 06-02*
