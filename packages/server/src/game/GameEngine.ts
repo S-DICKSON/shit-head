@@ -235,9 +235,11 @@ export class GameEngine {
 
   /**
    * Plays cards from a player's hand onto the discard pile.
-   * Validates phase, turn, card indices, rank consistency, and playability.
+   * Validates phase, turn, card indices, rank consistency, and playability using special card rules.
    * Auto-draws cards after play to maintain hand size of 3 if possible.
-   * Advances turn to next player on success.
+   * Detects burns (10 or four-of-a-kind) and handles accordingly:
+   * - On burn: clears pile and same player goes again
+   * - No burn: advances turn to next player
    *
    * @param state - Current game state
    * @param playerId - ID of the player playing cards
