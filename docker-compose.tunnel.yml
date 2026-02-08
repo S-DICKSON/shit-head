@@ -1,0 +1,16 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.tunnel
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    command: tunnel --no-autoupdate --url http://app:3000
+    depends_on:
+      - app

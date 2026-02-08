@@ -66,6 +66,12 @@ Friends can play a complete, rule-accurate game of Shithead together online with
 - **Card deck**: Standard 52-card deck + 2 Jokers (54 cards total)
 - **Players**: 2-4 per room
 
+## Verification Requirements
+
+All phases that write code **must** pass linting before completion:
+- Run `make lint` and ensure zero errors before considering a phase done
+- This applies to all future phases (8+) that produce or modify source code
+
 ## Key Decisions
 
 | Decision | Rationale | Outcome |

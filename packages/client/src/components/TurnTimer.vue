@@ -17,7 +17,11 @@ const strokeOffset = computed(() => {
 
 <template>
   <div class="relative inline-block w-20 h-20">
-    <svg width="80" height="80" viewBox="0 0 80 80">
+    <svg
+      width="80"
+      height="80"
+      viewBox="0 0 80 80"
+    >
       <!-- Background circle (track) -->
       <circle
         cx="40"

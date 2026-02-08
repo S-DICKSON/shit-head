@@ -50,8 +50,5 @@ clean: ## Clean up containers, volumes, and images
 	docker compose down -v --rmi local
 	docker compose -f docker-compose.prod.yml down -v --rmi local
 
-tunnel: ## Start ngrok tunnel for mobile testing (run make dev first)
-	@echo "Starting ngrok tunnel on port 5173..."
-	@echo "Share the https URL with mobile devices to test"
-	@echo ""
-	ngrok http 5173
+tunnel: ## Start cloudflared tunnel for mobile testing (one command)
+	docker compose -f docker-compose.tunnel.yml up --build

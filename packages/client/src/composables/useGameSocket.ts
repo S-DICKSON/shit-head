@@ -15,11 +15,17 @@ function createGameSocket() {
   const storedPlayerId = localStorage.getItem('shithead-player-id');
   const storedRoomCode = localStorage.getItem('shithead-room-code');
 
-  // Determine WebSocket URL: use env var in development, derive from page URL in production
+  // Determine WebSocket URL:
+  // - VITE_WS_URL override if set
+  // - localhost: connect directly to server on port 3000 (bypasses Vite proxy)
+  // - tunnel/production: use proxy path through current host
   const serverUrl = import.meta.env.VITE_WS_URL;
+  const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
   let wsUrl = serverUrl
     ? serverUrl
-    : `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/game-ws`;
+    : isLocalhost
+      ? `ws://${window.location.hostname}:3000/game-ws`
+      : `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/game-ws`;
 
   // Include stored playerId for reconnection
   if (storedPlayerId) {

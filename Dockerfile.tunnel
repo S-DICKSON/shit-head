@@ -1,0 +1,31 @@
+# Multi-stage Dockerfile for tunnel mode
+# Builds client static files and runs server serving them + WebSocket
+
+# Stage 1: Build client
+FROM oven/bun:1 AS client-build
+WORKDIR /app
+COPY package.json bun.lockb* tsconfig.json ./
+COPY packages/client/package.json ./packages/client/
+COPY packages/shared/package.json ./packages/shared/
+COPY packages/shared/tsconfig.json ./packages/shared/
+COPY packages/client/tsconfig.json ./packages/client/
+COPY packages/client/tsconfig.app.json ./packages/client/
+COPY packages/client/tsconfig.node.json ./packages/client/
+RUN bun install --frozen-lockfile
+COPY packages/client/ ./packages/client/
+COPY packages/shared/ ./packages/shared/
+WORKDIR /app/packages/client
+RUN bunx vite build
+
+# Stage 2: Run server with built client
+FROM oven/bun:1
+WORKDIR /app
+COPY package.json bun.lockb* tsconfig.json ./
+COPY packages/server/package.json ./packages/server/
+COPY packages/shared/package.json ./packages/shared/
+RUN bun install --frozen-lockfile --production
+COPY packages/server/ ./packages/server/
+COPY packages/shared/ ./packages/shared/
+COPY --from=client-build /app/packages/client/dist ./packages/client/dist
+EXPOSE 3000
+CMD ["bun", "packages/server/src/index.ts"]
