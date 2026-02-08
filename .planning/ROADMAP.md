@@ -203,10 +203,12 @@ Plans:
   3. Players can select and play cards with touch or click
   4. Cards animate smoothly when dealt, played, or burned
   5. Discard pile and draw pile are clearly visible
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] (Plans will be created during /gsd:plan-phase 10)
+- [ ] 10-01-PLAN.md — usePlayingPhase composable and PlayerCards component
+- [ ] 10-02-PLAN.md — DiscardPile, DrawPile, and OpponentCards sub-components
+- [ ] 10-03-PLAN.md — PlayingPhase.vue assembly and Game.vue integration
 
 ### Phase 11: Game Feedback & Turn Indicators
 **Goal**: Players know whose turn it is and how much time remains
@@ -283,7 +285,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 7. Endgame & Win Conditions | 5/5 | Complete | 2026-02-08 |
 | 8. Turn Timing & Auto-Pickup | 3/3 | Complete | 2026-02-08 |
 | 9. Connection Management & Reconnection | 4/6 | Gap closure | 2026-02-08 |
-| 10. Client UI & Card Interactions | 0/TBD | Not started | - |
+| 10. Client UI & Card Interactions | 0/3 | Not started | - |
 | 11. Game Feedback & Turn Indicators | 0/TBD | Not started | - |
 | 12. Deployment & Production Polish | 0/TBD | Not started | - |
 | 13. ESLint Setup & Fixes | 1/1 | Complete | 2026-02-08 |
