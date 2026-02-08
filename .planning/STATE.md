@@ -9,19 +9,19 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 
 ## Current Position
 
-Phase: 7 of 12 (Endgame & Win Conditions) — IN PROGRESS
-Plan: 3 of 3 complete
-Status: Wave 2 complete
-Last activity: 2026-02-08 — Completed 07-03-PLAN.md
+Phase: 7 of 12 (Endgame & Win Conditions) — COMPLETE
+Plan: 4 of 4 complete
+Status: Phase complete
+Last activity: 2026-02-08 — Completed 07-04-PLAN.md
 
-Progress: [█████░░░░░] ~53% (26 plans complete)
+Progress: [█████░░░░░] ~54% (27 plans complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 26
+- Total plans completed: 27
 - Average duration: 2.3 minutes
-- Total execution time: 1.11 hours
+- Total execution time: 1.15 hours
 
 **By Phase:**
 
@@ -33,11 +33,11 @@ Progress: [█████░░░░░] ~53% (26 plans complete)
 | 04 | 6 | 866s | 144s |
 | 05 | 4 | 668s | 167s |
 | 06 | 2 | 356s | 178s |
-| 07 | 3 | 582s | 194s |
+| 07 | 4 | 755s | 189s |
 
 **Recent Trend:**
-- Last 5 plans: 06-02 (240s), 07-01 (196s), 07-02 (180s), 07-03 (206s)
-- Trend: Schema plans fast (~3min), TDD utility plans fast (~3min), integration plans slower (~4min)
+- Last 5 plans: 07-01 (196s), 07-02 (180s), 07-03 (206s), 07-04 (173s)
+- Trend: Integration plans ~3min, consistent execution across Phase 7
 
 *Updated after each plan completion*
 
@@ -230,6 +230,13 @@ Recent decisions affecting current work:
 - Single card only from face-down (no multi-card blind play)
 - Empty pile edge case: any blind card playable (canPlayOnPile behavior)
 
+**From 07-04:**
+- checkPostPlayState fires callbacks after ANY successful play (hand, face-up, face-down)
+- DealerIndex set to shithead index on game end (loser deals next hand)
+- Game callbacks set during start-game countdown (alongside swap callbacks)
+- face-down-result includes per-player views for all players (hand, faceDownCount, opponents)
+- Room methods delegate to GameEngine and call checkPostPlayState for automatic elimination detection
+
 ### Pending Todos
 
 2 pending — `/gsd:check-todos` to review
@@ -246,7 +253,7 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Completed 07-03-PLAN.md
+Stopped at: Completed 07-04-PLAN.md (Phase 7 complete)
 Resume file: None
 
 ---
