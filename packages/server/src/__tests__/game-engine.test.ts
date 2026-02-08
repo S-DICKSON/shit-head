@@ -910,6 +910,11 @@ describe('GameEngine', () => {
     });
   });
 
+  // Helper for concise card creation (matches pattern from card-rules.test.ts)
+  function c(rank: string, suit: string = 'hearts'): Card {
+    return { kind: 'standard', suit: rank === 'J' ? 'joker' : suit as any, rank: rank as any };
+  }
+
   describe('pickupPile', () => {
     it('adds all discard pile cards to player hand', () => {
       const state = createTestState();
@@ -1021,6 +1026,673 @@ describe('GameEngine', () => {
 
       expect(state.players[0].hand).toHaveLength(originalHandLength);
       expect(state.discardPile).toHaveLength(originalDiscardLength);
+    });
+  });
+
+  describe('special cards and burns', () => {
+    describe('special card plays', () => {
+      it('allows playing 2 on King (2 resets)', () => {
+        const state = createTestState({
+          discardPile: [c('K')],
+          players: [
+            {
+              playerId: 'p1',
+              nickname: 'Alice',
+              hand: [c('2'), c('5'), c('6')],
+              faceUp: [],
+              faceDown: [],
+            },
+            {
+              playerId: 'p2',
+              nickname: 'Bob',
+              hand: [c('3'), c('4'), c('7')],
+              faceUp: [],
+              faceDown: [],
+            },
+          ],
+        });
+
+        const result = GameEngine.playCards(state, 'p1', [0]);
+
+        expect(result.success).toBe(true);
+        if (result.success) {
+          expect(result.data!.discardPile).toHaveLength(2);
+          expect(result.data!.discardPile[1].rank).toBe('2');
+        }
+      });
+
+      it('allows playing 2 on Ace (2 always playable)', () => {
+        const state = createTestState({
+          discardPile: [c('A')],
+          players: [
+            {
+              playerId: 'p1',
+              nickname: 'Alice',
+              hand: [c('2'), c('5'), c('6')],
+              faceUp: [],
+              faceDown: [],
+            },
+            {
+              playerId: 'p2',
+              nickname: 'Bob',
+              hand: [c('3')],
+              faceUp: [],
+              faceDown: [],
+            },
+          ],
+        });
+
+        const result = GameEngine.playCards(state, 'p1', [0]);
+
+        expect(result.success).toBe(true);
+      });
+
+      it('allows playing 2 on empty pile', () => {
+        const state = createTestState({
+          discardPile: [],
+          players: [
+            {
+              playerId: 'p1',
+              nickname: 'Alice',
+              hand: [c('2'), c('5'), c('6')],
+              faceUp: [],
+              faceDown: [],
+            },
+            {
+              playerId: 'p2',
+              nickname: 'Bob',
+              hand: [c('3')],
+              faceUp: [],
+              faceDown: [],
+            },
+          ],
+        });
+
+        const result = GameEngine.playCards(state, 'p1', [0]);
+
+        expect(result.success).toBe(true);
+      });
+
+      it('allows playing 10 on any pile and burns it', () => {
+        const state = createTestState({
+          discardPile: [c('K'), c('A')],
+          drawPile: [],
+          players: [
+            {
+              playerId: 'p1',
+              nickname: 'Alice',
+              hand: [c('10'), c('5'), c('6')],
+              faceUp: [],
+              faceDown: [],
+            },
+            {
+              playerId: 'p2',
+              nickname: 'Bob',
+              hand: [c('3')],
+              faceUp: [],
+              faceDown: [],
+            },
+          ],
+        });
+
+        const result = GameEngine.playCards(state, 'p1', [0]);
+
+        expect(result.success).toBe(true);
+        if (result.success) {
+          // Pile should be burned (empty)
+          expect(result.data!.discardPile).toEqual([]);
+          // Same player goes again (turn doesn't advance)
+          expect(result.data!.currentPlayerIndex).toBe(0);
+        }
+      });
+
+      it('allows playing 8 on any pile', () => {
+        const state = createTestState({
+          discardPile: [c('K')],
+          drawPile: [],
+          players: [
+            {
+              playerId: 'p1',
+              nickname: 'Alice',
+              hand: [c('8'), c('5'), c('6')],
+              faceUp: [],
+              faceDown: [],
+            },
+            {
+              playerId: 'p2',
+              nickname: 'Bob',
+              hand: [c('3')],
+              faceUp: [],
+              faceDown: [],
+            },
+          ],
+        });
+
+        const result = GameEngine.playCards(state, 'p1', [0]);
+
+        expect(result.success).toBe(true);
+        if (result.success) {
+          // 8 should be on pile
+          expect(result.data!.discardPile[result.data!.discardPile.length - 1].rank).toBe('8');
+          // Turn advances normally
+          expect(result.data!.currentPlayerIndex).toBe(1);
+        }
+      });
+
+      it('allows playing 5 on pile with 7 on top (5 <= 7)', () => {
+        const state = createTestState({
+          discardPile: [c('7')],
+          drawPile: [],
+          players: [
+            {
+              playerId: 'p1',
+              nickname: 'Alice',
+              hand: [c('5'), c('6'), c('9')],
+              faceUp: [],
+              faceDown: [],
+            },
+            {
+              playerId: 'p2',
+              nickname: 'Bob',
+              hand: [c('3')],
+              faceUp: [],
+              faceDown: [],
+            },
+          ],
+        });
+
+        const result = GameEngine.playCards(state, 'p1', [0]);
+
+        expect(result.success).toBe(true);
+      });
+
+      it('rejects playing 9 on pile with 7 on top (9 > 7, 7-constraint)', () => {
+        const state = createTestState({
+          discardPile: [c('7')],
+          drawPile: [],
+          players: [
+            {
+              playerId: 'p1',
+              nickname: 'Alice',
+              hand: [c('9'), c('5'), c('6')],
+              faceUp: [],
+              faceDown: [],
+            },
+            {
+              playerId: 'p2',
+              nickname: 'Bob',
+              hand: [c('3')],
+              faceUp: [],
+              faceDown: [],
+            },
+          ],
+        });
+
+        const result = GameEngine.playCards(state, 'p1', [0]);
+
+        expect(result.success).toBe(false);
+        if (!result.success) {
+          expect(result.code).toBe('INVALID_ACTION');
+        }
+      });
+
+      it('rejects playing Jack on pile with 7 on top (J > 7)', () => {
+        const state = createTestState({
+          discardPile: [c('7')],
+          drawPile: [],
+          players: [
+            {
+              playerId: 'p1',
+              nickname: 'Alice',
+              hand: [c('J'), c('5'), c('6')],
+              faceUp: [],
+              faceDown: [],
+            },
+            {
+              playerId: 'p2',
+              nickname: 'Bob',
+              hand: [c('3')],
+              faceUp: [],
+              faceDown: [],
+            },
+          ],
+        });
+
+        const result = GameEngine.playCards(state, 'p1', [0]);
+
+        expect(result.success).toBe(false);
+      });
+
+      it('allows playing 2 on pile with 7 on top (2 is special)', () => {
+        const state = createTestState({
+          discardPile: [c('7')],
+          drawPile: [],
+          players: [
+            {
+              playerId: 'p1',
+              nickname: 'Alice',
+              hand: [c('2'), c('5'), c('6')],
+              faceUp: [],
+              faceDown: [],
+            },
+            {
+              playerId: 'p2',
+              nickname: 'Bob',
+              hand: [c('3')],
+              faceUp: [],
+              faceDown: [],
+            },
+          ],
+        });
+
+        const result = GameEngine.playCards(state, 'p1', [0]);
+
+        expect(result.success).toBe(true);
+      });
+
+      it('allows playing 8 on pile with 7 on top (8 is special)', () => {
+        const state = createTestState({
+          discardPile: [c('7')],
+          drawPile: [],
+          players: [
+            {
+              playerId: 'p1',
+              nickname: 'Alice',
+              hand: [c('8'), c('5'), c('6')],
+              faceUp: [],
+              faceDown: [],
+            },
+            {
+              playerId: 'p2',
+              nickname: 'Bob',
+              hand: [c('3')],
+              faceUp: [],
+              faceDown: [],
+            },
+          ],
+        });
+
+        const result = GameEngine.playCards(state, 'p1', [0]);
+
+        expect(result.success).toBe(true);
+      });
+
+      it('validates card correctly when effective top is beneath 8s', () => {
+        const state = createTestState({
+          discardPile: [c('5'), c('8'), c('8')],
+          drawPile: [],
+          players: [
+            {
+              playerId: 'p1',
+              nickname: 'Alice',
+              hand: [c('6'), c('9'), c('3')],
+              faceUp: [],
+              faceDown: [],
+            },
+            {
+              playerId: 'p2',
+              nickname: 'Bob',
+              hand: [c('4')],
+              faceUp: [],
+              faceDown: [],
+            },
+          ],
+        });
+
+        // Should be able to play 6 (6 >= 5, effective top)
+        const result = GameEngine.playCards(state, 'p1', [0]);
+
+        expect(result.success).toBe(true);
+      });
+    });
+
+    describe('burn scenarios', () => {
+      it('playing 10 burns pile, same player goes again', () => {
+        const state = createTestState({
+          discardPile: [c('K'), c('A'), c('Q')],
+          drawPile: [],
+          players: [
+            {
+              playerId: 'p1',
+              nickname: 'Alice',
+              hand: [c('10'), c('5'), c('6')],
+              faceUp: [],
+              faceDown: [],
+            },
+            {
+              playerId: 'p2',
+              nickname: 'Bob',
+              hand: [c('3')],
+              faceUp: [],
+              faceDown: [],
+            },
+          ],
+        });
+
+        const result = GameEngine.playCards(state, 'p1', [0]);
+
+        expect(result.success).toBe(true);
+        if (result.success) {
+          // Pile burned
+          expect(result.data!.discardPile).toEqual([]);
+          // Same player's turn
+          expect(result.data!.currentPlayerIndex).toBe(0);
+        }
+      });
+
+      it('playing fourth King completes four-of-a-kind and burns pile', () => {
+        const state = createTestState({
+          discardPile: [c('K'), c('K'), c('K')],
+          drawPile: [],
+          players: [
+            {
+              playerId: 'p1',
+              nickname: 'Alice',
+              hand: [c('K'), c('5'), c('6')],
+              faceUp: [],
+              faceDown: [],
+            },
+            {
+              playerId: 'p2',
+              nickname: 'Bob',
+              hand: [c('3')],
+              faceUp: [],
+              faceDown: [],
+            },
+          ],
+        });
+
+        const result = GameEngine.playCards(state, 'p1', [0]);
+
+        expect(result.success).toBe(true);
+        if (result.success) {
+          // Pile burned
+          expect(result.data!.discardPile).toEqual([]);
+          // Same player's turn
+          expect(result.data!.currentPlayerIndex).toBe(0);
+        }
+      });
+
+      it('four-of-a-kind with 8s invisible burns pile', () => {
+        const state = createTestState({
+          discardPile: [c('2'), c('8'), c('2'), c('8')],
+          drawPile: [],
+          players: [
+            {
+              playerId: 'p1',
+              nickname: 'Alice',
+              hand: [c('2'), c('5'), c('6')],
+              faceUp: [],
+              faceDown: [],
+            },
+            {
+              playerId: 'p2',
+              nickname: 'Bob',
+              hand: [c('3')],
+              faceUp: [],
+              faceDown: [],
+            },
+          ],
+        });
+
+        // Pile has: [2, 8, 2, 8], playing another 2
+        // This gives: [2, 8, 2, 8, 2] -> three 2s visible through 8s, not enough yet
+        // Actually wait, let me reread: we need 4 total counting through 8s
+        // Pile currently: 2, 8, 2 (that's 2 twos visible through one 8, need to count backwards)
+        // Let me set up pile with 3 twos with 8s mixed in, then play 4th
+        state.discardPile = [c('2'), c('8'), c('2'), c('8'), c('2')];
+
+        const result = GameEngine.playCards(state, 'p1', [0]);
+
+        expect(result.success).toBe(true);
+        if (result.success) {
+          // Four 2s (with 8s invisible) should burn
+          expect(result.data!.discardPile).toEqual([]);
+          expect(result.data!.currentPlayerIndex).toBe(0);
+        }
+      });
+
+      it('after burn, player can play any card on empty pile', () => {
+        const state = createTestState({
+          discardPile: [c('K'), c('Q')],
+          drawPile: [],
+          players: [
+            {
+              playerId: 'p1',
+              nickname: 'Alice',
+              hand: [c('10'), c('3'), c('4')],
+              faceUp: [],
+              faceDown: [],
+            },
+            {
+              playerId: 'p2',
+              nickname: 'Bob',
+              hand: [c('5')],
+              faceUp: [],
+              faceDown: [],
+            },
+          ],
+        });
+
+        // First play 10 to burn pile
+        const result1 = GameEngine.playCards(state, 'p1', [0]);
+        expect(result1.success).toBe(true);
+
+        if (result1.success) {
+          const stateAfterBurn = result1.data!;
+          expect(stateAfterBurn.discardPile).toEqual([]);
+          expect(stateAfterBurn.currentPlayerIndex).toBe(0); // Still P1's turn
+
+          // Now P1 should be able to play any card (even low 3)
+          const result2 = GameEngine.playCards(stateAfterBurn, 'p1', [0]); // Play 3
+
+          expect(result2.success).toBe(true);
+        }
+      });
+
+      it('playing three Kings (not four) does not burn pile', () => {
+        const state = createTestState({
+          discardPile: [c('K'), c('K')],
+          drawPile: [],
+          players: [
+            {
+              playerId: 'p1',
+              nickname: 'Alice',
+              hand: [c('K'), c('5'), c('6')],
+              faceUp: [],
+              faceDown: [],
+            },
+            {
+              playerId: 'p2',
+              nickname: 'Bob',
+              hand: [c('3')],
+              faceUp: [],
+              faceDown: [],
+            },
+          ],
+        });
+
+        const result = GameEngine.playCards(state, 'p1', [0]);
+
+        expect(result.success).toBe(true);
+        if (result.success) {
+          // Pile should NOT be burned (only 3 Kings)
+          expect(result.data!.discardPile).toHaveLength(3);
+          // Turn should advance normally
+          expect(result.data!.currentPlayerIndex).toBe(1);
+        }
+      });
+    });
+
+    describe('turn management after burn', () => {
+      it('after 10 burn, currentPlayerIndex stays the same', () => {
+        const state = createTestState({
+          discardPile: [c('K')],
+          drawPile: [],
+          currentPlayerIndex: 0,
+          players: [
+            {
+              playerId: 'p1',
+              nickname: 'Alice',
+              hand: [c('10'), c('5'), c('6')],
+              faceUp: [],
+              faceDown: [],
+            },
+            {
+              playerId: 'p2',
+              nickname: 'Bob',
+              hand: [c('3')],
+              faceUp: [],
+              faceDown: [],
+            },
+          ],
+        });
+
+        const result = GameEngine.playCards(state, 'p1', [0]);
+
+        expect(result.success).toBe(true);
+        if (result.success) {
+          expect(result.data!.currentPlayerIndex).toBe(0);
+        }
+      });
+
+      it('after four-of-a-kind burn, currentPlayerIndex stays the same', () => {
+        const state = createTestState({
+          discardPile: [c('5'), c('5'), c('5')],
+          drawPile: [],
+          currentPlayerIndex: 0,
+          players: [
+            {
+              playerId: 'p1',
+              nickname: 'Alice',
+              hand: [c('5'), c('6'), c('7')],
+              faceUp: [],
+              faceDown: [],
+            },
+            {
+              playerId: 'p2',
+              nickname: 'Bob',
+              hand: [c('3')],
+              faceUp: [],
+              faceDown: [],
+            },
+          ],
+        });
+
+        const result = GameEngine.playCards(state, 'p1', [0]);
+
+        expect(result.success).toBe(true);
+        if (result.success) {
+          expect(result.data!.currentPlayerIndex).toBe(0);
+        }
+      });
+
+      it('after normal play (no burn), currentPlayerIndex advances', () => {
+        const state = createTestState({
+          discardPile: [c('5')],
+          drawPile: [],
+          currentPlayerIndex: 0,
+          players: [
+            {
+              playerId: 'p1',
+              nickname: 'Alice',
+              hand: [c('6'), c('7'), c('9')],
+              faceUp: [],
+              faceDown: [],
+            },
+            {
+              playerId: 'p2',
+              nickname: 'Bob',
+              hand: [c('3')],
+              faceUp: [],
+              faceDown: [],
+            },
+          ],
+        });
+
+        const result = GameEngine.playCards(state, 'p1', [0]);
+
+        expect(result.success).toBe(true);
+        if (result.success) {
+          expect(result.data!.currentPlayerIndex).toBe(1);
+        }
+      });
+
+      it('after burn, next play on empty pile succeeds with any card', () => {
+        const state = createTestState({
+          discardPile: [c('K'), c('Q'), c('J')],
+          drawPile: [],
+          players: [
+            {
+              playerId: 'p1',
+              nickname: 'Alice',
+              hand: [c('10'), c('3'), c('4')],
+              faceUp: [],
+              faceDown: [],
+            },
+            {
+              playerId: 'p2',
+              nickname: 'Bob',
+              hand: [c('5')],
+              faceUp: [],
+              faceDown: [],
+            },
+          ],
+        });
+
+        // P1 plays 10 to burn
+        const result1 = GameEngine.playCards(state, 'p1', [0]);
+        expect(result1.success).toBe(true);
+
+        if (result1.success) {
+          // Pile is empty, P1 still current
+          expect(result1.data!.discardPile).toEqual([]);
+          expect(result1.data!.currentPlayerIndex).toBe(0);
+
+          // P1 plays low card (3) on empty pile
+          const result2 = GameEngine.playCards(result1.data!, 'p1', [0]);
+          expect(result2.success).toBe(true);
+          if (result2.success) {
+            expect(result2.data!.discardPile).toHaveLength(1);
+            expect(result2.data!.discardPile[0].rank).toBe('3');
+          }
+        }
+      });
+    });
+
+    describe('multi-card plays with burn', () => {
+      it('playing multiple cards of same rank checks burn after all added', () => {
+        const state = createTestState({
+          discardPile: [c('K'), c('K')],
+          drawPile: [],
+          players: [
+            {
+              playerId: 'p1',
+              nickname: 'Alice',
+              hand: [c('K', 'hearts'), c('K', 'diamonds'), c('5')],
+              faceUp: [],
+              faceDown: [],
+            },
+            {
+              playerId: 'p2',
+              nickname: 'Bob',
+              hand: [c('3')],
+              faceUp: [],
+              faceDown: [],
+            },
+          ],
+        });
+
+        // Playing 2 Kings when pile has 2 Kings = 4 of a kind
+        const result = GameEngine.playCards(state, 'p1', [0, 1]);
+
+        expect(result.success).toBe(true);
+        if (result.success) {
+          // Should burn
+          expect(result.data!.discardPile).toEqual([]);
+          expect(result.data!.currentPlayerIndex).toBe(0);
+        }
+      });
     });
   });
 });
