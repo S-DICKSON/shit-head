@@ -24,7 +24,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 10: Client UI & Card Interactions** - React UI with card hand display and play actions
 - [ ] **Phase 11: Game Feedback & Turn Indicators** - Turn state display and visual cues
 - [ ] **Phase 12: Deployment & Production Polish** - Production build, hosting, and monitoring
-- [ ] **Phase 13: ESLint Setup & Fixes** - Install ESLint for server and client, add to Makefile, fix issues
+- [x] **Phase 13: ESLint Setup & Fixes** - Install ESLint for server and client, add to Makefile, fix issues
 
 ## Phase Details
 
@@ -244,7 +244,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 13-01-PLAN.md — Install ESLint 9 flat config with typescript-eslint v8 per-package configs, fix all errors, update Makefile and CI
+- [x] 13-01-PLAN.md — Install ESLint 9 flat config with typescript-eslint v8 per-package configs, fix all errors, update Makefile and CI
 
 ## Progress
 
@@ -265,8 +265,8 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 10. Client UI & Card Interactions | 0/TBD | Not started | - |
 | 11. Game Feedback & Turn Indicators | 0/TBD | Not started | - |
 | 12. Deployment & Production Polish | 0/TBD | Not started | - |
-| 13. ESLint Setup & Fixes | 0/1 | Not started | - |
+| 13. ESLint Setup & Fixes | 1/1 | Complete | 2026-02-08 |
 
 ---
 *Roadmap created: 2026-02-07*
-*Last updated: 2026-02-08 after Phase 13 planning*
+*Last updated: 2026-02-08 after Phase 13 execution*
