@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { GameEngine } from '../game/GameEngine';
 import { cardEquals } from '@shit-head/shared';
-import type { Card, PlayerGameState } from '@shit-head/shared';
+import type { Card, PlayerGameState, GameState, Rank, Suit } from '@shit-head/shared';
 
 describe('GameEngine', () => {
   const players2 = [
@@ -2526,6 +2526,478 @@ describe('GameEngine', () => {
         expect(result.code).toBe('INVALID_ACTION');
         expect(result.error).toContain('same rank');
       }
+    });
+  });
+
+  describe('playFaceDownBlind', () => {
+    // Helper to create card
+    function c(rank: Rank, suit: Suit = 'hearts'): Card {
+      return { kind: 'standard', suit, rank };
+    }
+
+    function joker(id: 1 | 2 = 1): Card {
+      return { kind: 'joker', id };
+    }
+
+    // Helper to create endgame state with specific cards
+    function createEndgameState(config: {
+      faceDown: Card[];
+      discardPile?: Card[];
+      otherPlayerCards?: boolean;
+      currentPlayerIndex?: number;
+      playerCount?: number;
+    }): GameState {
+      const players: PlayerGameState[] = [
+        {
+          playerId: 'p1',
+          nickname: 'Alice',
+          hand: [],
+          faceUp: [],
+          faceDown: config.faceDown,
+        },
+      ];
+
+      // Add second player
+      if (config.playerCount === undefined || config.playerCount >= 2) {
+        players.push({
+          playerId: 'p2',
+          nickname: 'Bob',
+          hand: config.otherPlayerCards ? [c('6')] : [],
+          faceUp: [],
+          faceDown: [],
+        });
+      }
+
+      // Add third player if requested
+      if (config.playerCount && config.playerCount >= 3) {
+        players.push({
+          playerId: 'p3',
+          nickname: 'Charlie',
+          hand: config.otherPlayerCards ? [c('7')] : [],
+          faceUp: [],
+          faceDown: [],
+        });
+      }
+
+      return {
+        phase: 'playing',
+        players,
+        drawPile: [],
+        discardPile: config.discardPile || [],
+        currentPlayerIndex: config.currentPlayerIndex ?? 0,
+        dealerIndex: 0,
+      };
+    }
+
+    describe('validation errors', () => {
+      it('rejects play during wrong phase (swapping)', () => {
+        const state = createEndgameState({ faceDown: [c('5')] });
+        state.phase = 'swapping';
+
+        const result = GameEngine.playFaceDownBlind(state, 'p1', 0);
+
+        expect(result.success).toBe(false);
+        if (!result.success) {
+          expect(result.code).toBe('INVALID_ACTION');
+          expect(result.error).toContain('playing phase');
+        }
+      });
+
+      it('rejects play when not player\'s turn', () => {
+        const state = createEndgameState({
+          faceDown: [c('5')],
+          currentPlayerIndex: 1,
+        });
+
+        const result = GameEngine.playFaceDownBlind(state, 'p1', 0);
+
+        expect(result.success).toBe(false);
+        if (!result.success) {
+          expect(result.code).toBe('NOT_YOUR_TURN');
+        }
+      });
+
+      it('rejects play when player has hand cards (source should be "hand")', () => {
+        const state = createEndgameState({ faceDown: [c('5')] });
+        state.players[0].hand = [c('3')]; // Player has hand cards
+
+        const result = GameEngine.playFaceDownBlind(state, 'p1', 0);
+
+        expect(result.success).toBe(false);
+        if (!result.success) {
+          expect(result.code).toBe('INVALID_ACTION');
+          expect(result.error).toContain('correct source');
+        }
+      });
+
+      it('rejects play when player has face-up cards (source should be "face-up")', () => {
+        const state = createEndgameState({ faceDown: [c('5')] });
+        state.players[0].faceUp = [c('3')]; // Player has face-up cards
+
+        const result = GameEngine.playFaceDownBlind(state, 'p1', 0);
+
+        expect(result.success).toBe(false);
+        if (!result.success) {
+          expect(result.code).toBe('INVALID_ACTION');
+          expect(result.error).toContain('correct source');
+        }
+      });
+
+      it('rejects play with invalid faceDownIndex (-1)', () => {
+        const state = createEndgameState({ faceDown: [c('5')] });
+
+        const result = GameEngine.playFaceDownBlind(state, 'p1', -1);
+
+        expect(result.success).toBe(false);
+        if (!result.success) {
+          expect(result.code).toBe('INVALID_ACTION');
+          expect(result.error).toContain('Invalid face-down index');
+        }
+      });
+
+      it('rejects play with invalid faceDownIndex (>= faceDown.length)', () => {
+        const state = createEndgameState({ faceDown: [c('5')] });
+
+        const result = GameEngine.playFaceDownBlind(state, 'p1', 1); // Only 1 card, index 1 is invalid
+
+        expect(result.success).toBe(false);
+        if (!result.success) {
+          expect(result.code).toBe('INVALID_ACTION');
+          expect(result.error).toContain('Invalid face-down index');
+        }
+      });
+
+      it('rejects play when player not found', () => {
+        const state = createEndgameState({ faceDown: [c('5')] });
+
+        const result = GameEngine.playFaceDownBlind(state, 'unknown', 0);
+
+        expect(result.success).toBe(false);
+        if (!result.success) {
+          expect(result.code).toBe('PLAYER_NOT_FOUND');
+        }
+      });
+    });
+
+    describe('playable card tests (path A)', () => {
+      it('blind card is higher than top of pile -> success, card on discard, faceDown count decreases', () => {
+        const state = createEndgameState({
+          faceDown: [c('A', 'hearts')], // Ace beats King
+          discardPile: [c('K')],
+          otherPlayerCards: true,
+        });
+
+        const result = GameEngine.playFaceDownBlind(state, 'p1', 0);
+
+        expect(result.success).toBe(true);
+        if (result.success) {
+          expect(result.data.playable).toBe(true);
+          expect(result.data.card).toEqual(c('A', 'hearts'));
+          expect(result.data.state.discardPile).toHaveLength(2);
+          expect(result.data.state.discardPile[1]).toEqual(c('A', 'hearts'));
+          expect(result.data.state.players[0].faceDown).toHaveLength(0);
+          expect(result.data.state.currentPlayerIndex).toBe(1); // Turn advanced
+        }
+      });
+
+      it('blind card is equal to top of pile -> success (equal is playable)', () => {
+        const state = createEndgameState({
+          faceDown: [c('7', 'diamonds')],
+          discardPile: [c('7', 'hearts')],
+          otherPlayerCards: true,
+        });
+
+        const result = GameEngine.playFaceDownBlind(state, 'p1', 0);
+
+        expect(result.success).toBe(true);
+        if (result.success) {
+          expect(result.data.playable).toBe(true);
+          expect(result.data.card).toEqual(c('7', 'diamonds'));
+          expect(result.data.state.discardPile).toHaveLength(2);
+        }
+      });
+
+      it('blind card on empty discard pile -> success (any card playable)', () => {
+        const state = createEndgameState({
+          faceDown: [c('3')], // Lowest card still playable on empty pile
+          discardPile: [],
+          otherPlayerCards: true,
+        });
+
+        const result = GameEngine.playFaceDownBlind(state, 'p1', 0);
+
+        expect(result.success).toBe(true);
+        if (result.success) {
+          expect(result.data.playable).toBe(true);
+          expect(result.data.card).toEqual(c('3'));
+          expect(result.data.state.discardPile).toHaveLength(1);
+          expect(result.data.state.discardPile[0]).toEqual(c('3'));
+        }
+      });
+
+      it('blind card is a joker -> success (joker beats everything)', () => {
+        const state = createEndgameState({
+          faceDown: [joker(1)],
+          discardPile: [c('A')], // Ace is highest standard card
+          otherPlayerCards: true,
+        });
+
+        const result = GameEngine.playFaceDownBlind(state, 'p1', 0);
+
+        expect(result.success).toBe(true);
+        if (result.success) {
+          expect(result.data.playable).toBe(true);
+          expect(result.data.card).toEqual(joker(1));
+          expect(result.data.state.discardPile).toHaveLength(2);
+        }
+      });
+
+      it('player plays last face-down card successfully -> player eliminated', () => {
+        const state = createEndgameState({
+          faceDown: [c('K')], // Only 1 face-down card
+          discardPile: [c('5')],
+          otherPlayerCards: true,
+        });
+
+        const result = GameEngine.playFaceDownBlind(state, 'p1', 0);
+
+        expect(result.success).toBe(true);
+        if (result.success) {
+          expect(result.data.playable).toBe(true);
+          // Player eliminated
+          expect(result.data.state.players[0].hand).toHaveLength(0);
+          expect(result.data.state.players[0].faceUp).toHaveLength(0);
+          expect(result.data.state.players[0].faceDown).toHaveLength(0);
+        }
+      });
+
+      it('elimination causes findShithead with 1 player remaining -> phase = finished', () => {
+        const state = createEndgameState({
+          faceDown: [c('K')],
+          discardPile: [c('5')],
+          otherPlayerCards: true, // Only P2 has cards
+          playerCount: 2,
+        });
+
+        const result = GameEngine.playFaceDownBlind(state, 'p1', 0);
+
+        expect(result.success).toBe(true);
+        if (result.success) {
+          expect(result.data.playable).toBe(true);
+          // P1 eliminated, only P2 has cards -> game over
+          expect(result.data.state.phase).toBe('finished');
+        }
+      });
+
+      it('elimination but 2+ players remain -> game continues', () => {
+        const state = createEndgameState({
+          faceDown: [c('K')],
+          discardPile: [c('5')],
+          otherPlayerCards: true,
+          playerCount: 3, // P2 and P3 have cards
+        });
+
+        const result = GameEngine.playFaceDownBlind(state, 'p1', 0);
+
+        expect(result.success).toBe(true);
+        if (result.success) {
+          expect(result.data.playable).toBe(true);
+          // P1 eliminated, but P2 and P3 remain -> game continues
+          expect(result.data.state.phase).toBe('playing');
+        }
+      });
+    });
+
+    describe('unplayable card tests (path B)', () => {
+      it('blind card is lower than top of pile -> card + pile go to hand, discard cleared', () => {
+        const state = createEndgameState({
+          faceDown: [c('3', 'hearts')], // 3 is lower than King
+          discardPile: [c('K')],
+          otherPlayerCards: true,
+        });
+
+        const result = GameEngine.playFaceDownBlind(state, 'p1', 0);
+
+        expect(result.success).toBe(true);
+        if (result.success) {
+          expect(result.data.playable).toBe(false);
+          expect(result.data.card).toEqual(c('3', 'hearts'));
+          // Hand contains discardPile cards AND the flipped card
+          expect(result.data.state.players[0].hand).toHaveLength(2); // K + 3
+          expect(result.data.state.players[0].hand).toContainEqual(c('K'));
+          expect(result.data.state.players[0].hand).toContainEqual(c('3', 'hearts'));
+          // Discard pile is empty
+          expect(result.data.state.discardPile).toHaveLength(0);
+          // FaceDown count decreased by 1
+          expect(result.data.state.players[0].faceDown).toHaveLength(0);
+        }
+      });
+
+      it('verify hand contains discardPile cards AND the flipped card', () => {
+        const state = createEndgameState({
+          faceDown: [c('4', 'spades')],
+          discardPile: [c('7'), c('9'), c('K')], // 3 cards on pile
+          otherPlayerCards: true,
+        });
+
+        const result = GameEngine.playFaceDownBlind(state, 'p1', 0);
+
+        expect(result.success).toBe(true);
+        if (result.success) {
+          expect(result.data.playable).toBe(false);
+          // Hand should have all 4 cards (3 from pile + 1 flipped)
+          expect(result.data.state.players[0].hand).toHaveLength(4);
+          expect(result.data.state.players[0].hand).toContainEqual(c('7'));
+          expect(result.data.state.players[0].hand).toContainEqual(c('9'));
+          expect(result.data.state.players[0].hand).toContainEqual(c('K'));
+          expect(result.data.state.players[0].hand).toContainEqual(c('4', 'spades'));
+        }
+      });
+
+      it('verify discardPile is empty after pickup', () => {
+        const state = createEndgameState({
+          faceDown: [c('3')],
+          discardPile: [c('5'), c('7'), c('K')],
+          otherPlayerCards: true,
+        });
+
+        const result = GameEngine.playFaceDownBlind(state, 'p1', 0);
+
+        expect(result.success).toBe(true);
+        if (result.success) {
+          expect(result.data.playable).toBe(false);
+          expect(result.data.state.discardPile).toEqual([]);
+        }
+      });
+
+      it('verify faceDown count decreases by 1', () => {
+        const state = createEndgameState({
+          faceDown: [c('3'), c('5'), c('7')], // 3 face-down cards
+          discardPile: [c('K')],
+          otherPlayerCards: true,
+        });
+
+        const result = GameEngine.playFaceDownBlind(state, 'p1', 0);
+
+        expect(result.success).toBe(true);
+        if (result.success) {
+          expect(result.data.playable).toBe(false);
+          expect(result.data.state.players[0].faceDown).toHaveLength(2); // 3 -> 2
+        }
+      });
+
+      it('turn advances to next player after pickup', () => {
+        const state = createEndgameState({
+          faceDown: [c('3')],
+          discardPile: [c('K')],
+          otherPlayerCards: true,
+          currentPlayerIndex: 0,
+        });
+
+        const result = GameEngine.playFaceDownBlind(state, 'p1', 0);
+
+        expect(result.success).toBe(true);
+        if (result.success) {
+          expect(result.data.playable).toBe(false);
+          expect(result.data.state.currentPlayerIndex).toBe(1);
+        }
+      });
+
+      it('after pickup, determinePlaySource on this player returns "hand"', () => {
+        const state = createEndgameState({
+          faceDown: [c('3'), c('5')],
+          discardPile: [c('K')],
+          otherPlayerCards: true,
+        });
+
+        const result = GameEngine.playFaceDownBlind(state, 'p1', 0);
+
+        expect(result.success).toBe(true);
+        if (result.success) {
+          expect(result.data.playable).toBe(false);
+          // Check that player now has hand cards
+          const player = result.data.state.players[0];
+          const playSource = GameEngine.determinePlaySource(player, true);
+          expect(playSource).toBe('hand');
+        }
+      });
+
+      it('pickup when discard pile has many cards -> all go to hand', () => {
+        const state = createEndgameState({
+          faceDown: [c('3')],
+          discardPile: [c('5'), c('6'), c('7'), c('8'), c('9'), c('10')], // 6 cards
+          otherPlayerCards: true,
+        });
+
+        const result = GameEngine.playFaceDownBlind(state, 'p1', 0);
+
+        expect(result.success).toBe(true);
+        if (result.success) {
+          expect(result.data.playable).toBe(false);
+          // 6 from pile + 1 flipped = 7 total
+          expect(result.data.state.players[0].hand).toHaveLength(7);
+        }
+      });
+    });
+
+    describe('edge cases', () => {
+      it('player with only 1 face-down card, blind play succeeds -> eliminated', () => {
+        const state = createEndgameState({
+          faceDown: [c('A')], // Only 1 card, and it's playable
+          discardPile: [c('5')],
+          otherPlayerCards: true,
+        });
+
+        const result = GameEngine.playFaceDownBlind(state, 'p1', 0);
+
+        expect(result.success).toBe(true);
+        if (result.success) {
+          expect(result.data.playable).toBe(true);
+          // Player eliminated (no cards left)
+          const totalCards = result.data.state.players[0].hand.length +
+                           result.data.state.players[0].faceUp.length +
+                           result.data.state.players[0].faceDown.length;
+          expect(totalCards).toBe(0);
+        }
+      });
+
+      it('player with only 1 face-down card, blind play fails -> picks up pile, has hand cards, continues', () => {
+        const state = createEndgameState({
+          faceDown: [c('3')], // Only 1 card, but it's not playable
+          discardPile: [c('K')],
+          otherPlayerCards: true,
+        });
+
+        const result = GameEngine.playFaceDownBlind(state, 'p1', 0);
+
+        expect(result.success).toBe(true);
+        if (result.success) {
+          expect(result.data.playable).toBe(false);
+          // Player not eliminated - has hand cards now
+          expect(result.data.state.players[0].hand).toHaveLength(2); // K + 3
+          expect(result.data.state.players[0].faceDown).toHaveLength(0);
+          // Game continues
+          expect(result.data.state.phase).toBe('playing');
+        }
+      });
+
+      it('2-player game, blind play eliminates P0 -> P1 is shithead (last with cards), game ends', () => {
+        const state = createEndgameState({
+          faceDown: [c('A')],
+          discardPile: [c('5')],
+          otherPlayerCards: true,
+          playerCount: 2,
+        });
+
+        const result = GameEngine.playFaceDownBlind(state, 'p1', 0);
+
+        expect(result.success).toBe(true);
+        if (result.success) {
+          expect(result.data.playable).toBe(true);
+          // P0 eliminated, only P1 has cards -> game ends
+          expect(result.data.state.phase).toBe('finished');
+        }
+      });
     });
   });
 });
