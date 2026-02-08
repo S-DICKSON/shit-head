@@ -9,19 +9,19 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 
 ## Current Position
 
-Phase: 10 of 14 (Client UI & Card Interactions) — COMPLETE
-Plan: 3/3 complete
-Status: Phase complete (verified, gap closure applied)
-Last activity: 2026-02-08 — Phase 10 verified with human UAT, endgame bug fixed, layout redesigned
+Phase: 11 of 14 (Game Feedback & Turn Indicators)
+Plan: 1 of 3 complete
+Status: In progress
+Last activity: 2026-02-08 — Completed 11-01-PLAN.md (Turn Feedback Indicators)
 
-Progress: [████████░░] ~88% (47 plans complete)
+Progress: [████████░░] ~90% (48 plans complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 44
+- Total plans completed: 45
 - Average duration: 2.3 minutes
-- Total execution time: 1.71 hours
+- Total execution time: 1.75 hours
 
 **By Phase:**
 
@@ -37,12 +37,13 @@ Progress: [████████░░] ~88% (47 plans complete)
 | 08 | 3 | 701s | 234s |
 | 09 | 7 | 1204s | 172s |
 | 10 | 3 | 451s | 150s |
+| 11 | 1 | 150s | 150s |
 | 13 | 1 | 118s | 118s |
 | 14 | 2 | 346s | 173s |
 
 **Recent Trend:**
-- Last 5 plans: 10-01 (145s), 10-02 (139s), 10-03 (167s), 09-07 (106s)
-- Trend: Steady ~2-3min execution times — gap closure was faster (1.8min)
+- Last 5 plans: 10-01 (145s), 10-02 (139s), 10-03 (167s), 09-07 (106s), 11-01 (150s)
+- Trend: Steady ~2-3min execution times, excellent consistency
 
 *Updated after each plan completion*
 
@@ -356,10 +357,19 @@ Recent decisions affecting current work:
 - Face-down cards stacked visually underneath face-up cards in "Table" section — saves vertical space and provides natural reveal effect
 - PlayingPhase uses h-screen with overflow-hidden to prevent scrolling on laptop
 
+**From 11-01:**
+- TurnBanner component with Vue Transition for smooth enter/leave animations (300ms enter, 200ms leave)
+- ARIA live region with aria-live="polite" for screen reader turn announcements
+- prefers-reduced-motion media query support for accessibility (0ms transitions)
+- GPU-accelerated animations using only transform and opacity properties
+- Opponent turn indicators use Vue Transition for pulse dot fade in/out
+- Nickname text emphasis (yellow-300, font-semibold) when opponent's turn
+
 ### Roadmap Evolution
 
 - Phase 13 added: ESLint Setup & Fixes — Install ESLint for server and client, add to Makefile, fix issues
 - Phase 14 added: Ngrok Local Dev Sharing — Ngrok tunnel so local dev can be shared and tested on mobile
+- Phase 15 added: Mobile UX Improvements — Pickup pile safety, turn indicators, timer relocation, 8-card visibility, hand card grouping (from mobile playtesting feedback)
 
 ### Pending Todos
 
@@ -376,6 +386,6 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Phase 10 complete — playing phase UI with gap closure (endgame fix + layout redesign)
+Stopped at: Completed 11-01-PLAN.md (Turn Feedback Indicators)
 Resume file: None
 
