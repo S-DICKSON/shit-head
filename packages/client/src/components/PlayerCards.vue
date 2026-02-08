@@ -1,13 +1,5 @@
 <template>
   <div class="flex flex-col">
-    <!-- Your Turn indicator -->
-    <div
-      v-if="isMyTurn"
-      class="text-center text-yellow-300 font-bold text-sm mb-2 animate-pulse"
-    >
-      Your Turn!
-    </div>
-
     <!-- Table cards: face-down underneath face-up (stacked) -->
     <div
       v-if="faceUp.length > 0 || faceDownCount > 0"

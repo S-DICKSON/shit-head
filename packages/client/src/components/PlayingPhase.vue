@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import { ref, watch } from 'vue';
 import { usePlayingPhase } from '../composables/usePlayingPhase';
 import TurnTimer from './TurnTimer.vue';
+import TurnBanner from './TurnBanner.vue';
 import OpponentCards from './OpponentCards.vue';
 import DrawPile from './DrawPile.vue';
 import DiscardPile from './DiscardPile.vue';
@@ -27,6 +29,22 @@ function isOpponentCurrentTurn(opponentPlayerId: string): boolean {
   const opponentIndex = roomState.value.players.findIndex(p => p.id === opponentPlayerId);
   return opponentIndex === gameView.value.currentPlayerIndex;
 }
+
+// ARIA live region for turn announcements
+const turnAnnouncement = ref('');
+
+watch(
+  () => gameView.value?.currentPlayerIndex,
+  () => {
+    if (isMyTurn.value) {
+      turnAnnouncement.value = "It's your turn";
+    } else if (gameView.value?.currentPlayerIndex !== undefined && roomState.value) {
+      const currentPlayer = roomState.value.players[gameView.value.currentPlayerIndex];
+      turnAnnouncement.value = currentPlayer ? `It's ${currentPlayer.nickname}'s turn` : '';
+    }
+  },
+  { immediate: true }
+);
 </script>
 
 <template>
@@ -48,6 +66,9 @@ function isOpponentCurrentTurn(opponentPlayerId: string): boolean {
         />
       </div>
     </div>
+
+    <!-- Turn Banner -->
+    <TurnBanner :visible="isMyTurn" />
 
     <!-- Center game area: Draw Pile + Discard Pile -->
     <div class="flex-1 flex items-center justify-center gap-6 sm:gap-8 px-4">
@@ -73,5 +94,24 @@ function isOpponentCurrentTurn(opponentPlayerId: string): boolean {
         @pickup-pile="pickupPile"
       />
     </div>
+
+    <!-- ARIA live region for screen readers -->
+    <div
+      class="sr-only"
+      aria-live="polite"
+      role="status"
+    >
+      {{ turnAnnouncement }}
+    </div>
   </div>
 </template>
+
+<style scoped>
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+}
+</style>
