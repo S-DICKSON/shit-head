@@ -62,9 +62,9 @@
 - [x] **MULT-01**: Real-time game state sync via WebSocket
 - [x] **MULT-02**: Server-authoritative game state (prevents cheating)
 - [x] **MULT-03**: Turn timer (30-60s) with auto-pickup on timeout
-- [ ] **MULT-04**: Player-specific state views (hide opponent hands and face-down cards)
-- [ ] **MULT-05**: Reconnection handling with brief wait period
-- [ ] **MULT-06**: Remove player after disconnect timeout
+- [x] **MULT-04**: Player-specific state views (hide opponent hands and face-down cards)
+- [x] **MULT-05**: Reconnection handling with brief wait period
+- [x] **MULT-06**: Remove player after disconnect timeout
 
 ### User Interface
 
@@ -141,9 +141,9 @@
 | MULT-01 | Phase 2 | Complete |
 | MULT-02 | Phase 2 | Complete |
 | MULT-03 | Phase 8 | Complete |
-| MULT-04 | Phase 9 | Pending |
-| MULT-05 | Phase 9 | Pending |
-| MULT-06 | Phase 9 | Pending |
+| MULT-04 | Phase 9 | Complete |
+| MULT-05 | Phase 9 | Complete |
+| MULT-06 | Phase 9 | Complete |
 | UI-01 | Phase 10 | Pending |
 | UI-02 | Phase 10 | Pending |
 | UI-03 | Phase 11 | Pending |
@@ -157,4 +157,4 @@
 
 ---
 *Requirements defined: 2026-02-07*
-*Last updated: 2026-02-08 after Phase 7 completion*
+*Last updated: 2026-02-08 after Phase 9 completion*

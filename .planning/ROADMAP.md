@@ -20,11 +20,12 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 6: Special Cards & Burn Mechanics** - 2s, 7s, 8s, 10s, and burn detection
 - [x] **Phase 7: Endgame & Win Conditions** - Hand to face-up to face-down progression and winner detection
 - [x] **Phase 8: Turn Timing & Auto-Pickup** - Turn timer with timeout handling
-- [ ] **Phase 9: Connection Management & Reconnection** - Disconnect detection and reconnection flow
+- [x] **Phase 9: Connection Management & Reconnection** - Disconnect detection and reconnection flow
 - [ ] **Phase 10: Client UI & Card Interactions** - React UI with card hand display and play actions
 - [ ] **Phase 11: Game Feedback & Turn Indicators** - Turn state display and visual cues
 - [ ] **Phase 12: Deployment & Production Polish** - Production build, hosting, and monitoring
 - [x] **Phase 13: ESLint Setup & Fixes** - Install ESLint for server and client, add to Makefile, fix issues
+- [ ] **Phase 14: Ngrok Local Dev Sharing** - Ngrok tunnel so local dev can be shared and tested on mobile
 
 ## Phase Details
 
@@ -185,10 +186,10 @@ Plans:
 **Plans**: 4 plans
 
 Plans:
-- [ ] 09-01-PLAN.md — Reconnection message schemas and types (shared package)
-- [ ] 09-02-PLAN.md — Room disconnect/reconnect lifecycle with grace period (TDD)
-- [ ] 09-03-PLAN.md — Client localStorage persistence and auto-reconnect logic
-- [ ] 09-04-PLAN.md — Server WebSocket handler integration (reconnect handler, handleClose update)
+- [x] 09-01-PLAN.md — Reconnection message schemas and types (shared package)
+- [x] 09-02-PLAN.md — Room disconnect/reconnect lifecycle with grace period (TDD)
+- [x] 09-03-PLAN.md — Client localStorage persistence and auto-reconnect logic
+- [x] 09-04-PLAN.md — Server WebSocket handler integration (reconnect handler, handleClose update)
 
 ### Phase 10: Client UI & Card Interactions
 **Goal**: Players have a responsive UI to view and play cards on mobile and desktop
@@ -249,10 +250,24 @@ Plans:
 Plans:
 - [x] 13-01-PLAN.md — Install ESLint 9 flat config with typescript-eslint v8 per-package configs, fix all errors, update Makefile and CI
 
+### Phase 14: Ngrok Local Dev Sharing
+**Goal**: Ngrok tunnel enables sharing local dev environment for mobile testing
+**Depends on**: Phase 13
+**Requirements**: None (developer tooling)
+**Success Criteria** (what must be TRUE):
+  1. Local dev server is accessible via ngrok tunnel URL
+  2. WebSocket connections work through ngrok tunnel
+  3. Mobile devices can connect and play the game via tunnel URL
+  4. Simple command (Makefile target) to start tunneled dev server
+**Plans**: 0 plans
+
+Plans:
+- [ ] (Plans will be created during /gsd:plan-phase 14)
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13
+Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -264,12 +279,13 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 6. Special Cards & Burn Mechanics | 2/2 | Complete | 2026-02-08 |
 | 7. Endgame & Win Conditions | 5/5 | Complete | 2026-02-08 |
 | 8. Turn Timing & Auto-Pickup | 3/3 | Complete | 2026-02-08 |
-| 9. Connection Management & Reconnection | 0/TBD | Not started | - |
+| 9. Connection Management & Reconnection | 4/4 | Complete | 2026-02-08 |
 | 10. Client UI & Card Interactions | 0/TBD | Not started | - |
 | 11. Game Feedback & Turn Indicators | 0/TBD | Not started | - |
 | 12. Deployment & Production Polish | 0/TBD | Not started | - |
 | 13. ESLint Setup & Fixes | 1/1 | Complete | 2026-02-08 |
+| 14. Ngrok Local Dev Sharing | 0/TBD | Not started | - |
 
 ---
 *Roadmap created: 2026-02-07*
-*Last updated: 2026-02-08 after Phase 8 execution*
+*Last updated: 2026-02-08 after Phase 9 execution*
