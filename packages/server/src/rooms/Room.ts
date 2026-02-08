@@ -1,7 +1,7 @@
 // Room class - individual room state and logic
 import { customAlphabet } from 'nanoid';
 import type { RoomState, RoomStatus, LobbyPlayer, ErrorCode, GameState, PlayerGameView } from '@shit-head/shared';
-import { GameEngine } from '../game/GameEngine';
+import { GameEngine, type BlindPlayResult } from '../game/GameEngine';
 
 // Custom alphabet excludes confusable characters: 0/O, 1/I/L, 5/S
 const ALPHABET = '2346789ABCDEFGHJKMNPQRTUVWXYZ';
@@ -27,6 +27,8 @@ export class Room {
   private onPlayerReady?: (playerId: string, readyPlayers: string[]) => void;
   private onSwapPhaseComplete?: (reason: 'timer-expired' | 'all-ready') => void;
   private onPlayPhaseStart?: (currentPlayerIndex: number) => void;
+  private onPlayerEliminated?: (playerId: string, nickname: string, currentPlayerIndex: number) => void;
+  private onGameOver?: (shitheadId: string, shitheadNickname: string) => void;
 
   constructor(hostId: string, hostNickname: string) {
     this.code = generateRoomCode();
@@ -157,6 +159,14 @@ export class Room {
     this.onPlayPhaseStart = callbacks.onPlayPhaseStart;
   }
 
+  setGameCallbacks(callbacks: {
+    onPlayerEliminated: (playerId: string, nickname: string, currentPlayerIndex: number) => void;
+    onGameOver: (shitheadId: string, shitheadNickname: string) => void;
+  }): void {
+    this.onPlayerEliminated = callbacks.onPlayerEliminated;
+    this.onGameOver = callbacks.onGameOver;
+  }
+
   swapCards(playerId: string, handIndex: number, faceUpIndex: number): OperationResult {
     // Validate game exists
     if (!this.gameState) {
@@ -265,6 +275,31 @@ export class Room {
     return Array.from(this.readyPlayers);
   }
 
+  private checkPostPlayState(playerId: string): void {
+    if (!this.gameState) return;
+
+    const player = this.gameState.players.find(p => p.playerId === playerId);
+    if (!player) return;
+
+    // Check if player just got eliminated
+    if (GameEngine.checkPlayerElimination(player)) {
+      this.onPlayerEliminated?.(playerId, player.nickname, this.gameState.currentPlayerIndex);
+
+      // Check if game is over
+      const shitheadId = GameEngine.findShithead(this.gameState);
+      if (shitheadId) {
+        this.gameState.phase = 'finished';
+        const shithead = this.gameState.players.find(p => p.playerId === shitheadId);
+        if (shithead) {
+          // Set dealer index for next hand
+          const shitheadIndex = this.gameState.players.findIndex(p => p.playerId === shitheadId);
+          this.dealerIndex = shitheadIndex;
+          this.onGameOver?.(shitheadId, shithead.nickname);
+        }
+      }
+    }
+  }
+
   playCards(playerId: string, cardIndices: number[]): OperationResult {
     if (!this.gameState) {
       return { success: false, error: 'No game in progress', code: 'INVALID_ACTION' };
@@ -272,6 +307,7 @@ export class Room {
     const result = GameEngine.playCards(this.gameState, playerId, cardIndices);
     if (result.success && result.data) {
       this.gameState = result.data;
+      this.checkPostPlayState(playerId);
       return { success: true };
     }
     if (!result.success) {
@@ -295,5 +331,37 @@ export class Room {
       return { success: false, error: result.error, code: result.code as ErrorCode };
     }
     return { success: false, error: 'Unknown error', code: 'INVALID_ACTION' };
+  }
+
+  playFromFaceUp(playerId: string, cardIndices: number[]): OperationResult {
+    if (!this.gameState) {
+      return { success: false, error: 'No game in progress', code: 'INVALID_ACTION' };
+    }
+
+    const result = GameEngine.playFromFaceUp(this.gameState, playerId, cardIndices);
+
+    if (result.success && result.data) {
+      this.gameState = result.data;
+      this.checkPostPlayState(playerId);
+      return { success: true };
+    }
+
+    return result;
+  }
+
+  playFaceDownBlind(playerId: string, faceDownIndex: number): OperationResult<BlindPlayResult> {
+    if (!this.gameState) {
+      return { success: false, error: 'No game in progress', code: 'INVALID_ACTION' };
+    }
+
+    const result = GameEngine.playFaceDownBlind(this.gameState, playerId, faceDownIndex);
+
+    if (result.success && result.data) {
+      this.gameState = result.data.state;
+      this.checkPostPlayState(playerId);
+      return { success: true, data: result.data };
+    }
+
+    return result;
   }
 }
