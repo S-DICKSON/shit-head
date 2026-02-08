@@ -571,6 +571,7 @@ export class Room {
         gamePlayer.faceDown = [];
       }
 
+      // Turn advancement - ONLY during playing phase
       if (this.gameState.phase === 'playing') {
         const currentPlayer = this.gameState.players[this.gameState.currentPlayerIndex];
 
@@ -588,28 +589,28 @@ export class Room {
           // Notify play phase start for new current player
           this.onPlayPhaseStart?.(this.gameState.currentPlayerIndex);
         }
+      }
 
-        // Check if game should end (fewer than 2 connected players remain)
-        // Count players still in the room (not disconnected and removed)
-        const connectedPlayerCount = this.players.size;
+      // Game-end check - applies to ALL active phases (swapping, transitioning, playing)
+      // Count players still in the room (not disconnected and removed)
+      const connectedPlayerCount = this.players.size;
 
-        if (connectedPlayerCount < 2) {
-          this.gameState.phase = 'finished';
-          this.clearTurnTimer();
+      if (connectedPlayerCount < 2) {
+        this.gameState.phase = 'finished';
+        this.clearTurnTimer();
 
-          // Find remaining player
-          const remainingPlayerIds = Array.from(this.players.keys());
-          if (remainingPlayerIds.length === 1) {
-            const remainingPlayerId = remainingPlayerIds[0];
-            const remainingGamePlayer = this.gameState.players.find(p => p.playerId === remainingPlayerId);
-            if (remainingGamePlayer) {
-              this.onGameOver?.(remainingGamePlayer.playerId, remainingGamePlayer.nickname);
-            }
-          } else if (remainingPlayerIds.length === 0 && this.gameState.players.length > 0) {
-            // Edge case: all players disconnected, use first from game state
-            const fallbackPlayer = this.gameState.players[0];
-            this.onGameOver?.(fallbackPlayer.playerId, fallbackPlayer.nickname);
+        // Find remaining player
+        const remainingPlayerIds = Array.from(this.players.keys());
+        if (remainingPlayerIds.length === 1) {
+          const remainingPlayerId = remainingPlayerIds[0];
+          const remainingGamePlayer = this.gameState.players.find(p => p.playerId === remainingPlayerId);
+          if (remainingGamePlayer) {
+            this.onGameOver?.(remainingGamePlayer.playerId, remainingGamePlayer.nickname);
           }
+        } else if (remainingPlayerIds.length === 0 && this.gameState.players.length > 0) {
+          // Edge case: all players disconnected, use first from game state
+          const fallbackPlayer = this.gameState.players[0];
+          this.onGameOver?.(fallbackPlayer.playerId, fallbackPlayer.nickname);
         }
       }
     }
