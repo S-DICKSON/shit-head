@@ -257,6 +257,36 @@ export function handleMessage(
             },
           });
 
+          room.setGameCallbacks({
+            onPlayerEliminated: (eliminatedPlayerId, nickname, currentPlayerIndex) => {
+              const playerIds = room.getPlayerIds();
+              for (const pid of playerIds) {
+                const pWs = playerSockets.get(pid);
+                if (pWs) {
+                  sendMessage(pWs, {
+                    type: 'player-eliminated',
+                    playerId: eliminatedPlayerId,
+                    nickname,
+                    currentPlayerIndex,
+                  });
+                }
+              }
+            },
+            onGameOver: (shitheadId, shitheadNickname) => {
+              const playerIds = room.getPlayerIds();
+              for (const pid of playerIds) {
+                const pWs = playerSockets.get(pid);
+                if (pWs) {
+                  sendMessage(pWs, {
+                    type: 'game-over',
+                    shitheadId,
+                    shitheadNickname,
+                  });
+                }
+              }
+            },
+          });
+
           room.startGame();
 
           // Send player-specific game-dealt messages to each player
@@ -450,6 +480,53 @@ export function handleMessage(
             hand: view.hand,
             opponents: view.opponents,
           });
+        }
+      }
+      break;
+    }
+
+    case 'play-face-down': {
+      const roomCode = ws.data.roomCode;
+
+      if (!roomCode) {
+        sendMessage(ws, { type: 'error', message: 'Not in a room', code: 'ROOM_NOT_FOUND' });
+        return;
+      }
+
+      const room = manager.getRoom(roomCode);
+
+      if (!room) {
+        sendMessage(ws, { type: 'error', message: 'Room not found', code: 'ROOM_NOT_FOUND' });
+        return;
+      }
+
+      const result = room.playFaceDownBlind(ws.data.playerId, message.faceDownIndex);
+
+      if (!result.success) {
+        sendMessage(ws, { type: 'error', message: result.error, code: result.code });
+        return;
+      }
+
+      // Broadcast face-down-result to ALL players with per-player views
+      if (result.data) {
+        const playerIds = room.getPlayerIds();
+        for (const pid of playerIds) {
+          const view = room.getPlayerView(pid);
+          const pWs = playerSockets.get(pid);
+          if (view && pWs) {
+            sendMessage(pWs, {
+              type: 'face-down-result',
+              playerId: ws.data.playerId,
+              card: result.data.card,
+              playable: result.data.playable,
+              currentPlayerIndex: view.currentPlayerIndex,
+              discardPile: view.discardPile,
+              // Include per-player specific data
+              hand: view.hand,
+              faceDownCount: view.faceDownCount,
+              opponents: view.opponents,
+            });
+          }
         }
       }
       break;
