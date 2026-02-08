@@ -17,7 +17,7 @@ export default defineConfig({
     proxy: {
       '/api': serverUrl,
       '/game-ws': {
-        target: serverUrl.replace('http', 'ws'),
+        target: serverUrl,
         ws: true,
         changeOrigin: true,  // Rewrites Host header for WebSocket handshake
       },
