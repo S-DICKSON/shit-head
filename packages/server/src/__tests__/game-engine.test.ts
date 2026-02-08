@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { GameEngine } from '../game/GameEngine';
 import { cardEquals } from '@shit-head/shared';
-import type { Card } from '@shit-head/shared';
+import type { Card, PlayerGameState } from '@shit-head/shared';
 
 describe('GameEngine', () => {
   const players2 = [
@@ -1692,6 +1692,840 @@ describe('GameEngine', () => {
           expect(result.data!.currentPlayerIndex).toBe(0);
         }
       });
+    });
+  });
+
+  describe('determinePlaySource', () => {
+    it('returns "hand" when player has hand cards', () => {
+      const player: PlayerGameState = {
+        playerId: 'p1',
+        nickname: 'Alice',
+        hand: [c('5'), c('7')],
+        faceUp: [c('3')],
+        faceDown: [c('K')],
+      };
+
+      const result = GameEngine.determinePlaySource(player, false);
+
+      expect(result).toBe('hand');
+    });
+
+    it('returns "hand" when hand is empty but draw pile has cards (player must draw)', () => {
+      const player: PlayerGameState = {
+        playerId: 'p1',
+        nickname: 'Alice',
+        hand: [],
+        faceUp: [c('3'), c('4')],
+        faceDown: [c('K')],
+      };
+
+      const result = GameEngine.determinePlaySource(player, false);
+
+      expect(result).toBe('hand');
+    });
+
+    it('returns "face-up" when hand and draw pile are empty but face-up cards remain', () => {
+      const player: PlayerGameState = {
+        playerId: 'p1',
+        nickname: 'Alice',
+        hand: [],
+        faceUp: [c('3'), c('4')],
+        faceDown: [c('K')],
+      };
+
+      const result = GameEngine.determinePlaySource(player, true);
+
+      expect(result).toBe('face-up');
+    });
+
+    it('returns "face-down" when hand, draw pile, and face-up are all empty but face-down remains', () => {
+      const player: PlayerGameState = {
+        playerId: 'p1',
+        nickname: 'Alice',
+        hand: [],
+        faceUp: [],
+        faceDown: [c('K')],
+      };
+
+      const result = GameEngine.determinePlaySource(player, true);
+
+      expect(result).toBe('face-down');
+    });
+
+    it('returns null when player has no cards at all (eliminated)', () => {
+      const player: PlayerGameState = {
+        playerId: 'p1',
+        nickname: 'Alice',
+        hand: [],
+        faceUp: [],
+        faceDown: [],
+      };
+
+      const result = GameEngine.determinePlaySource(player, true);
+
+      expect(result).toBeNull();
+    });
+
+    it('returns "hand" when hand has cards even if draw pile is empty', () => {
+      const player: PlayerGameState = {
+        playerId: 'p1',
+        nickname: 'Alice',
+        hand: [c('5')],
+        faceUp: [],
+        faceDown: [],
+      };
+
+      const result = GameEngine.determinePlaySource(player, true);
+
+      expect(result).toBe('hand');
+    });
+  });
+
+  describe('checkPlayerElimination', () => {
+    it('returns true when all card arrays are empty', () => {
+      const player: PlayerGameState = {
+        playerId: 'p1',
+        nickname: 'Alice',
+        hand: [],
+        faceUp: [],
+        faceDown: [],
+      };
+
+      const result = GameEngine.checkPlayerElimination(player);
+
+      expect(result).toBe(true);
+    });
+
+    it('returns false when hand has cards', () => {
+      const player: PlayerGameState = {
+        playerId: 'p1',
+        nickname: 'Alice',
+        hand: [c('5')],
+        faceUp: [],
+        faceDown: [],
+      };
+
+      const result = GameEngine.checkPlayerElimination(player);
+
+      expect(result).toBe(false);
+    });
+
+    it('returns false when faceUp has cards', () => {
+      const player: PlayerGameState = {
+        playerId: 'p1',
+        nickname: 'Alice',
+        hand: [],
+        faceUp: [c('3')],
+        faceDown: [],
+      };
+
+      const result = GameEngine.checkPlayerElimination(player);
+
+      expect(result).toBe(false);
+    });
+
+    it('returns false when faceDown has cards', () => {
+      const player: PlayerGameState = {
+        playerId: 'p1',
+        nickname: 'Alice',
+        hand: [],
+        faceUp: [],
+        faceDown: [c('K')],
+      };
+
+      const result = GameEngine.checkPlayerElimination(player);
+
+      expect(result).toBe(false);
+    });
+  });
+
+  describe('nextActivePlayerIndex', () => {
+    it('skips eliminated players and returns next player with cards', () => {
+      const state = createTestState({
+        players: [
+          {
+            playerId: 'p1',
+            nickname: 'Alice',
+            hand: [c('5')],
+            faceUp: [],
+            faceDown: [],
+          },
+          {
+            playerId: 'p2',
+            nickname: 'Bob',
+            hand: [],
+            faceUp: [],
+            faceDown: [],
+          },
+          {
+            playerId: 'p3',
+            nickname: 'Charlie',
+            hand: [c('7')],
+            faceUp: [],
+            faceDown: [],
+          },
+        ],
+      });
+
+      const result = GameEngine.nextActivePlayerIndex(state, 2);
+
+      expect(result).toBe(0); // Skips P2 (eliminated)
+    });
+
+    it('returns current player when all others are eliminated', () => {
+      const state = createTestState({
+        players: [
+          {
+            playerId: 'p1',
+            nickname: 'Alice',
+            hand: [c('5')],
+            faceUp: [],
+            faceDown: [],
+          },
+          {
+            playerId: 'p2',
+            nickname: 'Bob',
+            hand: [],
+            faceUp: [],
+            faceDown: [],
+          },
+          {
+            playerId: 'p3',
+            nickname: 'Charlie',
+            hand: [],
+            faceUp: [],
+            faceDown: [],
+          },
+        ],
+      });
+
+      const result = GameEngine.nextActivePlayerIndex(state, 0);
+
+      expect(result).toBe(0); // Only P1 has cards
+    });
+
+    it('handles normal rotation when no players eliminated', () => {
+      const state = createTestState({
+        players: [
+          {
+            playerId: 'p1',
+            nickname: 'Alice',
+            hand: [c('5')],
+            faceUp: [],
+            faceDown: [],
+          },
+          {
+            playerId: 'p2',
+            nickname: 'Bob',
+            hand: [c('6')],
+            faceUp: [],
+            faceDown: [],
+          },
+        ],
+      });
+
+      const result = GameEngine.nextActivePlayerIndex(state, 0);
+
+      expect(result).toBe(1);
+    });
+
+    it('wraps around to beginning of array', () => {
+      const state = createTestState({
+        players: [
+          {
+            playerId: 'p1',
+            nickname: 'Alice',
+            hand: [c('5')],
+            faceUp: [],
+            faceDown: [],
+          },
+          {
+            playerId: 'p2',
+            nickname: 'Bob',
+            hand: [c('6')],
+            faceUp: [],
+            faceDown: [],
+          },
+          {
+            playerId: 'p3',
+            nickname: 'Charlie',
+            hand: [],
+            faceUp: [],
+            faceDown: [],
+          },
+        ],
+      });
+
+      const result = GameEngine.nextActivePlayerIndex(state, 1);
+
+      expect(result).toBe(0); // Wraps from P2 to P1, skipping P3
+    });
+
+    it('has loop limit to prevent infinite loops', () => {
+      const state = createTestState({
+        players: [
+          {
+            playerId: 'p1',
+            nickname: 'Alice',
+            hand: [],
+            faceUp: [],
+            faceDown: [],
+          },
+          {
+            playerId: 'p2',
+            nickname: 'Bob',
+            hand: [],
+            faceUp: [],
+            faceDown: [],
+          },
+          {
+            playerId: 'p3',
+            nickname: 'Charlie',
+            hand: [],
+            faceUp: [],
+            faceDown: [],
+          },
+        ],
+      });
+
+      const result = GameEngine.nextActivePlayerIndex(state, 0);
+
+      // Should return current index as fallback when all eliminated
+      expect(result).toBe(0);
+    });
+  });
+
+  describe('findShithead', () => {
+    it('returns null when 2+ players have cards', () => {
+      const state = createTestState({
+        players: [
+          {
+            playerId: 'p1',
+            nickname: 'Alice',
+            hand: [c('5')],
+            faceUp: [],
+            faceDown: [],
+          },
+          {
+            playerId: 'p2',
+            nickname: 'Bob',
+            hand: [c('6')],
+            faceUp: [],
+            faceDown: [],
+          },
+        ],
+      });
+
+      const result = GameEngine.findShithead(state);
+
+      expect(result).toBeNull();
+    });
+
+    it('returns playerId when only 1 player has cards (3 player game)', () => {
+      const state = createTestState({
+        players: [
+          {
+            playerId: 'p1',
+            nickname: 'Alice',
+            hand: [],
+            faceUp: [],
+            faceDown: [],
+          },
+          {
+            playerId: 'p2',
+            nickname: 'Bob',
+            hand: [c('6')],
+            faceUp: [],
+            faceDown: [],
+          },
+          {
+            playerId: 'p3',
+            nickname: 'Charlie',
+            hand: [],
+            faceUp: [],
+            faceDown: [],
+          },
+        ],
+      });
+
+      const result = GameEngine.findShithead(state);
+
+      expect(result).toBe('p2');
+    });
+
+    it('returns playerId when only 1 player has cards (2 player game)', () => {
+      const state = createTestState({
+        players: [
+          {
+            playerId: 'p1',
+            nickname: 'Alice',
+            hand: [],
+            faceUp: [],
+            faceDown: [],
+          },
+          {
+            playerId: 'p2',
+            nickname: 'Bob',
+            hand: [],
+            faceUp: [c('3')],
+            faceDown: [],
+          },
+        ],
+      });
+
+      const result = GameEngine.findShithead(state);
+
+      expect(result).toBe('p2');
+    });
+
+    it('returns null when 2 players both have cards', () => {
+      const state = createTestState({
+        players: [
+          {
+            playerId: 'p1',
+            nickname: 'Alice',
+            hand: [],
+            faceUp: [c('4')],
+            faceDown: [],
+          },
+          {
+            playerId: 'p2',
+            nickname: 'Bob',
+            hand: [],
+            faceUp: [c('3')],
+            faceDown: [],
+          },
+          {
+            playerId: 'p3',
+            nickname: 'Charlie',
+            hand: [],
+            faceUp: [],
+            faceDown: [],
+          },
+          {
+            playerId: 'p4',
+            nickname: 'Diana',
+            hand: [],
+            faceUp: [],
+            faceDown: [],
+          },
+        ],
+      });
+
+      const result = GameEngine.findShithead(state);
+
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('playFromFaceUp', () => {
+    it('allows valid single face-up card play', () => {
+      const state = createTestState({
+        drawPile: [],
+        discardPile: [c('3')],
+        players: [
+          {
+            playerId: 'p1',
+            nickname: 'Alice',
+            hand: [],
+            faceUp: [c('5'), c('7'), c('9')],
+            faceDown: [],
+          },
+          {
+            playerId: 'p2',
+            nickname: 'Bob',
+            hand: [c('6')],
+            faceUp: [],
+            faceDown: [],
+          },
+        ],
+      });
+
+      const result = GameEngine.playFromFaceUp(state, 'p1', [0]);
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data!.discardPile).toHaveLength(2);
+        expect(result.data!.discardPile[1]).toEqual(c('5'));
+        expect(result.data!.players[0].faceUp).toHaveLength(2);
+        expect(result.data!.currentPlayerIndex).toBe(1);
+      }
+    });
+
+    it('allows valid multi-card face-up play (2 same-rank cards)', () => {
+      const state = createTestState({
+        drawPile: [],
+        discardPile: [c('3')],
+        players: [
+          {
+            playerId: 'p1',
+            nickname: 'Alice',
+            hand: [],
+            faceUp: [c('5', 'hearts'), c('5', 'diamonds'), c('9')],
+            faceDown: [],
+          },
+          {
+            playerId: 'p2',
+            nickname: 'Bob',
+            hand: [c('6')],
+            faceUp: [],
+            faceDown: [],
+          },
+        ],
+      });
+
+      const result = GameEngine.playFromFaceUp(state, 'p1', [0, 1]);
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data!.discardPile).toHaveLength(3);
+        expect(result.data!.players[0].faceUp).toHaveLength(1);
+      }
+    });
+
+    it('allows play on empty discard pile from face-up', () => {
+      const state = createTestState({
+        drawPile: [],
+        discardPile: [],
+        players: [
+          {
+            playerId: 'p1',
+            nickname: 'Alice',
+            hand: [],
+            faceUp: [c('3')],
+            faceDown: [],
+          },
+          {
+            playerId: 'p2',
+            nickname: 'Bob',
+            hand: [c('6')],
+            faceUp: [],
+            faceDown: [],
+          },
+        ],
+      });
+
+      const result = GameEngine.playFromFaceUp(state, 'p1', [0]);
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data!.discardPile).toHaveLength(1);
+      }
+    });
+
+    it('rejects play of lower card from face-up', () => {
+      const state = createTestState({
+        drawPile: [],
+        discardPile: [c('9')],
+        players: [
+          {
+            playerId: 'p1',
+            nickname: 'Alice',
+            hand: [],
+            faceUp: [c('5'), c('6')],
+            faceDown: [],
+          },
+          {
+            playerId: 'p2',
+            nickname: 'Bob',
+            hand: [c('K')],
+            faceUp: [],
+            faceDown: [],
+          },
+        ],
+      });
+
+      const result = GameEngine.playFromFaceUp(state, 'p1', [0]);
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.code).toBe('INVALID_ACTION');
+      }
+    });
+
+    it('rejects play when not player\'s turn', () => {
+      const state = createTestState({
+        drawPile: [],
+        currentPlayerIndex: 1,
+        players: [
+          {
+            playerId: 'p1',
+            nickname: 'Alice',
+            hand: [],
+            faceUp: [c('5')],
+            faceDown: [],
+          },
+          {
+            playerId: 'p2',
+            nickname: 'Bob',
+            hand: [c('6')],
+            faceUp: [],
+            faceDown: [],
+          },
+        ],
+      });
+
+      const result = GameEngine.playFromFaceUp(state, 'p1', [0]);
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.code).toBe('NOT_YOUR_TURN');
+      }
+    });
+
+    it('rejects play when determinePlaySource returns "hand" not "face-up"', () => {
+      const state = createTestState({
+        drawPile: [],
+        players: [
+          {
+            playerId: 'p1',
+            nickname: 'Alice',
+            hand: [c('4')], // Has hand cards, must play from hand
+            faceUp: [c('5')],
+            faceDown: [],
+          },
+          {
+            playerId: 'p2',
+            nickname: 'Bob',
+            hand: [c('6')],
+            faceUp: [],
+            faceDown: [],
+          },
+        ],
+      });
+
+      const result = GameEngine.playFromFaceUp(state, 'p1', [0]);
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.code).toBe('INVALID_ACTION');
+        expect(result.error).toContain('correct source');
+      }
+    });
+
+    it('rejects play with invalid index', () => {
+      const state = createTestState({
+        drawPile: [],
+        players: [
+          {
+            playerId: 'p1',
+            nickname: 'Alice',
+            hand: [],
+            faceUp: [c('5')],
+            faceDown: [],
+          },
+          {
+            playerId: 'p2',
+            nickname: 'Bob',
+            hand: [c('6')],
+            faceUp: [],
+            faceDown: [],
+          },
+        ],
+      });
+
+      const result = GameEngine.playFromFaceUp(state, 'p1', [5]);
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.code).toBe('INVALID_ACTION');
+        expect(result.error).toContain('Invalid card index');
+      }
+    });
+
+    it('rejects play when player plays last face-up card(s) but still has face-down', () => {
+      // This test verifies that elimination is checked correctly
+      const state = createTestState({
+        drawPile: [],
+        discardPile: [c('3')],
+        players: [
+          {
+            playerId: 'p1',
+            nickname: 'Alice',
+            hand: [],
+            faceUp: [c('5')],
+            faceDown: [c('K')],
+          },
+          {
+            playerId: 'p2',
+            nickname: 'Bob',
+            hand: [c('6')],
+            faceUp: [],
+            faceDown: [],
+          },
+        ],
+      });
+
+      const result = GameEngine.playFromFaceUp(state, 'p1', [0]);
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        // Player not eliminated (has face-down cards)
+        expect(result.data!.players[0].faceUp).toHaveLength(0);
+        expect(result.data!.players[0].faceDown).toHaveLength(1);
+        // Turn advances normally
+        expect(result.data!.currentPlayerIndex).toBe(1);
+        // Phase still playing
+        expect(result.data!.phase).toBe('playing');
+      }
+    });
+
+    it('eliminates player when last face-up card(s) played with no other cards', () => {
+      const state = createTestState({
+        drawPile: [],
+        discardPile: [c('3')],
+        players: [
+          {
+            playerId: 'p1',
+            nickname: 'Alice',
+            hand: [],
+            faceUp: [c('5')],
+            faceDown: [],
+          },
+          {
+            playerId: 'p2',
+            nickname: 'Bob',
+            hand: [c('6')],
+            faceUp: [],
+            faceDown: [],
+          },
+        ],
+      });
+
+      const result = GameEngine.playFromFaceUp(state, 'p1', [0]);
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        // Player eliminated (no cards left)
+        expect(result.data!.players[0].hand).toHaveLength(0);
+        expect(result.data!.players[0].faceUp).toHaveLength(0);
+        expect(result.data!.players[0].faceDown).toHaveLength(0);
+        // Game ends (only P2 has cards)
+        expect(result.data!.phase).toBe('finished');
+      }
+    });
+
+    it('does NOT auto-draw (draw pile is empty by definition in endgame)', () => {
+      const state = createTestState({
+        drawPile: [],
+        discardPile: [c('3')],
+        players: [
+          {
+            playerId: 'p1',
+            nickname: 'Alice',
+            hand: [],
+            faceUp: [c('5')],
+            faceDown: [c('K')],
+          },
+          {
+            playerId: 'p2',
+            nickname: 'Bob',
+            hand: [c('6')],
+            faceUp: [],
+            faceDown: [],
+          },
+        ],
+      });
+
+      const result = GameEngine.playFromFaceUp(state, 'p1', [0]);
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        // Hand remains empty (no auto-draw)
+        expect(result.data!.players[0].hand).toHaveLength(0);
+        expect(result.data!.drawPile).toHaveLength(0);
+      }
+    });
+
+    it('rejects empty cardIndices array', () => {
+      const state = createTestState({
+        drawPile: [],
+        players: [
+          {
+            playerId: 'p1',
+            nickname: 'Alice',
+            hand: [],
+            faceUp: [c('5')],
+            faceDown: [],
+          },
+          {
+            playerId: 'p2',
+            nickname: 'Bob',
+            hand: [c('6')],
+            faceUp: [],
+            faceDown: [],
+          },
+        ],
+      });
+
+      const result = GameEngine.playFromFaceUp(state, 'p1', []);
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.code).toBe('INVALID_ACTION');
+        expect(result.error).toContain('at least one');
+      }
+    });
+
+    it('rejects duplicate indices', () => {
+      const state = createTestState({
+        drawPile: [],
+        players: [
+          {
+            playerId: 'p1',
+            nickname: 'Alice',
+            hand: [],
+            faceUp: [c('5'), c('6')],
+            faceDown: [],
+          },
+          {
+            playerId: 'p2',
+            nickname: 'Bob',
+            hand: [c('7')],
+            faceUp: [],
+            faceDown: [],
+          },
+        ],
+      });
+
+      const result = GameEngine.playFromFaceUp(state, 'p1', [0, 0]);
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.code).toBe('INVALID_ACTION');
+        expect(result.error).toContain('Duplicate');
+      }
+    });
+
+    it('rejects cards with different ranks', () => {
+      const state = createTestState({
+        drawPile: [],
+        discardPile: [c('3')],
+        players: [
+          {
+            playerId: 'p1',
+            nickname: 'Alice',
+            hand: [],
+            faceUp: [c('5'), c('6')],
+            faceDown: [],
+          },
+          {
+            playerId: 'p2',
+            nickname: 'Bob',
+            hand: [c('7')],
+            faceUp: [],
+            faceDown: [],
+          },
+        ],
+      });
+
+      const result = GameEngine.playFromFaceUp(state, 'p1', [0, 1]);
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.code).toBe('INVALID_ACTION');
+        expect(result.error).toContain('same rank');
+      }
     });
   });
 });
