@@ -9,19 +9,19 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 
 ## Current Position
 
-Phase: 09 of 14 (Connection Management Reconnection) — IN PROGRESS
-Plan: 5/5 complete
+Phase: 09 of 14 (Connection Management Reconnection) — COMPLETE
+Plan: 6/6 complete
 Status: Phase complete
-Last activity: 2026-02-08 — Completed 09-05-PLAN.md (gap closure)
+Last activity: 2026-02-08 — Completed 09-06-PLAN.md (gap closure - notification UI)
 
-Progress: [████████░░] ~78% (39 plans complete)
+Progress: [████████░░] ~80% (40 plans complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 39
+- Total plans completed: 40
 - Average duration: 2.3 minutes
-- Total execution time: 1.52 hours
+- Total execution time: 1.56 hours
 
 **By Phase:**
 
@@ -35,13 +35,13 @@ Progress: [████████░░] ~78% (39 plans complete)
 | 06 | 2 | 356s | 178s |
 | 07 | 5 | 981s | 196s |
 | 08 | 3 | 701s | 234s |
-| 09 | 5 | 953s | 191s |
+| 09 | 6 | 1098s | 183s |
 | 13 | 1 | 118s | 118s |
 | 14 | 2 | 346s | 173s |
 
 **Recent Trend:**
-- Last 5 plans: 09-02 (400s), 09-04 (165s), 14-01 (93s), 14-02 (253s), 09-05 (242s)
-- Trend: Gap closure plans averaging ~4min — focused on specific fixes
+- Last 5 plans: 09-04 (165s), 14-01 (93s), 14-02 (253s), 09-05 (242s), 09-06 (145s)
+- Trend: Steady ~2-4min execution times — consistent productivity
 
 *Updated after each plan completion*
 
@@ -323,6 +323,13 @@ Recent decisions affecting current work:
 - reconnecting ref pattern: set true on reconnect attempt, cleared on success/error
 - Router guard async state resolution: wait for reconnect completion before navigation
 
+**From 09-06:**
+- Toast notifications for disconnect events (auto-dismiss 5s, click-to-dismiss, top-right overlay)
+- Notification severity levels: warning (disconnect/timeout), success (reconnect), error (host-left)
+- Host-left notification delayed by 1.5s before state cleanup to ensure visibility before redirect
+- Global NotificationToast component mounted in App.vue for cross-route notifications
+- GameNotification interface with id/message/severity/timestamp for type-safe notification state
+
 ### Roadmap Evolution
 
 - Phase 13 added: ESLint Setup & Fixes — Install ESLint for server and client, add to Makefile, fix issues
@@ -343,9 +350,9 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Completed 09-05-PLAN.md (gap closure — page reload reconnect fix)
+Stopped at: Completed 09-06-PLAN.md (gap closure - notification UI)
 Resume file: None
 
 ---
 *State initialized: 2026-02-07*
-*Last updated: 2026-02-08 after Phase 09-05 execution*
+*Last updated: 2026-02-08 after Phase 09-06 execution*
