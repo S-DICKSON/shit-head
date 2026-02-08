@@ -34,6 +34,10 @@ function createGameSocket() {
   const error = ref<string | null>(null);
   const messageHandlers: MessageHandler[] = [];
 
+  // Reconnection state tracking
+  const reconnecting = ref<boolean>(false);
+  const reconnectTarget = ref<{ roomCode: string } | null>(null);
+
   // Swap phase state
   const gameView = ref<PlayerGameView | null>(null);
   const swapTimeRemaining = ref<number>(30);
@@ -81,6 +85,9 @@ function createGameSocket() {
   // Auto-reconnect to room when WebSocket reopens
   scope.run(() => watch(status, (newStatus) => {
     if (newStatus === 'OPEN' && storedPlayerId && storedRoomCode) {
+      // Track reconnection state
+      reconnecting.value = true;
+      reconnectTarget.value = { roomCode: storedRoomCode };
       // Send reconnect message to rejoin room
       wsSend(JSON.stringify({ type: 'reconnect', roomCode: storedRoomCode }));
     }
@@ -103,6 +110,8 @@ function createGameSocket() {
         case 'room-joined':
           playerId.value = message.playerId;
           roomState.value = message.room;
+          // Clear reconnecting state on successful join/reconnect
+          reconnecting.value = false;
           break;
         case 'room-updated':
           if (roomState.value) {
@@ -245,6 +254,13 @@ function createGameSocket() {
           break;
         case 'error':
           error.value = message.message;
+          // Clear localStorage on reconnect failure
+          if (reconnecting.value && (message.code === 'PLAYER_NOT_FOUND' || message.code === 'ROOM_NOT_FOUND')) {
+            localStorage.removeItem('shithead-player-id');
+            localStorage.removeItem('shithead-room-code');
+            reconnecting.value = false;
+            reconnectTarget.value = null;
+          }
           break;
       }
 
@@ -300,6 +316,9 @@ function createGameSocket() {
     // Turn timer state
     turnTimeRemaining,
     turnTimerPlayerIndex,
+    // Reconnection state
+    reconnecting,
+    reconnectTarget,
   };
 }
 
