@@ -8,6 +8,8 @@ type OperationResult<T = void> =
   | { success: true; data?: T }
   | { success: false; error: string; code: string };
 
+export type BlindPlayResult = { state: GameState; card: Card; playable: boolean };
+
 export class GameEngine {
   /**
    * Creates a new game with shuffled and dealt cards.
@@ -749,5 +751,182 @@ export class GameEngine {
       success: true,
       data: newState,
     };
+  }
+
+  /**
+   * Plays a face-down card blind (without seeing it first).
+   * The card is revealed and checked for playability.
+   * If playable: card moves to discard pile, turn advances.
+   * If not playable: entire discard pile + flipped card go into player's hand.
+   *
+   * @param state - Current game state
+   * @param playerId - ID of the player playing blind
+   * @param faceDownIndex - Index of the face-down card to flip
+   * @returns OperationResult with BlindPlayResult (state, card, playable flag)
+   */
+  static playFaceDownBlind(
+    state: GameState,
+    playerId: string,
+    faceDownIndex: number
+  ): OperationResult<BlindPlayResult> {
+    // Validate phase
+    if (state.phase !== 'playing') {
+      return {
+        success: false,
+        error: 'Can only play cards during playing phase',
+        code: 'INVALID_ACTION',
+      };
+    }
+
+    // Find player
+    const playerIndex = state.players.findIndex(p => p.playerId === playerId);
+    if (playerIndex === -1) {
+      return {
+        success: false,
+        error: 'Player not found',
+        code: 'PLAYER_NOT_FOUND',
+      };
+    }
+
+    // Validate turn
+    if (playerIndex !== state.currentPlayerIndex) {
+      return {
+        success: false,
+        error: 'Not your turn',
+        code: 'NOT_YOUR_TURN',
+      };
+    }
+
+    const player = state.players[playerIndex];
+
+    // Validate play source is face-down
+    const playSource = this.determinePlaySource(player, state.drawPile.length === 0);
+    if (playSource !== 'face-down') {
+      return {
+        success: false,
+        error: 'Must play from correct source',
+        code: 'INVALID_ACTION',
+      };
+    }
+
+    // Validate faceDownIndex bounds
+    if (faceDownIndex < 0 || faceDownIndex >= player.faceDown.length) {
+      return {
+        success: false,
+        error: 'Invalid face-down index',
+        code: 'INVALID_ACTION',
+      };
+    }
+
+    // Extract the flipped card
+    const flippedCard = player.faceDown[faceDownIndex];
+
+    // Determine if card is playable
+    const isPlayable = canPlayOnPile(flippedCard, state.discardPile);
+
+    // Remove card from faceDown
+    const updatedFaceDown = player.faceDown.filter((_, idx) => idx !== faceDownIndex);
+
+    let updatedHand: Card[];
+    let updatedDiscardPile: Card[];
+    let nextPlayerIndex: number;
+    let updatedPhase: GameState['phase'] = state.phase;
+
+    if (isPlayable) {
+      // PATH A: Card is playable
+      // Add flipped card to discard pile
+      updatedDiscardPile = [...state.discardPile, flippedCard];
+      updatedHand = player.hand;
+
+      // Update player state
+      const updatedPlayer: PlayerGameState = {
+        ...player,
+        faceDown: updatedFaceDown,
+      };
+
+      // Check if player eliminated
+      const isEliminated = this.checkPlayerElimination(updatedPlayer);
+
+      // Create intermediate state for turn advancement
+      const updatedPlayers = state.players.map((p, i) =>
+        i === playerIndex ? updatedPlayer : p
+      );
+
+      const intermediateState: GameState = {
+        ...state,
+        players: updatedPlayers,
+        discardPile: updatedDiscardPile,
+      };
+
+      // Advance turn
+      if (isEliminated) {
+        // Player eliminated, skip to next active player
+        nextPlayerIndex = this.nextActivePlayerIndex(intermediateState, playerIndex);
+
+        // Check for game end
+        const shitheadId = this.findShithead(intermediateState);
+        if (shitheadId) {
+          updatedPhase = 'finished';
+        }
+      } else {
+        // Normal turn advancement
+        nextPlayerIndex = this.nextActivePlayerIndex(intermediateState, playerIndex);
+      }
+
+      const finalState: GameState = {
+        ...intermediateState,
+        currentPlayerIndex: nextPlayerIndex,
+        phase: updatedPhase,
+      };
+
+      return {
+        success: true,
+        data: {
+          state: finalState,
+          card: flippedCard,
+          playable: true,
+        },
+      };
+    } else {
+      // PATH B: Card is NOT playable
+      // Player picks up entire discard pile + flipped card
+      updatedHand = [...state.discardPile, flippedCard];
+      updatedDiscardPile = [];
+
+      // Update player state
+      const updatedPlayer: PlayerGameState = {
+        ...player,
+        hand: updatedHand,
+        faceDown: updatedFaceDown,
+      };
+
+      // Create intermediate state for turn advancement
+      const updatedPlayers = state.players.map((p, i) =>
+        i === playerIndex ? updatedPlayer : p
+      );
+
+      const intermediateState: GameState = {
+        ...state,
+        players: updatedPlayers,
+        discardPile: updatedDiscardPile,
+      };
+
+      // Advance turn to next active player
+      nextPlayerIndex = this.nextActivePlayerIndex(intermediateState, playerIndex);
+
+      const finalState: GameState = {
+        ...intermediateState,
+        currentPlayerIndex: nextPlayerIndex,
+      };
+
+      return {
+        success: true,
+        data: {
+          state: finalState,
+          card: flippedCard,
+          playable: false,
+        },
+      };
+    }
   }
 }
