@@ -265,7 +265,7 @@ Plans:
 
 Plans:
 - [x] 14-01-PLAN.md — Add Vite WebSocket proxy, remove VITE_WS_URL, add Makefile tunnel target
-- [ ] 14-02-PLAN.md — Fix WebSocket proxy handshake and ngrok hostname blocking (gap closure)
+- [x] 14-02-PLAN.md — Fix WebSocket proxy handshake and ngrok hostname blocking (gap closure)
 
 ## Progress
 
@@ -287,8 +287,8 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 11. Game Feedback & Turn Indicators | 0/TBD | Not started | - |
 | 12. Deployment & Production Polish | 0/TBD | Not started | - |
 | 13. ESLint Setup & Fixes | 1/1 | Complete | 2026-02-08 |
-| 14. Ngrok Local Dev Sharing | 1/2 | Gap closure | 2026-02-08 |
+| 14. Ngrok Local Dev Sharing | 2/2 | Complete | 2026-02-08 |
 
 ---
 *Roadmap created: 2026-02-07*
-*Last updated: 2026-02-08 after Phase 14 gap closure planning*
+*Last updated: 2026-02-08 after Phase 14 gap closure execution*

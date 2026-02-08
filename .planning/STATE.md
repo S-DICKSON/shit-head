@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-07)
 
 **Core value:** Friends can play a complete, rule-accurate game of Shithead together online with zero friction
-**Current focus:** Phase 14 complete — Ngrok tunnel for mobile testing
+**Current focus:** Phase 14 complete — WebSocket proxy and ngrok hostname fixed
 
 ## Current Position
 
 Phase: 14 of 14 (Ngrok Local Dev Sharing) — COMPLETE
-Plan: 1/1 complete
+Plan: 2/2 complete
 Status: Phase complete
-Last activity: 2026-02-08 — Completed 14-01-PLAN.md
+Last activity: 2026-02-08 — Completed 14-02-PLAN.md (gap closure)
 
-Progress: [████████░░] ~75% (37 plans complete)
+Progress: [████████░░] ~77% (38 plans complete)
 
 ## Performance Metrics
 
@@ -303,6 +303,12 @@ Recent decisions affecting current work:
 - RoomManager.destroyRoom and removePlayerIndex clean up indices on player removal
 - Reconnected players receive room-joined with current state and game-dealt with player view
 
+**From 14-02:**
+- WebSocket proxy target uses host.docker.internal instead of Docker service name — Docker DNS fails WebSocket upgrade through http-proxy
+- allowedHosts: true in Vite config bypasses hostname validation for ngrok tunnels
+- changeOrigin: true rewrites Host header for WebSocket handshake compatibility
+- Known limitation: ngrok free tier interstitial blocks WebSocket on iOS mobile (deferred — cloudflared recommended)
+
 **From 14-01:**
 - Vite proxy handles WebSocket upgrade with ws: true config
 - Remove VITE_WS_URL to rely on window.location-based WebSocket URL derivation
@@ -330,7 +336,7 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Phase 14 complete — Ngrok tunnel ready for mobile testing
+Stopped at: Phase 14 gap closure complete — WebSocket proxy fixed
 Resume file: None
 
 ---
