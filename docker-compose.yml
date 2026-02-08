@@ -15,7 +15,6 @@ services:
     environment:
       - NODE_ENV=development
       - VITE_SERVER_URL=http://server:3000
-      - VITE_WS_URL=ws://localhost:3000/game-ws
     depends_on:
       - server
 
