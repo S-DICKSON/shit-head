@@ -1,17 +1,15 @@
 import { defineConfig, type Plugin } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import tailwindcss from '@tailwindcss/vite'
-import http from 'node:http'
-import type { Socket } from 'node:net'
+import net from 'node:net'
 
 const serverUrl = process.env.VITE_SERVER_URL || 'http://localhost:3000'
 
 /**
- * Custom WebSocket proxy plugin.
+ * Custom WebSocket proxy plugin using raw TCP sockets.
  * Vite's built-in http-proxy ws:true doesn't reliably pipe the 101 upgrade
- * response back to the browser (especially with Bun servers in Docker).
- * This plugin manually handles the upgrade at the HTTP server level,
- * before Vite's HMR handler, ensuring reliable WebSocket proxying.
+ * response back to the browser (Bun server + Docker). Using raw TCP avoids
+ * relying on node:http upgrade events which may not fire under Bun.
  */
 function gameWsProxy(): Plugin {
   return {
@@ -19,47 +17,40 @@ function gameWsProxy(): Plugin {
     configureServer(server) {
       const target = new URL(serverUrl)
 
-      server.httpServer?.on('upgrade', (req, socket: Socket, _head) => {
+      server.httpServer?.on('upgrade', (req, socket: net.Socket, _head) => {
         if (!req.url?.startsWith('/game-ws')) return
 
-        const proxyReq = http.request({
-          hostname: target.hostname,
-          port: target.port,
-          path: req.url,
-          method: req.method,
-          headers: {
-            ...req.headers,
-            host: `${target.hostname}:${target.port}`,
-          },
-        })
+        // Connect raw TCP socket to the backend server
+        const proxySocket = net.connect(
+          { host: target.hostname, port: Number(target.port) },
+          () => {
+            // Build and send the HTTP upgrade request
+            const headers = Object.entries(req.headers)
+              .filter(([key]) => key !== 'host')
+              .map(([key, value]) => `${key}: ${value}`)
+              .join('\r\n')
 
-        proxyReq.on('upgrade', (_proxyRes, proxySocket: Socket, proxyHead) => {
-          // Forward the raw 101 response back to the browser
-          socket.write(
-            'HTTP/1.1 101 Switching Protocols\r\n' +
-            'Upgrade: websocket\r\n' +
-            'Connection: Upgrade\r\n' +
-            `Sec-WebSocket-Accept: ${_proxyRes.headers['sec-websocket-accept']}\r\n` +
-            '\r\n'
-          )
+            proxySocket.write(
+              `${req.method} ${req.url} HTTP/1.1\r\n` +
+              `Host: ${target.hostname}:${target.port}\r\n` +
+              `${headers}\r\n` +
+              '\r\n'
+            )
 
-          if (proxyHead.length) socket.write(proxyHead)
+            // Pipe everything bidirectionally — the 101 response and
+            // all subsequent WebSocket frames flow through transparently
+            proxySocket.pipe(socket)
+            socket.pipe(proxySocket)
+          }
+        )
 
-          // Pipe data bidirectionally
-          proxySocket.pipe(socket)
-          socket.pipe(proxySocket)
-
-          // Clean up on close
-          socket.on('close', () => proxySocket.destroy())
-          proxySocket.on('close', () => socket.destroy())
-        })
-
-        proxyReq.on('error', (err) => {
+        proxySocket.on('error', (err) => {
           console.error('[game-ws-proxy] error:', err.message)
           socket.destroy()
         })
 
-        proxyReq.end()
+        socket.on('close', () => proxySocket.destroy())
+        proxySocket.on('close', () => socket.destroy())
       })
     },
   }
