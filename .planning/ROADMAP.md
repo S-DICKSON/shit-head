@@ -17,7 +17,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 3: Deck & Dealing System** - Card deck initialization and dealing logic
 - [x] **Phase 4: Pre-Game Swap Phase** - 30-second simultaneous card swap before game start
 - [x] **Phase 5: Core Game Engine & Rules** - Turn system, play validation, draw/pickup mechanics
-- [ ] **Phase 6: Special Cards & Burn Mechanics** - 2s, 7s, 8s, 10s, and burn detection
+- [x] **Phase 6: Special Cards & Burn Mechanics** - 2s, 7s, 8s, 10s, and burn detection
 - [ ] **Phase 7: Endgame & Win Conditions** - Hand to face-up to face-down progression and winner detection
 - [ ] **Phase 8: Turn Timing & Auto-Pickup** - Turn timer with timeout handling
 - [ ] **Phase 9: Connection Management & Reconnection** - Disconnect detection and reconnection flow
@@ -133,8 +133,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 06-01-PLAN.md — Special card validation and burn detection pure functions (TDD)
-- [ ] 06-02-PLAN.md — Integrate special cards and burn mechanics into GameEngine.playCards() (TDD)
+- [x] 06-01-PLAN.md — Special card validation and burn detection pure functions (TDD)
+- [x] 06-02-PLAN.md — Integrate special cards and burn mechanics into GameEngine.playCards() (TDD)
 
 ### Phase 7: Endgame & Win Conditions
 **Goal**: Players progress through hand, face-up, and face-down cards to win
@@ -239,7 +239,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 3. Deck & Dealing System | 3/3 | Complete | 2026-02-07 |
 | 4. Pre-Game Swap Phase | 6/6 | Complete | 2026-02-07 |
 | 5. Core Game Engine & Rules | 4/4 | Complete | 2026-02-07 |
-| 6. Special Cards & Burn Mechanics | 0/TBD | Not started | - |
+| 6. Special Cards & Burn Mechanics | 2/2 | Complete | 2026-02-08 |
 | 7. Endgame & Win Conditions | 0/TBD | Not started | - |
 | 8. Turn Timing & Auto-Pickup | 0/TBD | Not started | - |
 | 9. Connection Management & Reconnection | 0/TBD | Not started | - |
@@ -249,4 +249,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 
 ---
 *Roadmap created: 2026-02-07*
-*Last updated: 2026-02-07 after Phase 5 execution*
+*Last updated: 2026-02-08 after Phase 6 execution*

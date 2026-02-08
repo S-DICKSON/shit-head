@@ -37,17 +37,17 @@
 
 ### Special Cards
 
-- [ ] **SPEC-01**: 2 resets pile and can be played on anything
-- [ ] **SPEC-02**: 7 follows normal ordering, next player must play <= 7
-- [ ] **SPEC-03**: 8 is invisible (next player plays on card beneath), stackable
-- [ ] **SPEC-04**: 10 burns pile, player goes again, cannot win on a 10
+- [x] **SPEC-01**: 2 resets pile and can be played on anything
+- [x] **SPEC-02**: 7 follows normal ordering, next player must play <= 7
+- [x] **SPEC-03**: 8 is invisible (next player plays on card beneath), stackable
+- [x] **SPEC-04**: 10 burns pile, player goes again, cannot win on a 10
 - [x] **SPEC-05**: Card values: 3 < 4 < 5 < 6 < 7 < 9 < J < Q < K < A < Joker
 
 ### Burn Mechanic
 
-- [ ] **BURN-01**: 4-of-a-kind on pile burns it, including four 8s (player goes again)
-- [ ] **BURN-02**: 8s are invisible when counting burns for non-8 cards (e.g., 2,2,2,8,8,2 = burn because four 2s)
-- [ ] **BURN-03**: 10 burns pile immediately
+- [x] **BURN-01**: 4-of-a-kind on pile burns it, including four 8s (player goes again)
+- [x] **BURN-02**: 8s are invisible when counting burns for non-8 cards (e.g., 2,2,2,8,8,2 = burn because four 2s)
+- [x] **BURN-03**: 10 burns pile immediately
 
 ### Endgame
 
@@ -125,14 +125,14 @@
 | PLAY-05 | Phase 5 | Complete |
 | PLAY-06 | Phase 5 | Complete |
 | PLAY-07 | Phase 5 | Complete |
-| SPEC-01 | Phase 6 | Pending |
-| SPEC-02 | Phase 6 | Pending |
-| SPEC-03 | Phase 6 | Pending |
-| SPEC-04 | Phase 6 | Pending |
+| SPEC-01 | Phase 6 | Complete |
+| SPEC-02 | Phase 6 | Complete |
+| SPEC-03 | Phase 6 | Complete |
+| SPEC-04 | Phase 6 | Complete |
 | SPEC-05 | Phase 5 | Complete |
-| BURN-01 | Phase 6 | Pending |
-| BURN-02 | Phase 6 | Pending |
-| BURN-03 | Phase 6 | Pending |
+| BURN-01 | Phase 6 | Complete |
+| BURN-02 | Phase 6 | Complete |
+| BURN-03 | Phase 6 | Complete |
 | END-01 | Phase 7 | Pending |
 | END-02 | Phase 7 | Pending |
 | END-03 | Phase 7 | Pending |
@@ -157,4 +157,4 @@
 
 ---
 *Requirements defined: 2026-02-07*
-*Last updated: 2026-02-07 after Phase 5 completion*
+*Last updated: 2026-02-08 after Phase 6 completion*
