@@ -661,6 +661,66 @@ export function handleMessage(
       }
       break;
     }
+
+    case 'reconnect': {
+      const room = manager.getRoom(message.roomCode);
+
+      if (!room) {
+        sendMessage(ws, {
+          type: 'error',
+          message: 'Room not found',
+          code: 'ROOM_NOT_FOUND',
+        });
+        return;
+      }
+
+      // Check if this player was in this room
+      const roomState = room.getState();
+      const playerInRoom = roomState.players.some(p => p.id === ws.data.playerId);
+
+      if (!playerInRoom) {
+        sendMessage(ws, {
+          type: 'error',
+          message: 'You are not in this room',
+          code: 'PLAYER_NOT_FOUND',
+        });
+        return;
+      }
+
+      // Update connection data
+      ws.data.roomCode = message.roomCode;
+      ws.subscribe(message.roomCode);
+      playerSockets.set(ws.data.playerId, ws);
+
+      // Handle reconnection in room (clears grace period timer)
+      room.handlePlayerReconnect(ws.data.playerId);
+
+      // Send current room state to reconnected player
+      sendMessage(ws, {
+        type: 'room-joined',
+        room: roomState,
+        playerId: ws.data.playerId,
+      });
+
+      // If game in progress, send player-specific game view
+      const gameView = room.getPlayerView(ws.data.playerId);
+      if (gameView) {
+        sendMessage(ws, {
+          type: 'game-dealt',
+          phase: gameView.phase,
+          hand: gameView.hand,
+          faceUp: gameView.faceUp,
+          faceDownCount: gameView.faceDownCount,
+          opponents: gameView.opponents,
+          drawPileCount: gameView.drawPileCount,
+          discardPile: gameView.discardPile,
+          currentPlayerIndex: gameView.currentPlayerIndex,
+          dealerIndex: gameView.dealerIndex,
+        });
+      }
+
+      break;
+    }
   }
 }
 
