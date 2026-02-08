@@ -10,6 +10,7 @@ import type {
   playCardsSchema,
   pickupPileSchema,
   playFaceDownSchema,
+  reconnectSchema,
   roomCreatedSchema,
   roomJoinedSchema,
   roomUpdatedSchema,
@@ -24,6 +25,9 @@ import type {
   pilePickupSchema,
   turnChangedSchema,
   turnTimerTickSchema,
+  playerDisconnectedSchema,
+  playerReconnectedSchema,
+  playerRemovedSchema,
   faceDownResultSchema,
   playerEliminatedSchema,
   gameOverSchema,
@@ -42,6 +46,7 @@ export type ReadyUpMessage = z.infer<typeof readyUpSchema>;
 export type PlayCardsMessage = z.infer<typeof playCardsSchema>;
 export type PickupPileMessage = z.infer<typeof pickupPileSchema>;
 export type PlayFaceDownMessage = z.infer<typeof playFaceDownSchema>;
+export type ReconnectMessage = z.infer<typeof reconnectSchema>;
 
 export type ClientMessage = z.infer<typeof clientMessageSchema>;
 
@@ -60,6 +65,9 @@ export type CardPlayedMessage = z.infer<typeof cardPlayedSchema>;
 export type PilePickupMessage = z.infer<typeof pilePickupSchema>;
 export type TurnChangedMessage = z.infer<typeof turnChangedSchema>;
 export type TurnTimerTickMessage = z.infer<typeof turnTimerTickSchema>;
+export type PlayerDisconnectedMessage = z.infer<typeof playerDisconnectedSchema>;
+export type PlayerReconnectedMessage = z.infer<typeof playerReconnectedSchema>;
+export type PlayerRemovedMessage = z.infer<typeof playerRemovedSchema>;
 export type FaceDownResultMessage = z.infer<typeof faceDownResultSchema>;
 export type PlayerEliminatedMessage = z.infer<typeof playerEliminatedSchema>;
 export type GameOverMessage = z.infer<typeof gameOverSchema>;
