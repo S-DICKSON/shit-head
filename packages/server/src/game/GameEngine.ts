@@ -1,7 +1,7 @@
 import type { Card, GameState, PlayerGameView, PlayerGameState, OpponentView, PlaySource, ErrorCode } from '@shit-head/shared';
 import { createDeck } from '@shit-head/shared';
 import { shuffleDeck } from './Deck';
-import { RANK_ORDER, canPlayOn } from './CardComparison';
+import { RANK_ORDER } from './CardComparison';
 import { canPlayOnPile, detectBurn } from './CardRules';
 
 type OperationResult<T = void> = T extends void
@@ -345,16 +345,16 @@ export class GameEngine {
 
     // Remove played cards from hand (sort indices descending to avoid index shifting)
     const sortedIndices = [...cardIndices].sort((a, b) => b - a);
-    let updatedHand = [...player.hand];
+    const updatedHand = [...player.hand];
     for (const idx of sortedIndices) {
       updatedHand.splice(idx, 1);
     }
 
     // Add played cards to discard pile
-    let updatedDiscardPile = [...state.discardPile, ...cardsToPlay];
+    const updatedDiscardPile = [...state.discardPile, ...cardsToPlay];
 
     // Auto-draw: if hand < 3 and draw pile has cards, draw until hand is 3 or pile empty
-    let updatedDrawPile = [...state.drawPile];
+    const updatedDrawPile = [...state.drawPile];
     while (updatedHand.length < 3 && updatedDrawPile.length > 0) {
       const drawnCard = updatedDrawPile.shift()!;
       updatedHand.push(drawnCard);
@@ -698,7 +698,7 @@ export class GameEngine {
     const updatedFaceUp = player.faceUp.filter((_, idx) => !indicesSetForFilter.has(idx));
 
     // Add played cards to discard pile
-    let updatedDiscardPile = [...state.discardPile, ...cardsToPlay];
+    const updatedDiscardPile = [...state.discardPile, ...cardsToPlay];
 
     // Check for burn after cards are added to pile
     const burnResult = detectBurn(updatedDiscardPile);
@@ -836,7 +836,6 @@ export class GameEngine {
       // PATH A: Card is playable
       // Add flipped card to discard pile
       updatedDiscardPile = [...state.discardPile, flippedCard];
-      updatedHand = player.hand;
 
       // Update player state
       const updatedPlayer: PlayerGameState = {

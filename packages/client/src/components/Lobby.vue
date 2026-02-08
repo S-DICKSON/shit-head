@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { useRouter } from 'vue-router';
 import { useGameSocket } from '../composables/useGameSocket';
 import RoomCode from './RoomCode.vue';
 
-const route = useRoute();
 const router = useRouter();
 const { send, onMessage, roomState, playerId } = useGameSocket();
 
@@ -82,33 +81,48 @@ onUnmounted(() => {
   <div class="min-h-screen flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl shadow-xl p-8 w-full max-w-2xl">
       <!-- Room Code Section -->
-      <RoomCode v-if="roomState" :code="roomState.code" />
+      <RoomCode
+        v-if="roomState"
+        :code="roomState.code"
+      />
 
       <!-- Divider -->
-      <div class="my-6 border-t border-gray-300"></div>
+      <div class="my-6 border-t border-gray-300" />
 
       <!-- Players Section -->
       <div class="mb-6">
         <div class="flex justify-between items-center mb-4">
-          <h2 class="text-xl font-bold text-gray-800">Players {{ playerCount }}</h2>
+          <h2 class="text-xl font-bold text-gray-800">
+            Players {{ playerCount }}
+          </h2>
           <button
-            @click="leaveRoom"
             class="text-sm text-red-600 hover:text-red-700 hover:underline"
+            @click="leaveRoom"
           >
             Leave Room
           </button>
         </div>
 
         <!-- Player List -->
-        <div v-if="roomState" class="divide-y divide-gray-200 border border-gray-200 rounded-lg">
+        <div
+          v-if="roomState"
+          class="divide-y divide-gray-200 border border-gray-200 rounded-lg"
+        >
           <div
             v-for="player in roomState.players"
             :key="player.id"
             class="py-3 px-4 flex items-center gap-2"
           >
             <!-- Host Icon (crown/star) -->
-            <span v-if="player.isHost" class="text-yellow-500 text-xl" title="Host">★</span>
-            <span v-else class="text-transparent text-xl">★</span>
+            <span
+              v-if="player.isHost"
+              class="text-yellow-500 text-xl"
+              title="Host"
+            >★</span>
+            <span
+              v-else
+              class="text-transparent text-xl"
+            >★</span>
 
             <!-- Player Nickname -->
             <span
@@ -116,24 +130,33 @@ onUnmounted(() => {
               class="flex-1 text-gray-800"
             >
               {{ player.nickname }}
-              <span v-if="player.id === playerId" class="text-gray-500 text-sm">(You)</span>
+              <span
+                v-if="player.id === playerId"
+                class="text-gray-500 text-sm"
+              >(You)</span>
             </span>
           </div>
         </div>
       </div>
 
       <!-- Host Controls / Waiting Message -->
-      <div v-if="isHost" class="mt-6">
+      <div
+        v-if="isHost"
+        class="mt-6"
+      >
         <button
-          @click="startGame"
           :disabled="!canStartGame"
           class="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-bold py-4 rounded-lg transition-all shadow-md hover:shadow-lg text-lg"
+          @click="startGame"
         >
           <span v-if="!canStartGame">Waiting for players...</span>
           <span v-else>Start Game</span>
         </button>
       </div>
-      <div v-else class="mt-6 text-center text-gray-600 italic">
+      <div
+        v-else
+        class="mt-6 text-center text-gray-600 italic"
+      >
         Waiting for host to start...
       </div>
     </div>

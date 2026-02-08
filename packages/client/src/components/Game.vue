@@ -27,7 +27,9 @@ onMounted(() => {
       v-else
       class="min-h-screen flex items-center justify-center bg-green-900 text-white"
     >
-      <div class="text-2xl font-bold">Game in progress...</div>
+      <div class="text-2xl font-bold">
+        Game in progress...
+      </div>
     </div>
   </div>
 </template>

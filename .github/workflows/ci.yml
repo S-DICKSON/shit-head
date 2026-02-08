@@ -26,6 +26,12 @@ jobs:
       - name: Type-check server
         run: cd packages/server && bun run tsc --noEmit
 
+      - name: Lint shared
+        run: cd packages/shared && bun run lint
+
+      - name: Lint server
+        run: cd packages/server && bun run lint
+
       - name: Lint client
         run: cd packages/client && bun run lint
 

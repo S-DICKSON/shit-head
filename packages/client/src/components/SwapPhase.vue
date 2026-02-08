@@ -1,7 +1,12 @@
 <template>
   <!-- Transition overlay -->
-  <div v-if="isTransitioning" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-    <h1 class="text-white text-5xl font-bold">{{ transitionMessage }}</h1>
+  <div
+    v-if="isTransitioning"
+    class="fixed inset-0 bg-black/70 flex items-center justify-center z-50"
+  >
+    <h1 class="text-white text-5xl font-bold">
+      {{ transitionMessage }}
+    </h1>
   </div>
 
   <div class="flex flex-col min-h-screen bg-green-900 text-white p-4">
@@ -12,10 +17,17 @@
 
     <!-- Opponents -->
     <div class="flex flex-wrap justify-center gap-4 mb-6">
-      <div v-for="opponent in gameView?.opponents" :key="opponent.playerId" class="text-center">
+      <div
+        v-for="opponent in gameView?.opponents"
+        :key="opponent.playerId"
+        class="text-center"
+      >
         <div class="flex items-center justify-center gap-1 mb-1">
           <span class="text-sm font-medium">{{ opponent.nickname }}</span>
-          <span v-if="readyPlayers.includes(opponent.playerId)" class="text-green-400">✓</span>
+          <span
+            v-if="readyPlayers.includes(opponent.playerId)"
+            class="text-green-400"
+          >✓</span>
         </div>
         <div class="flex gap-1">
           <div
@@ -43,9 +55,9 @@
       <button
         v-for="(card, i) in gameView?.faceUp"
         :key="'fu-' + i"
-        @click="selectFaceUpCard(i)"
         class="w-16 h-24 bg-white text-black rounded border-2 flex flex-col items-center justify-center text-sm cursor-pointer transition-all"
         :class="selectedFaceUpIndex === i ? 'ring-2 ring-blue-500 scale-105 border-blue-500' : 'border-gray-300 hover:border-gray-400'"
+        @click="selectFaceUpCard(i)"
       >
         <span class="font-bold">{{ card.kind === 'standard' ? card.rank : 'JKR' }}</span>
         <span :class="card.kind === 'standard' && ['hearts','diamonds'].includes(card.suit) ? 'text-red-600' : 'text-black'">
@@ -76,9 +88,9 @@
       <button
         v-for="(card, i) in gameView?.hand"
         :key="'h-' + i"
-        @click="selectHandCard(i)"
         class="w-16 h-24 bg-white text-black rounded border-2 flex flex-col items-center justify-center text-sm cursor-pointer transition-all"
         :class="selectedHandIndex === i ? 'ring-2 ring-blue-500 scale-105 border-blue-500' : 'border-gray-300 hover:border-gray-400'"
+        @click="selectHandCard(i)"
       >
         <span class="font-bold">{{ card.kind === 'standard' ? card.rank : 'JKR' }}</span>
         <span :class="card.kind === 'standard' && ['hearts','diamonds'].includes(card.suit) ? 'text-red-600' : 'text-black'">
@@ -90,12 +102,12 @@
     <!-- Ready button -->
     <div class="text-center pb-4">
       <button
-        @click="toggleReady"
         :disabled="isTransitioning"
         class="px-8 py-3 rounded-full text-lg font-bold transition-all"
         :class="isReady
           ? 'bg-green-600 text-white cursor-default'
           : 'bg-white text-green-900 hover:bg-green-100 cursor-pointer'"
+        @click="toggleReady"
       >
         {{ isReady ? 'Ready! ✓' : 'Ready' }}
       </button>

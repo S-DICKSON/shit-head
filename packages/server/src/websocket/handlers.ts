@@ -44,7 +44,7 @@ export function handleMessage(
   let parsedMessage: unknown;
   try {
     parsedMessage = JSON.parse(messageStr);
-  } catch (error) {
+  } catch {
     sendMessage(ws, {
       type: 'error',
       message: 'Invalid JSON',

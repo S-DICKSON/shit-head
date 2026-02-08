@@ -1,4 +1,4 @@
-.PHONY: help dev start build test test-server test-client clean lint type-check type-check-server type-check-shared
+.PHONY: help dev start build test test-server test-client clean lint lint-fix type-check type-check-server type-check-shared
 
 .DEFAULT_GOAL := help
 
@@ -24,8 +24,15 @@ test-server: ## Run server tests only
 test-client: ## Run client tests only
 	docker compose run --rm client bunx vitest run
 
-lint: ## Run linter
+lint: ## Run linter on all packages
+	docker compose run --rm server sh -c "cd /app/packages/shared && bunx eslint ."
+	docker compose run --rm server sh -c "cd /app/packages/server && bunx eslint ."
 	docker compose run --rm client bunx eslint .
+
+lint-fix: ## Auto-fix linting issues
+	docker compose run --rm server sh -c "cd /app/packages/shared && bunx eslint . --fix"
+	docker compose run --rm server sh -c "cd /app/packages/server && bunx eslint . --fix"
+	docker compose run --rm client bunx eslint . --fix
 
 type-check: ## Run TypeScript type checking (all packages)
 	docker compose run --rm server bunx tsc --build packages/shared/tsconfig.json

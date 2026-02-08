@@ -48,8 +48,8 @@ const copyShareLink = async () => {
           {{ code }}
         </div>
         <button
-          @click="copyCode"
           class="px-3 py-2 text-sm bg-gray-200 hover:bg-gray-300 text-gray-700 rounded transition-colors whitespace-nowrap"
+          @click="copyCode"
         >
           {{ copyButtonText }}
         </button>
@@ -64,8 +64,8 @@ const copyShareLink = async () => {
           {{ shareUrl }}
         </div>
         <button
-          @click="copyShareLink"
           class="px-3 py-2 text-sm bg-gray-200 hover:bg-gray-300 text-gray-700 rounded transition-colors whitespace-nowrap"
+          @click="copyShareLink"
         >
           {{ shareLinkButtonText }}
         </button>
