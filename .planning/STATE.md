@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 ## Current Position
 
 Phase: 08 of 12 (Turn Timing & Auto-Pickup) — IN PROGRESS
-Plan: 1/3 complete
-Status: Turn timer message protocol and auto-play logic complete
-Last activity: 2026-02-08 — Completed 08-01-PLAN.md (Turn timer schema & auto-play logic)
+Plan: 2/3 complete
+Status: Turn timer UI complete
+Last activity: 2026-02-08 — Completed 08-03-PLAN.md (Turn timer UI with circular SVG progress ring)
 
-Progress: [██████░░░░] ~62% (30 plans complete)
+Progress: [██████░░░░] ~64% (31 plans complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 30
+- Total plans completed: 31
 - Average duration: 2.3 minutes
-- Total execution time: 1.28 hours
+- Total execution time: 1.30 hours
 
 **By Phase:**
 
@@ -34,12 +34,12 @@ Progress: [██████░░░░] ~62% (30 plans complete)
 | 05 | 4 | 668s | 167s |
 | 06 | 2 | 356s | 178s |
 | 07 | 5 | 981s | 196s |
-| 08 | 1 | 241s | 241s |
+| 08 | 2 | 359s | 180s |
 | 13 | 1 | 118s | 118s |
 
 **Recent Trend:**
-- Last 5 plans: 07-04 (173s), 07-05 (226s), 13-01 (118s), 08-01 (241s)
-- Trend: Phase 08-01 longer (4min) - TDD with comprehensive test coverage
+- Last 5 plans: 07-05 (226s), 13-01 (118s), 08-01 (241s), 08-03 (118s)
+- Trend: Fast UI plans (08-03 = 2min), longer TDD plans with test coverage
 
 *Updated after each plan completion*
 
@@ -262,6 +262,13 @@ Recent decisions affecting current work:
 - Auto-play uses Math.random for card selection (sufficient for game logic, no crypto needed)
 - Auto-play respects burn mechanics (10 or four-of-a-kind = same player goes again)
 
+**From 08-03:**
+- TurnTimer.vue uses circular SVG progress ring with stroke-dashoffset animation
+- No color changes or urgency cues on timer (per locked project decision)
+- Game view state updated from all gameplay messages (card-played, pile-pickup, face-down-result, turn-changed, player-eliminated, game-over)
+- Game.vue renders TurnTimer during playing phase, with finished and fallback phase handlers
+- Turn timer state (turnTimeRemaining, turnTimerPlayerIndex) synchronized via WebSocket
+
 ### Roadmap Evolution
 
 - Phase 13 added: ESLint Setup & Fixes — Install ESLint for server and client, add to Makefile, fix issues
@@ -281,9 +288,9 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Completed 08-01-PLAN.md (Turn timer schema & auto-play logic)
+Stopped at: Completed 08-03-PLAN.md (Turn timer UI with circular SVG progress ring)
 Resume file: None
 
 ---
 *State initialized: 2026-02-07*
-*Last updated: 2026-02-08 after Phase 08-01 execution*
+*Last updated: 2026-02-08 after Phase 08-03 execution*
