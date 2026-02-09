@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 ## Current Position
 
 Phase: 15 of 15 (Mobile UX Improvements)
-Plan: 0/TBD
-Status: Not started
-Last activity: 2026-02-09 — Phase 12 verified and complete
+Plan: 1/TBD
+Status: In progress
+Last activity: 2026-02-09 — Completed 15-01-PLAN.md
 
-Progress: [█████████░] ~94% (53 plans complete)
+Progress: [█████████░] ~94% (54 plans complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 46
+- Total plans completed: 47
 - Average duration: 2.3 minutes
-- Total execution time: 1.82 hours
+- Total execution time: 1.90 hours
 
 **By Phase:**
 
@@ -41,9 +41,10 @@ Progress: [█████████░] ~94% (53 plans complete)
 | 12 | 2 | 503s | 252s |
 | 13 | 1 | 118s | 118s |
 | 14 | 2 | 346s | 173s |
+| 15 | 1 | 281s | 281s |
 
 **Recent Trend:**
-- Last 5 plans: 09-07 (106s), 11-01 (150s), 12-02 (138s), 12-01 (243s), 12-03 (260s)
+- Last 5 plans: 11-01 (150s), 12-02 (138s), 12-01 (243s), 12-03 (260s), 15-01 (281s)
 - Trend: Steady ~2-4min execution times, deployment infra plans slightly longer due to multiple file updates
 
 *Updated after each plan completion*
@@ -366,6 +367,13 @@ Recent decisions affecting current work:
 - Opponent turn indicators use Vue Transition for pulse dot fade in/out
 - Nickname text emphasis (yellow-300, font-semibold) when opponent's turn
 
+**From 15-01:**
+- useDoubleTap composable with 300ms threshold for mobile double-tap gesture detection
+- Pickup pile requires double-tap confirmation with visual feedback (yellow ring, "Tap Again to Pick Up" text)
+- TurnTimer repositioned to fixed bottom-right corner at 48px (mobile) / 64px (desktop) with iOS safe area support
+- 8-cards render semi-transparent (50% opacity) with dashed purple border so underlying effective card is visible
+- Reusable composable pattern for gesture detection with timeout and visual state management
+
 **From 12-02:**
 - Client WebSocket URL uses VITE_SERVER_URL for split deployment (CF Pages + Fly.io)
 - Three-tier WebSocket URL strategy: VITE_SERVER_URL (production) → localhost:3000 (dev) → proxy via current host (tunnel)
@@ -389,9 +397,8 @@ Recent decisions affecting current work:
 
 ### Pending Todos
 
-2 pending — `/gsd:check-todos` to review
+1 pending — `/gsd:check-todos` to review
 - Add debug gamestate dev tooling (tooling)
-- Fix CI/CD pipeline and clean up Makefile deploy targets (tooling)
 
 ### Blockers/Concerns
 
@@ -403,6 +410,6 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-09
-Stopped at: Phase 12 verified and complete
+Stopped at: Completed 15-01-PLAN.md
 Resume file: None
 
