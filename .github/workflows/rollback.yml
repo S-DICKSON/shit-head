@@ -34,8 +34,9 @@ jobs:
       - name: Deploy rollback to Fly.io
         uses: superfly/flyctl-actions/setup-flyctl@master
 
-      - run: flyctl deploy --image ghcr.io/${{ github.repository }}-server:prod-sha-${{ inputs.target_sha }}
+      - run: flyctl deploy --image ghcr.io/${{ github.repository }}-server:prod-sha-${TARGET_SHA::7}
         env:
+          TARGET_SHA: ${{ inputs.target_sha }}
           FLY_API_TOKEN: ${{ env.fly_api_token }}
 
   rollback-client:
