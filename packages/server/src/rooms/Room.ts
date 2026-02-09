@@ -386,7 +386,17 @@ export class Room {
     if (!this.gameState) {
       return { success: false, error: 'No game in progress', code: 'INVALID_ACTION' };
     }
-    const result = GameEngine.playCards(this.gameState, playerId, cardIndices);
+
+    // Determine play source and route to correct engine method
+    const player = this.gameState.players.find(p => p.playerId === playerId);
+    if (!player) {
+      return { success: false, error: 'Player not found', code: 'PLAYER_NOT_FOUND' };
+    }
+
+    const playSource = GameEngine.determinePlaySource(player, this.gameState.drawPile.length === 0);
+    const result = playSource === 'face-up'
+      ? GameEngine.playFromFaceUp(this.gameState, playerId, cardIndices)
+      : GameEngine.playCards(this.gameState, playerId, cardIndices);
     if (result.success && result.data) {
       this.gameState = result.data;
       this.checkPostPlayState(playerId);
