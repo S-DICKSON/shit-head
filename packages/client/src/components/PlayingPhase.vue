@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import { usePlayingPhase } from '../composables/usePlayingPhase';
+import { useGameSocket } from '../composables/useGameSocket';
 import TurnTimer from './TurnTimer.vue';
 import TurnBanner from './TurnBanner.vue';
 import OpponentCards from './OpponentCards.vue';
@@ -24,10 +25,18 @@ const {
   pickupPile,
 } = usePlayingPhase();
 
+// Get send from useGameSocket for grouped card play
+const { send } = useGameSocket();
+
 function isOpponentCurrentTurn(opponentPlayerId: string): boolean {
   if (!roomState.value || gameView.value?.currentPlayerIndex === undefined) return false;
   const opponentIndex = roomState.value.players.findIndex(p => p.id === opponentPlayerId);
   return opponentIndex === gameView.value.currentPlayerIndex;
+}
+
+// Handle grouped card play from mobile view
+function handleGroupedPlay(indices: number[]): void {
+  send({ type: 'play-cards', cardIndices: indices });
 }
 
 // ARIA live region for turn announcements
@@ -70,8 +79,8 @@ watch(
       <DiscardPile :cards="gameView?.discardPile ?? []" />
     </div>
 
-    <!-- Player's cards area (bottom of screen, no scroll needed) -->
-    <div class="flex-shrink-0 px-2 pb-3">
+    <!-- Player's cards area (scrollable on mobile with many cards) -->
+    <div class="flex-shrink-0 px-2 pb-3 max-h-[45vh] overflow-y-auto">
       <PlayerCards
         :hand="gameView?.hand ?? []"
         :face-up="gameView?.faceUp ?? []"
@@ -86,6 +95,7 @@ watch(
         @select-face-down="selectFaceDownCard"
         @play-cards="playSelectedCards"
         @pickup-pile="pickupPile"
+        @play-grouped-cards="handleGroupedPlay"
       />
     </div>
 
