@@ -389,8 +389,10 @@ Recent decisions affecting current work:
 
 ### Pending Todos
 
-1 pending — `/gsd:check-todos` to review
+3 pending — `/gsd:check-todos` to review
 - Add debug gamestate dev tooling (tooling)
+- Configure ESLint for all packages (tooling)
+- Fix CI/CD pipeline and clean up Makefile deploy targets (tooling)
 
 ### Blockers/Concerns
 
