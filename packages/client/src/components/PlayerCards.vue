@@ -88,28 +88,38 @@
     </div>
 
     <!-- Action buttons -->
-    <div class="flex justify-center gap-4 mt-1">
-      <button
-        v-if="hasSelection"
-        class="px-6 py-2 bg-yellow-500 text-black font-bold rounded-lg disabled:opacity-50 hover:bg-yellow-400 transition-colors"
-        :disabled="!isMyTurn"
-        @click="$emit('play-cards')"
+    <div class="flex flex-col items-center gap-2">
+      <div class="flex justify-center gap-4">
+        <button
+          v-if="hasSelection"
+          class="px-6 py-2 bg-yellow-500 text-black font-bold rounded-lg disabled:opacity-50 hover:bg-yellow-400 transition-colors"
+          :disabled="!isMyTurn"
+          @click="emit('play-cards')"
+        >
+          Play
+        </button>
+        <button
+          class="px-6 py-2 bg-red-500 text-white font-bold rounded-lg disabled:opacity-50 hover:bg-red-400 transition-colors"
+          :class="{ 'ring-4 ring-yellow-400 animate-pulse': pickupConfirming }"
+          :disabled="!isMyTurn"
+          @click="handlePickupTap"
+        >
+          {{ pickupConfirming ? 'Tap Again to Pick Up' : 'Pick Up Pile' }}
+        </button>
+      </div>
+      <p
+        v-if="isMyTurn"
+        class="text-center text-xs text-green-400 mt-1"
       >
-        Play
-      </button>
-      <button
-        class="px-6 py-2 bg-red-500 text-white font-bold rounded-lg disabled:opacity-50 hover:bg-red-400 transition-colors"
-        :disabled="!isMyTurn"
-        @click="$emit('pickup-pile')"
-      >
-        Pick Up Pile
-      </button>
+        Double-tap to pick up pile
+      </p>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import type { Card } from '@shit-head/shared';
+import { useDoubleTap } from '../composables/useDoubleTap';
 
 defineProps<{
   hand: Card[];
@@ -122,13 +132,19 @@ defineProps<{
   hasSelection: boolean;
 }>();
 
-defineEmits<{
+const emit = defineEmits<{
   'toggle-hand-card': [index: number];
   'select-face-up': [index: number];
   'select-face-down': [index: number];
   'play-cards': [];
   'pickup-pile': [];
 }>();
+
+// Double-tap handler for pickup pile
+const { handleTap: handlePickupTap, isWaitingForSecondTap: pickupConfirming } = useDoubleTap(
+  () => emit('pickup-pile'),
+  300
+);
 
 // Helper: suit symbol
 function suitSymbol(suit: string): string {
