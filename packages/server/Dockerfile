@@ -21,20 +21,22 @@ EXPOSE 3000
 # Start with --watch for hot reload
 CMD ["bun", "--watch", "packages/server/src/index.ts"]
 
-# Production stage
+# Production stage (server-only for Fly.io)
 FROM base AS production
-# Copy root dependencies and TypeScript config
+WORKDIR /app
+# Copy package files for dependency resolution
 COPY package.json bun.lockb* tsconfig.json ./
 COPY packages/server/package.json ./packages/server/
 COPY packages/shared/package.json ./packages/shared/
 # Install production dependencies only
 RUN bun install --frozen-lockfile --production
-# Copy source
+# Copy server and shared source
 COPY packages/server/ ./packages/server/
 COPY packages/shared/ ./packages/shared/
 # Expose server port
-EXPOSE 3000
+EXPOSE 8080
 # Set production environment
 ENV NODE_ENV=production
-# Start server
+ENV PORT=8080
+# Start server (WebSocket + API only, no static files)
 CMD ["bun", "packages/server/src/index.ts"]
