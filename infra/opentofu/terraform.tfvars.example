@@ -1,15 +1,13 @@
-# Example Terraform variables file
-# Copy this file to terraform.tfvars and fill in your values
-# terraform.tfvars is gitignored to protect secrets
+# Fly.io configuration
+fly_api_token = "fo1_your_fly_api_token_here"
+fly_org       = "personal"
+fly_region    = "sjc"
 
-# Get your Render API key from: https://dashboard.render.com/account/settings
-render_api_key = "your-render-api-key-here"
+# Cloudflare configuration
+cloudflare_api_token  = "your_cloudflare_api_token_here"
+cloudflare_account_id = "your_cloudflare_account_id_here"
 
-# Project name prefix for Render services
-project_name = "shithead-online"
-
-# Your GitHub repository URL
-repo_url = "https://github.com/YOUR_USERNAME/shit-head"
-
-# Render region (oregon, frankfurt, singapore, ohio)
-region = "oregon"
+# Project configuration
+project_name    = "shit-head"
+github_repo     = "YOUR_USERNAME/shit-head"
+allowed_origins = "https://shit-head.pages.dev"
