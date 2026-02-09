@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-02-07)
 
 **Core value:** Friends can play a complete, rule-accurate game of Shithead together online with zero friction
-**Current focus:** Phase 12 complete — deployment & production polish
+**Current focus:** Phase 15 complete — all milestone phases delivered
 
 ## Current Position
 
 Phase: 15 of 15 (Mobile UX Improvements)
 Plan: 2 of 2 (Phase complete)
 Status: Phase complete
-Last activity: 2026-02-09 — Completed 15-02-PLAN.md
+Last activity: 2026-02-09 — Phase 15 verified and complete
 
 Progress: [██████████] 100% (55 plans complete)
 
@@ -419,6 +419,6 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-09
-Stopped at: Completed 15-02-PLAN.md
+Stopped at: Phase 15 verified and complete — all 15 phases delivered
 Resume file: None
 

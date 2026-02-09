@@ -26,7 +26,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 12: Deployment & Production Polish** - Production build, hosting, and monitoring
 - [x] **Phase 13: ESLint Setup & Fixes** - Install ESLint for server and client, add to Makefile, fix issues
 - [x] **Phase 14: Ngrok Local Dev Sharing** - Ngrok tunnel so local dev can be shared and tested on mobile
-- [ ] **Phase 15: Mobile UX Improvements** - Pickup pile safety, turn indicators, timer relocation, 8-card visibility, hand card grouping
+- [x] **Phase 15: Mobile UX Improvements** - Pickup pile safety, turn indicators, timer relocation, 8-card visibility, hand card grouping
 
 ## Phase Details
 
@@ -287,8 +287,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 15-01-PLAN.md — Double-tap pickup safety, compact timer relocation, 8-card transparency
-- [ ] 15-02-PLAN.md — Turn sound notification and mobile card grouping with sticky play button
+- [x] 15-01-PLAN.md — Double-tap pickup safety, compact timer relocation, 8-card transparency
+- [x] 15-02-PLAN.md — Turn sound notification and mobile card grouping with sticky play button
 
 ## Progress
 
@@ -311,8 +311,8 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 12. Deployment & Production Polish | 3/3 | Complete | 2026-02-09 |
 | 13. ESLint Setup & Fixes | 1/1 | Complete | 2026-02-08 |
 | 14. Ngrok Local Dev Sharing | 2/2 | Complete | 2026-02-08 |
-| 15. Mobile UX Improvements | 0/2 | Not started | - |
+| 15. Mobile UX Improvements | 2/2 | Complete | 2026-02-09 |
 
 ---
 *Roadmap created: 2026-02-07*
-*Last updated: 2026-02-09 after Phase 15 planning*
+*Last updated: 2026-02-09 after Phase 15 execution*
