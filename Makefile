@@ -1,5 +1,5 @@
 .PHONY: help dev start build test test-server test-client clean lint lint-fix type-check type-check-server type-check-shared tunnel \
-	infra-init infra-plan infra-apply infra-destroy infra-edit-secrets infra-shell
+	deploy-server fly-secrets-set infra-init infra-plan infra-apply infra-destroy infra-edit-secrets infra-shell
 
 .DEFAULT_GOAL := help
 
@@ -56,8 +56,18 @@ clean: ## Clean up containers, volumes, and images
 tunnel: ## Start cloudflared tunnel for mobile testing (one command)
 	docker compose -f docker-compose.tunnel.yml up --build
 
-# --- Infrastructure (OpenTofu + SOPS) ---
+# --- Deployment ---
 
+FLYCTL = @FLY_TOKEN=$$(cd infra && SOPS_AGE_KEY_FILE=~/.config/sops/age/keys.txt sops -d --extract '["fly_api_token"]' secrets.sops.yaml) && \
+	docker run --rm -v "$(CURDIR):/app" -w /app -e "FLY_API_TOKEN=$$FLY_TOKEN" flyio/flyctl:latest
+
+deploy-server: ## Deploy server to Fly.io
+	$(FLYCTL) deploy
+
+fly-secrets-set: ## Set Fly.io secrets (usage: make fly-secrets-set SECRETS="KEY=val KEY2=val2")
+	$(FLYCTL) secrets set $(SECRETS)
+
+# --- Infrastructure (OpenTofu + SOPS) ---
 
 INFRA_RUN = docker compose -f docker-compose.infra.yml run --rm infra
 
