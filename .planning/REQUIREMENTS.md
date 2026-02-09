@@ -70,8 +70,8 @@
 
 - [x] **UI-01**: Responsive layout works on mobile and desktop browsers
 - [x] **UI-02**: Functional card animations (deal, play, burn)
-- [ ] **UI-03**: Clear turn indicators showing whose turn it is
-- [ ] **UI-04**: Turn timer countdown visible to all players
+- [x] **UI-03**: Clear turn indicators showing whose turn it is
+- [x] **UI-04**: Turn timer countdown visible to all players
 - [x] **UI-05**: Card hand display with clear selection state
 
 ## v2 Requirements
@@ -146,8 +146,8 @@
 | MULT-06 | Phase 9 | Complete |
 | UI-01 | Phase 10 | Complete |
 | UI-02 | Phase 10 | Complete |
-| UI-03 | Phase 11 | Pending |
-| UI-04 | Phase 11 | Pending |
+| UI-03 | Phase 11 | Complete |
+| UI-04 | Phase 11 | Complete |
 | UI-05 | Phase 10 | Complete |
 
 **Coverage:**

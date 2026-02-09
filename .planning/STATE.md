@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-07)
 
 **Core value:** Friends can play a complete, rule-accurate game of Shithead together online with zero friction
-**Current focus:** Phase 10 complete — playing phase UI with card interactions
+**Current focus:** Phase 11 complete — game feedback & turn indicators
 
 ## Current Position
 
-Phase: 12 of 14 (Deployment & Production Polish)
-Plan: 2 of 5 complete
+Phase: 12 of 15 (Deployment & Production Polish)
+Plan: 1/3 complete
 Status: In progress
-Last activity: 2026-02-08 — Completed 12-02-PLAN.md (Client Split Deployment Configuration)
+Last activity: 2026-02-08 — Completed 12-01-PLAN.md (Server Production Hardening)
 
-Progress: [████████░░] ~90% (49 plans complete)
+Progress: [█████████░] ~91% (49 plans complete)
 
 ## Performance Metrics
 
@@ -42,8 +42,8 @@ Progress: [████████░░] ~90% (49 plans complete)
 | 14 | 2 | 346s | 173s |
 
 **Recent Trend:**
-- Last 5 plans: 10-02 (139s), 10-03 (167s), 09-07 (106s), 11-01 (150s), 12-02 (138s)
-- Trend: Steady ~2-3min execution times, excellent consistency
+- Last 5 plans: 10-03 (167s), 09-07 (106s), 11-01 (150s), 12-02 (138s), 12-01 (243s)
+- Trend: Steady ~2-3min execution times, excellent consistency (12-01 longer due to comprehensive server hardening)
 
 *Updated after each plan completion*
 
