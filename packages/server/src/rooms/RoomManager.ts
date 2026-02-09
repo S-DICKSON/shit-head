@@ -9,16 +9,22 @@ type OperationResult<T = void> = T extends void
 export class RoomManager {
   private rooms: Map<string, Room>; // code -> Room
   private playerRoomIndex: Map<string, string>; // playerId -> roomCode
+  private lastActivityTimes: Map<string, number>; // roomCode -> timestamp
 
   constructor() {
     this.rooms = new Map();
     this.playerRoomIndex = new Map();
+    this.lastActivityTimes = new Map();
+
+    // Start cleanup interval - runs every 5 minutes
+    setInterval(() => this.cleanupAbandonedRooms(), 5 * 60 * 1000);
   }
 
   createRoom(hostId: string, nickname: string): OperationResult<RoomState> {
     const room = new Room(hostId, nickname);
     this.rooms.set(room.code, room);
     this.playerRoomIndex.set(hostId, room.code);
+    this.markActivity(room.code);
 
     return {
       success: true,
@@ -44,6 +50,7 @@ export class RoomManager {
     }
 
     this.playerRoomIndex.set(playerId, code);
+    this.markActivity(code);
 
     return {
       success: true,
@@ -82,6 +89,9 @@ export class RoomManager {
         this.playerRoomIndex.delete(player.id);
       });
       this.rooms.delete(roomCode);
+      this.lastActivityTimes.delete(roomCode);
+    } else {
+      this.markActivity(roomCode);
     }
 
     return { success: true };
@@ -129,6 +139,7 @@ export class RoomManager {
     }
 
     room.startCountdown();
+    this.markActivity(roomCode);
 
     return { success: true };
   }
@@ -153,10 +164,45 @@ export class RoomManager {
         this.playerRoomIndex.delete(player.id);
       });
       this.rooms.delete(code);
+      this.lastActivityTimes.delete(code);
     }
   }
 
   removePlayerIndex(playerId: string): void {
     this.playerRoomIndex.delete(playerId);
+  }
+
+  markActivity(roomCode: string): void {
+    this.lastActivityTimes.set(roomCode, Date.now());
+  }
+
+  getRoomCount(): number {
+    return this.rooms.size;
+  }
+
+  getPlayerCount(): number {
+    return this.playerRoomIndex.size;
+  }
+
+  private cleanupAbandonedRooms(): void {
+    const now = Date.now();
+    const abandonedThreshold = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+
+    for (const [roomCode, lastActivity] of this.lastActivityTimes.entries()) {
+      if (now - lastActivity > abandonedThreshold) {
+        console.log(`Cleaning up abandoned room: ${roomCode}`);
+
+        const room = this.rooms.get(roomCode);
+        if (room) {
+          const state = room.getState();
+          state.players.forEach(player => {
+            this.playerRoomIndex.delete(player.id);
+          });
+        }
+
+        this.rooms.delete(roomCode);
+        this.lastActivityTimes.delete(roomCode);
+      }
+    }
   }
 }
