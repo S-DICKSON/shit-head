@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 ## Current Position
 
 Phase: 15 of 15 (Mobile UX Improvements)
-Plan: 1/TBD
-Status: In progress
-Last activity: 2026-02-09 — Completed 15-01-PLAN.md
+Plan: 2 of 2 (Phase complete)
+Status: Phase complete
+Last activity: 2026-02-09 — Completed 15-02-PLAN.md
 
-Progress: [█████████░] ~94% (54 plans complete)
+Progress: [██████████] 100% (55 plans complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 47
+- Total plans completed: 48
 - Average duration: 2.3 minutes
-- Total execution time: 1.90 hours
+- Total execution time: 1.96 hours
 
 **By Phase:**
 
@@ -41,11 +41,11 @@ Progress: [█████████░] ~94% (54 plans complete)
 | 12 | 2 | 503s | 252s |
 | 13 | 1 | 118s | 118s |
 | 14 | 2 | 346s | 173s |
-| 15 | 1 | 281s | 281s |
+| 15 | 2 | 506s | 253s |
 
 **Recent Trend:**
-- Last 5 plans: 11-01 (150s), 12-02 (138s), 12-01 (243s), 12-03 (260s), 15-01 (281s)
-- Trend: Steady ~2-4min execution times, deployment infra plans slightly longer due to multiple file updates
+- Last 5 plans: 12-02 (138s), 12-01 (243s), 12-03 (260s), 15-01 (281s), 15-02 (225s)
+- Trend: Steady ~2-4min execution times, mobile UX plans efficient with focused composable creation
 
 *Updated after each plan completion*
 
@@ -374,6 +374,15 @@ Recent decisions affecting current work:
 - 8-cards render semi-transparent (50% opacity) with dashed purple border so underlying effective card is visible
 - Reusable composable pattern for gesture detection with timeout and visual state management
 
+**From 15-02:**
+- Web Audio API for turn notifications (880Hz sine wave, 150ms beep, 0.15 volume) — no external audio files needed
+- Module-level AudioContext singleton for sound effects, created lazily on first notification
+- Mobile card grouping activates when > 5 cards in hand on screens < 640px
+- Grouped view shows cards by rank with +/- quantity selectors, maps selections to original card indices
+- Sticky action buttons with backdrop blur (bg-green-900/95) ensure play/pickup always accessible during scroll
+- play-grouped-cards event pattern for mobile card selection, handled via useGameSocket.send
+- Player cards area scrollable with max-h-[45vh] on mobile to prevent overflow
+
 **From 12-02:**
 - Client WebSocket URL uses VITE_SERVER_URL for split deployment (CF Pages + Fly.io)
 - Three-tier WebSocket URL strategy: VITE_SERVER_URL (production) → localhost:3000 (dev) → proxy via current host (tunnel)
@@ -410,6 +419,6 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-09
-Stopped at: Completed 15-01-PLAN.md
+Stopped at: Completed 15-02-PLAN.md
 Resume file: None
 
