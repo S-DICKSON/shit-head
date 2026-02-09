@@ -49,14 +49,8 @@ watch(
 
 <template>
   <div class="flex flex-col h-screen bg-green-900 text-white overflow-hidden">
-    <!-- Top bar: Turn Timer + Opponents -->
+    <!-- Top bar: Opponents -->
     <div class="flex-shrink-0 pt-2">
-      <div class="flex justify-center mb-1">
-        <TurnTimer
-          :time-remaining="turnTimeRemaining"
-          :total-time="45"
-        />
-      </div>
       <div class="flex flex-wrap justify-center gap-2 sm:gap-4 px-2 mb-1">
         <OpponentCards
           v-for="opponent in gameView?.opponents"
@@ -94,6 +88,12 @@ watch(
         @pickup-pile="pickupPile"
       />
     </div>
+
+    <!-- Turn Timer (fixed overlay in bottom-right) -->
+    <TurnTimer
+      :time-remaining="turnTimeRemaining"
+      :total-time="45"
+    />
 
     <!-- ARIA live region for screen readers -->
     <div
