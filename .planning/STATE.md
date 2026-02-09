@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 
 ## Current Position
 
-Phase: 11 of 14 (Game Feedback & Turn Indicators)
-Plan: 1 of 3 complete
+Phase: 12 of 14 (Deployment & Production Polish)
+Plan: 2 of 5 complete
 Status: In progress
-Last activity: 2026-02-08 — Completed 11-01-PLAN.md (Turn Feedback Indicators)
+Last activity: 2026-02-08 — Completed 12-02-PLAN.md (Client Split Deployment Configuration)
 
-Progress: [████████░░] ~90% (48 plans complete)
+Progress: [████████░░] ~90% (49 plans complete)
 
 ## Performance Metrics
 
@@ -42,7 +42,7 @@ Progress: [████████░░] ~90% (48 plans complete)
 | 14 | 2 | 346s | 173s |
 
 **Recent Trend:**
-- Last 5 plans: 10-01 (145s), 10-02 (139s), 10-03 (167s), 09-07 (106s), 11-01 (150s)
+- Last 5 plans: 10-02 (139s), 10-03 (167s), 09-07 (106s), 11-01 (150s), 12-02 (138s)
 - Trend: Steady ~2-3min execution times, excellent consistency
 
 *Updated after each plan completion*
@@ -365,6 +365,12 @@ Recent decisions affecting current work:
 - Opponent turn indicators use Vue Transition for pulse dot fade in/out
 - Nickname text emphasis (yellow-300, font-semibold) when opponent's turn
 
+**From 12-02:**
+- Client WebSocket URL uses VITE_SERVER_URL for split deployment (CF Pages + Fly.io)
+- Three-tier WebSocket URL strategy: VITE_SERVER_URL (production) → localhost:3000 (dev) → proxy via current host (tunnel)
+- Vite build outputs to dist/ directory for CF Pages deployment
+- Env vars baked into client build via import.meta.env static replacement (build-time only)
+
 ### Roadmap Evolution
 
 - Phase 13 added: ESLint Setup & Fixes — Install ESLint for server and client, add to Makefile, fix issues
@@ -386,6 +392,6 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Completed 11-01-PLAN.md (Turn Feedback Indicators)
+Stopped at: Completed 12-02-PLAN.md (Client Split Deployment Configuration)
 Resume file: None
 
