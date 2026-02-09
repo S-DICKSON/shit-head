@@ -119,6 +119,6 @@ jobs:
       - name: Deploy to Fly.io
         uses: superfly/flyctl-actions/setup-flyctl@master
 
-      - run: flyctl deploy --config packages/server/fly.toml --image ghcr.io/${{ github.repository }}-server:prod-sha-${{ github.sha }}
+      - run: flyctl deploy --image ghcr.io/${{ github.repository }}-server:prod-sha-${{ github.sha }}
         env:
           FLY_API_TOKEN: ${{ env.fly_api_token }}
