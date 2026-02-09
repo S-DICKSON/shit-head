@@ -389,11 +389,9 @@ Recent decisions affecting current work:
 
 ### Pending Todos
 
-4 pending — `/gsd:check-todos` to review
+2 pending — `/gsd:check-todos` to review
 - Add debug gamestate dev tooling (tooling)
-- Configure ESLint for all packages (tooling)
 - Fix CI/CD pipeline and clean up Makefile deploy targets (tooling)
-- Fix face-down cards unplayable in endgame (general)
 
 ### Blockers/Concerns
 
