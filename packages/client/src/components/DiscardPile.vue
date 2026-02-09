@@ -18,7 +18,8 @@
           v-for="(card, i) in visibleCards"
           :key="cardKey(card)"
           :style="{ transform: `translate(${i * 3}px, ${i * 3}px)`, zIndex: i }"
-          class="absolute top-0 left-0 w-14 h-21 sm:w-16 sm:h-24 bg-white text-black rounded border border-gray-300 flex flex-col items-center justify-center text-xs sm:text-sm shadow-sm"
+          class="absolute top-0 left-0 w-14 h-21 sm:w-16 sm:h-24 bg-white text-black rounded flex flex-col items-center justify-center text-xs sm:text-sm shadow-sm"
+          :class="isTransparentEight(card, i) ? 'opacity-50 border-dashed border-2 border-purple-400' : 'border border-gray-300'"
         >
           <span class="font-bold">{{ card.kind === 'standard' ? card.rank : 'JKR' }}</span>
           <span
@@ -38,8 +39,14 @@
     </div>
 
     <!-- Label -->
-    <div class="text-center text-xs text-green-300 mt-1">
-      Discard
+    <div class="text-center text-xs mt-1">
+      <span class="text-green-300">Discard</span>
+      <div
+        v-if="topCardIsEight"
+        class="text-purple-300 mt-0.5"
+      >
+        8 is invisible
+      </div>
     </div>
   </div>
 </template>
@@ -60,6 +67,15 @@ const props = withDefaults(defineProps<Props>(), {
 const visibleCards = computed(() => props.cards.slice(-3));
 const isEmpty = computed(() => props.cards.length === 0);
 const pileCount = computed(() => props.cards.length);
+
+const topCardIsEight = computed(() => {
+  const topCard = props.cards[props.cards.length - 1];
+  return topCard?.kind === 'standard' && topCard.rank === '8';
+});
+
+function isTransparentEight(card: Card, index: number): boolean {
+  return index === visibleCards.value.length - 1 && card.kind === 'standard' && card.rank === '8';
+}
 
 function suitSymbol(suit: string): string {
   const symbols: Record<string, string> = {
