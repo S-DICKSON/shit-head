@@ -10,9 +10,24 @@
 </template>
 
 <script setup lang="ts">
-defineProps<{
+import { watch } from 'vue';
+import { useSoundEffects } from '../composables/useSoundEffects';
+
+const props = defineProps<{
   visible: boolean;
 }>();
+
+const { playTurnNotification } = useSoundEffects();
+
+// Play notification sound when banner becomes visible
+watch(
+  () => props.visible,
+  (newVisible) => {
+    if (newVisible) {
+      playTurnNotification();
+    }
+  }
+);
 </script>
 
 <style scoped>
