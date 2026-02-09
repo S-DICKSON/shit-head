@@ -2,7 +2,7 @@ app = "shit-head-server"
 primary_region = "sjc"
 
 [build]
-  dockerfile = "packages/server/Dockerfile"
+  dockerfile = "Dockerfile"
   [build.args]
     # Uses production target
 

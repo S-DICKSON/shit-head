@@ -1,4 +1,5 @@
-.PHONY: help dev start build test test-server test-client clean lint lint-fix type-check type-check-server type-check-shared tunnel
+.PHONY: help dev start build test test-server test-client clean lint lint-fix type-check type-check-server type-check-shared tunnel \
+	infra-init infra-plan infra-apply infra-destroy infra-edit-secrets infra-shell
 
 .DEFAULT_GOAL := help
 
@@ -50,6 +51,29 @@ clean: ## Clean up containers, volumes, and images
 	docker compose down -v --rmi local --remove-orphans
 	docker compose -f docker-compose.prod.yml down -v --rmi local --remove-orphans
 	docker compose -f docker-compose.tunnel.yml down -v --remove-orphans
+	docker compose -f docker-compose.infra.yml down -v --rmi local --remove-orphans
 
 tunnel: ## Start cloudflared tunnel for mobile testing (one command)
 	docker compose -f docker-compose.tunnel.yml up --build
+
+# --- Infrastructure (OpenTofu + SOPS) ---
+
+INFRA_RUN = docker compose -f docker-compose.infra.yml run --rm infra
+
+infra-init: ## Init OpenTofu providers
+	$(INFRA_RUN) init
+
+infra-plan: ## Preview infrastructure changes
+	$(INFRA_RUN) plan
+
+infra-apply: ## Apply infrastructure changes
+	$(INFRA_RUN) apply -auto-approve
+
+infra-destroy: ## Tear down all infrastructure
+	$(INFRA_RUN) destroy -auto-approve
+
+infra-edit-secrets: ## Edit encrypted secrets (requires local sops + age)
+	cd infra && EDITOR=nano SOPS_AGE_KEY_FILE=~/.config/sops/age/keys.txt sops secrets.sops.yaml
+
+infra-shell: ## Open debug shell in infra container
+	$(INFRA_RUN) bash

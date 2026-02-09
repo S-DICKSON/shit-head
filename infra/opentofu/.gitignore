@@ -25,3 +25,7 @@ override.tf.json
 # CLI configuration files
 .terraformrc
 terraform.rc
+
+# age private keys (NEVER commit)
+*.age.key
+keys.txt

@@ -14,12 +14,29 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install SOPS and age
+        run: |
+          SOPS_VERSION=3.9.4
+          AGE_VERSION=1.2.0
+          curl -fsSL -o /usr/local/bin/sops \
+            "https://github.com/getsops/sops/releases/download/v${SOPS_VERSION}/sops-v${SOPS_VERSION}.linux.amd64"
+          chmod +x /usr/local/bin/sops
+          curl -fsSL "https://github.com/FiloSottile/age/releases/download/v${AGE_VERSION}/age-v${AGE_VERSION}-linux-amd64.tar.gz" \
+            | tar -xz --strip-components=1 -C /usr/local/bin age/age age/age-keygen
+          chmod +x /usr/local/bin/age /usr/local/bin/age-keygen
+
+      - name: Decrypt secrets
+        env:
+          SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
+        run: |
+          sops -d --output-type json infra/secrets.sops.yaml | jq -r 'to_entries[] | "\(.key)=\(.value)"' >> "$GITHUB_ENV"
+
       - name: Deploy rollback to Fly.io
         uses: superfly/flyctl-actions/setup-flyctl@master
 
-      - run: flyctl deploy --image ghcr.io/${{ github.repository }}-server:prod-sha-${{ inputs.target_sha }}
+      - run: flyctl deploy --config packages/server/fly.toml --image ghcr.io/${{ github.repository }}-server:prod-sha-${{ inputs.target_sha }}
         env:
-          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+          FLY_API_TOKEN: ${{ env.fly_api_token }}
 
   rollback-client:
     runs-on: ubuntu-latest
@@ -27,6 +44,23 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.target_sha }}
+
+      - name: Install SOPS and age
+        run: |
+          SOPS_VERSION=3.9.4
+          AGE_VERSION=1.2.0
+          curl -fsSL -o /usr/local/bin/sops \
+            "https://github.com/getsops/sops/releases/download/v${SOPS_VERSION}/sops-v${SOPS_VERSION}.linux.amd64"
+          chmod +x /usr/local/bin/sops
+          curl -fsSL "https://github.com/FiloSottile/age/releases/download/v${AGE_VERSION}/age-v${AGE_VERSION}-linux-amd64.tar.gz" \
+            | tar -xz --strip-components=1 -C /usr/local/bin age/age age/age-keygen
+          chmod +x /usr/local/bin/age /usr/local/bin/age-keygen
+
+      - name: Decrypt secrets
+        env:
+          SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
+        run: |
+          sops -d --output-type json infra/secrets.sops.yaml | jq -r 'to_entries[] | "\(.key)=\(.value)"' >> "$GITHUB_ENV"
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -37,11 +71,11 @@ jobs:
       - name: Build client at target SHA
         run: cd packages/client && bunx vite build
         env:
-          VITE_SERVER_URL: ${{ secrets.VITE_SERVER_URL }}
+          VITE_SERVER_URL: ${{ env.vite_server_url }}
 
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
         with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          apiToken: ${{ env.cloudflare_api_token }}
+          accountId: ${{ env.cloudflare_account_id }}
           command: pages deploy packages/client/dist --project-name=shit-head
