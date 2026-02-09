@@ -284,10 +284,11 @@ Plans:
   4. When an 8 is played, it appears semi-transparent/ghost-like on the pile so players can see the effective card underneath
   5. When holding many cards, the play card button remains accessible (not pushed off screen)
   6. Hand cards are grouped by rank (e.g., "2x 7s", "3x 3s") with a mobile-friendly selector for choosing how many to play
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] (Plans will be created during /gsd:plan-phase 15)
+- [ ] 15-01-PLAN.md — Double-tap pickup safety, compact timer relocation, 8-card transparency
+- [ ] 15-02-PLAN.md — Turn sound notification and mobile card grouping with sticky play button
 
 ## Progress
 
@@ -310,8 +311,8 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 12. Deployment & Production Polish | 3/3 | Complete | 2026-02-09 |
 | 13. ESLint Setup & Fixes | 1/1 | Complete | 2026-02-08 |
 | 14. Ngrok Local Dev Sharing | 2/2 | Complete | 2026-02-08 |
-| 15. Mobile UX Improvements | 0/TBD | Not started | - |
+| 15. Mobile UX Improvements | 0/2 | Not started | - |
 
 ---
 *Roadmap created: 2026-02-07*
-*Last updated: 2026-02-09 after Phase 12 execution*
+*Last updated: 2026-02-09 after Phase 15 planning*
