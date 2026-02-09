@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-07)
 
 **Core value:** Friends can play a complete, rule-accurate game of Shithead together online with zero friction
-**Current focus:** Phase 11 complete — game feedback & turn indicators
+**Current focus:** Phase 12 complete — deployment & production polish
 
 ## Current Position
 
-Phase: 12 of 15 (Deployment & Production Polish)
-Plan: 2/3 complete
-Status: In progress
-Last activity: 2026-02-09 — Completed 12-03-PLAN.md (Deployment Infrastructure)
+Phase: 15 of 15 (Mobile UX Improvements)
+Plan: 0/TBD
+Status: Not started
+Last activity: 2026-02-09 — Phase 12 verified and complete
 
-Progress: [█████████░] ~92% (50 plans complete)
+Progress: [█████████░] ~94% (53 plans complete)
 
 ## Performance Metrics
 
@@ -401,7 +401,7 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-02-09 00:09:26 UTC
-Stopped at: Completed 12-03-PLAN.md (Deployment Infrastructure)
+Last session: 2026-02-09
+Stopped at: Phase 12 verified and complete
 Resume file: None
 

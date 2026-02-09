@@ -23,7 +23,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 9: Connection Management & Reconnection** - Disconnect detection and reconnection flow
 - [x] **Phase 10: Client UI & Card Interactions** - Vue UI with card hand display and play actions
 - [x] **Phase 11: Game Feedback & Turn Indicators** - Turn state display and visual cues
-- [ ] **Phase 12: Deployment & Production Polish** - Production build, hosting, and monitoring
+- [x] **Phase 12: Deployment & Production Polish** - Production build, hosting, and monitoring
 - [x] **Phase 13: ESLint Setup & Fixes** - Install ESLint for server and client, add to Makefile, fix issues
 - [x] **Phase 14: Ngrok Local Dev Sharing** - Ngrok tunnel so local dev can be shared and tested on mobile
 - [ ] **Phase 15: Mobile UX Improvements** - Pickup pile safety, turn indicators, timer relocation, 8-card visibility, hand card grouping
@@ -239,9 +239,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 12-01-PLAN.md — Server production hardening (Origin validation, health metrics, graceful shutdown, room cleanup)
-- [ ] 12-02-PLAN.md — Client split deployment URL (VITE_SERVER_URL support, Vite build config)
-- [ ] 12-03-PLAN.md — Deployment infrastructure (Dockerfile, fly.toml, deploy/rollback workflows, OpenTofu IaC)
+- [x] 12-01-PLAN.md — Server production hardening (Origin validation, health metrics, graceful shutdown, room cleanup)
+- [x] 12-02-PLAN.md — Client split deployment URL (VITE_SERVER_URL support, Vite build config)
+- [x] 12-03-PLAN.md — Deployment infrastructure (Dockerfile, fly.toml, deploy/rollback workflows, OpenTofu IaC)
 
 ### Phase 13: ESLint Setup & Fixes
 **Goal**: ESLint is configured for all packages with consistent rules and all issues are resolved
@@ -307,11 +307,11 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 9. Connection Management & Reconnection | 7/7 | Complete | 2026-02-08 |
 | 10. Client UI & Card Interactions | 3/3 | Complete | 2026-02-08 |
 | 11. Game Feedback & Turn Indicators | 1/1 | Complete | 2026-02-09 |
-| 12. Deployment & Production Polish | 0/3 | Not started | - |
+| 12. Deployment & Production Polish | 3/3 | Complete | 2026-02-09 |
 | 13. ESLint Setup & Fixes | 1/1 | Complete | 2026-02-08 |
 | 14. Ngrok Local Dev Sharing | 2/2 | Complete | 2026-02-08 |
 | 15. Mobile UX Improvements | 0/TBD | Not started | - |
 
 ---
 *Roadmap created: 2026-02-07*
-*Last updated: 2026-02-09 after Phase 11 execution*
+*Last updated: 2026-02-09 after Phase 12 execution*
