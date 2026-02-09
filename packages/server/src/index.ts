@@ -3,6 +3,7 @@ import { handleMessage, handleClose, handleOpen, roomManager } from './websocket
 import type { WebSocketData } from './websocket/handlers';
 import { nanoid } from 'nanoid';
 import type { ServerWebSocket } from 'bun';
+import { join } from 'path';
 
 // Environment configuration
 const NODE_ENV = process.env.NODE_ENV || 'development';
@@ -18,13 +19,18 @@ if (NODE_ENV !== 'production') {
   ALLOWED_ORIGINS.push('http://localhost:5173', 'http://localhost:4173');
 }
 
+// Static file serving: check if client dist exists (tunnel/production single-origin mode)
+const clientDistPath = join(import.meta.dir, '../../client/dist');
+const indexHtml = Bun.file(join(clientDistPath, 'index.html'));
+const serveStaticFiles = await indexHtml.exists();
+
 // Connection tracking for graceful shutdown
 const activeConnections = new Set<ServerWebSocket<WebSocketData>>();
 
 const server = Bun.serve<WebSocketData>({
   port: Number(process.env.PORT) || 3000,
 
-  fetch(req, server) {
+  async fetch(req, server) {
     const url = new URL(req.url);
 
     // Health check endpoint with metrics
@@ -51,8 +57,8 @@ const server = Bun.serve<WebSocketData>({
     if (url.pathname === '/game-ws') {
       const origin = req.headers.get('Origin');
 
-      // Validate origin in production
-      if (NODE_ENV === 'production') {
+      // Validate origin in production (skip when serving static files — same-origin tunnel mode)
+      if (NODE_ENV === 'production' && !serveStaticFiles) {
         if (!origin || !ALLOWED_ORIGINS.includes(origin)) {
           console.warn(`WebSocket upgrade rejected - invalid origin: ${origin}`);
           return new Response('Forbidden', { status: 403 });
@@ -78,7 +84,17 @@ const server = Bun.serve<WebSocketData>({
       return new Response('WebSocket upgrade failed', { status: 500 });
     }
 
-    // No static file serving in split deployment - return 404
+    // Serve static files from client/dist if available (tunnel/production single-origin)
+    if (serveStaticFiles) {
+      const filePath = join(clientDistPath, url.pathname === '/' ? 'index.html' : url.pathname);
+      const file = Bun.file(filePath);
+      if (await file.exists()) {
+        return new Response(file);
+      }
+      // SPA fallback: serve index.html for client-side routes
+      return new Response(indexHtml);
+    }
+
     return new Response('Not Found', { status: 404 });
   },
 

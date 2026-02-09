@@ -47,8 +47,9 @@ type-check-server: ## Run server type checking
 	docker compose run --rm server bunx tsc --noEmit -p packages/server/tsconfig.json
 
 clean: ## Clean up containers, volumes, and images
-	docker compose down -v --rmi local
-	docker compose -f docker-compose.prod.yml down -v --rmi local
+	docker compose down -v --rmi local --remove-orphans
+	docker compose -f docker-compose.prod.yml down -v --rmi local --remove-orphans
+	docker compose -f docker-compose.tunnel.yml down -v --remove-orphans
 
 tunnel: ## Start cloudflared tunnel for mobile testing (one command)
 	docker compose -f docker-compose.tunnel.yml up --build
