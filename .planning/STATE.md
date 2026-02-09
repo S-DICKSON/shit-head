@@ -371,6 +371,15 @@ Recent decisions affecting current work:
 - Vite build outputs to dist/ directory for CF Pages deployment
 - Env vars baked into client build via import.meta.env static replacement (build-time only)
 
+**From 12-01:**
+- Server no longer serves static files in split deployment (CF Pages serves client, Fly.io serves server)
+- ALLOWED_ORIGINS env var (comma-separated) validated in production mode for WebSocket upgrades
+- Development automatically allows localhost:5173 and localhost:4173 origins
+- Health endpoint returns activeRooms, activePlayers, activeConnections metrics with CORS header
+- SIGTERM graceful shutdown: 55s timeout with 100ms polling to allow orderly connection closure
+- Room activity tracking with 24 hour abandonment threshold, cleanup every 5 minutes
+- Connection tracking via Set<ServerWebSocket> for graceful shutdown coordination
+
 ### Roadmap Evolution
 
 - Phase 13 added: ESLint Setup & Fixes — Install ESLint for server and client, add to Makefile, fix issues
@@ -391,7 +400,7 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-02-08
-Stopped at: Completed 12-02-PLAN.md (Client Split Deployment Configuration)
+Last session: 2026-02-08 23:56:23 UTC
+Stopped at: Completed 12-01-PLAN.md (Server Production Hardening)
 Resume file: None
 
