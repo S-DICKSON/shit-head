@@ -36,6 +36,22 @@
           {{ pileCount }}
         </span>
       </div>
+      <!-- Burn fire animation overlay -->
+      <div
+        v-if="burnAnimation"
+        class="burn-fire"
+        aria-hidden="true"
+      >
+        <div
+          v-for="p in 12"
+          :key="p"
+          class="fire-particle"
+          :style="{
+            animationDelay: `${(p - 1) * 0.1}s`,
+            left: `calc((100% - 2.5em) * ${(p - 1) / 11})`,
+          }"
+        />
+      </div>
     </div>
 
     <!-- Label -->
@@ -150,3 +166,42 @@ function cardKey(card: Card): string {
   return card.kind === 'standard' ? `${card.suit}-${card.rank}` : `joker-${card.id}`;
 }
 </script>
+
+<style scoped>
+.burn-fire {
+  position: absolute;
+  top: -40%;
+  left: -30%;
+  width: 160%;
+  height: 180%;
+  z-index: 50;
+  pointer-events: none;
+  filter: blur(1px);
+}
+
+.fire-particle {
+  animation: rise 1.5s ease-in forwards;
+  background-image: radial-gradient(rgb(255, 80, 0) 20%, rgba(255, 80, 0, 0) 70%);
+  border-radius: 50%;
+  mix-blend-mode: screen;
+  opacity: 0;
+  position: absolute;
+  bottom: 0;
+  width: 2.5em;
+  height: 2.5em;
+}
+
+@keyframes rise {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scale(1);
+  }
+  25% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-5em) scale(0);
+  }
+}
+</style>
