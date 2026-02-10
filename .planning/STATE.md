@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 Phase: 15 of 15 (Mobile UX Improvements)
 Plan: 2 of 2 (Phase complete)
 Status: Phase complete
-Last activity: 2026-02-09 — Phase 15 verified and complete
+Last activity: 2026-02-10 — Completed quick task 001: Visual 8-card offset on discard pile
 
 Progress: [██████████] 100% (55 plans complete)
 
@@ -408,6 +408,12 @@ Recent decisions affecting current work:
 
 1 pending — `/gsd:check-todos` to review
 - Add debug gamestate dev tooling (tooling)
+
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 001 | Visual 8-card offset on discard pile | 2026-02-10 | 2de53d3 | [001-visual-8-card-offset-on-discard-pile](./quick/001-visual-8-card-offset-on-discard-pile/) |
 
 ### Blockers/Concerns
 
