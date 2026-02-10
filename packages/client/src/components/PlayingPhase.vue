@@ -25,8 +25,8 @@ const {
   pickupPile,
 } = usePlayingPhase();
 
-// Get send from useGameSocket for grouped card play
-const { send } = useGameSocket();
+// Get send and burnTriggered from useGameSocket
+const { send, burnTriggered } = useGameSocket();
 
 function isOpponentCurrentTurn(opponentPlayerId: string): boolean {
   if (!roomState.value || gameView.value?.currentPlayerIndex === undefined) return false;
@@ -76,7 +76,10 @@ watch(
     <!-- Center game area: Draw Pile + Discard Pile -->
     <div class="flex-1 flex items-center justify-center gap-6 sm:gap-8 px-4">
       <DrawPile :count="gameView?.drawPileCount ?? 0" />
-      <DiscardPile :cards="gameView?.discardPile ?? []" />
+      <DiscardPile
+        :cards="gameView?.discardPile ?? []"
+        :burn-animation="burnTriggered"
+      />
     </div>
 
     <!-- Player's cards area (scrollable on mobile with many cards) -->

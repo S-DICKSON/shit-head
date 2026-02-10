@@ -63,6 +63,9 @@ function createGameSocket() {
   const turnTimeRemaining = ref<number>(45);
   const turnTimerPlayerIndex = ref<number>(-1);
 
+  // Burn animation state
+  const burnTriggered = ref<boolean>(false);
+
   // Notification state
   interface GameNotification {
     id: number;
@@ -213,6 +216,11 @@ function createGameSocket() {
           break;
         case 'card-played':
           if (gameView.value) {
+            // Detect burn: pile was non-empty but incoming pile is empty
+            if (gameView.value.discardPile.length > 0 && message.discardPile.length === 0) {
+              burnTriggered.value = true;
+              setTimeout(() => { burnTriggered.value = false; }, 1500);
+            }
             gameView.value = {
               ...gameView.value,
               currentPlayerIndex: message.currentPlayerIndex,
@@ -359,6 +367,8 @@ function createGameSocket() {
     // Turn timer state
     turnTimeRemaining,
     turnTimerPlayerIndex,
+    // Burn animation state
+    burnTriggered,
     // Reconnection state
     reconnecting,
     reconnectTarget,
