@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 ## Current Position
 
 Phase: 12 of 15 (Deployment - Production Polish)
-Plan: 1 of 3 (In progress)
+Plan: 2 of 3 (In progress)
 Status: In progress
-Last activity: 2026-02-14 — Completed 12-01-PLAN.md
+Last activity: 2026-02-14 — Completed 12-02-PLAN.md
 
-Progress: [█████████░] 93% (56 plans complete)
+Progress: [█████████░] 94% (57 plans complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 49
+- Total plans completed: 50
 - Average duration: 2.3 minutes
-- Total execution time: 2.00 hours
+- Total execution time: 2.03 hours
 
 **By Phase:**
 
@@ -38,14 +38,14 @@ Progress: [█████████░] 93% (56 plans complete)
 | 09 | 7 | 1204s | 172s |
 | 10 | 3 | 451s | 150s |
 | 11 | 1 | 150s | 150s |
-| 12 | 3 | 628s | 209s |
+| 12 | 4 | 808s | 202s |
 | 13 | 1 | 118s | 118s |
 | 14 | 2 | 346s | 173s |
 | 15 | 2 | 506s | 253s |
 
 **Recent Trend:**
-- Last 5 plans: 12-01 (243s), 12-03 (260s), 15-01 (281s), 15-02 (225s), 12-01 (125s)
-- Trend: New Phase 12 plan very efficient at 125s, infrastructure-only plans faster than full-stack
+- Last 5 plans: 12-03 (260s), 15-01 (281s), 15-02 (225s), 12-01 (125s), 12-02 (180s)
+- Trend: Phase 12 Docker plans efficient, infrastructure work faster than full-stack features
 
 *Updated after each plan completion*
 
@@ -383,7 +383,14 @@ Recent decisions affecting current work:
 - play-grouped-cards event pattern for mobile card selection, handled via useGameSocket.send
 - Player cards area scrollable with max-h-[45vh] on mobile to prevent overflow
 
-**From 12-02:**
+**From 12-02 (NEW - Unified Docker image):**
+- Multi-stage Dockerfile with client-build intermediate stage for Vite production build
+- Production image serves static files + WebSocket from single Bun process on port 3000
+- Client assets copied from client-build stage at packages/client/dist path
+- ARM64 build compatibility verified for Oracle Cloud Ampere A1
+- Dev stage preserved for Docker Compose local development workflow
+
+**From 12-02 (OLD - Cloudflare/Fly.io split deployment):**
 - Client WebSocket URL uses VITE_SERVER_URL for split deployment (CF Pages + Fly.io)
 - Three-tier WebSocket URL strategy: VITE_SERVER_URL (production) → localhost:3000 (dev) → proxy via current host (tunnel)
 - Vite build outputs to dist/ directory for CF Pages deployment
@@ -436,6 +443,6 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-14
-Stopped at: Completed 12-01-PLAN.md (Oracle Cloud Infrastructure setup)
+Stopped at: Completed 12-02-PLAN.md (Unified production Docker image)
 Resume file: None
 

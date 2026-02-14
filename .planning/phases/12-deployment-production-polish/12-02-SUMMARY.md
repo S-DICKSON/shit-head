@@ -2,89 +2,76 @@
 phase: 12-deployment-production-polish
 plan: 02
 subsystem: infra
-tags: [cloudflare-pages, fly-io, vite, websocket, deployment]
+tags: [docker, bun, vite, arm64, oracle-cloud, unified-deployment]
 
 # Dependency graph
 requires:
+  - phase: 01-project-setup-foundation
+    provides: Multi-stage Dockerfiles with dev and production targets
   - phase: 12-01
-    provides: Research and deployment strategy for split hosting (CF Pages + Fly.io)
+    provides: Server static file serving capability and ALLOWED_ORIGINS validation
 provides:
-  - Client WebSocket connection with VITE_SERVER_URL for split deployment
-  - Vite build configuration for CF Pages
-  - Backward compatibility for local dev and tunnel modes
-affects: [12-03, 12-04, deployment, production]
+  - Unified Docker image with client build stage
+  - Single container serving static files + WebSocket on port 3000
+  - ARM64-compatible production build for Oracle Cloud Ampere A1
+affects: [12-03-oracle-infisical-setup, deployment, infra]
 
 # Tech tracking
 tech-stack:
   added: []
-  patterns:
-    - "VITE_SERVER_URL env var for split deployment WebSocket URLs"
-    - "Three-tier WebSocket URL strategy: production (VITE_SERVER_URL), local (direct), tunnel (proxy)"
+  patterns: ["Multi-stage Docker build with intermediate client-build stage", "COPY --from=stage for asset propagation"]
 
 key-files:
   created: []
-  modified:
-    - packages/client/src/composables/useGameSocket.ts
-    - packages/client/vite.config.ts
+  modified: ["packages/server/Dockerfile"]
 
 key-decisions:
-  - "Replace VITE_WS_URL with VITE_SERVER_URL for consistency with research phase naming"
-  - "Explicit build.outDir: 'dist' in vite.config.ts for CF Pages deployment target"
-  - "Remove unused serverUrl variable from vite.config.ts, hardcode Docker proxy targets"
+  - "Production image changed from port 8080 to 3000 (unified)"
+  - "Client assets copied from client-build stage at packages/client/dist path"
+  - "Dev stage preserved unchanged for Docker Compose local workflow"
 
 patterns-established:
-  - "WebSocket URL selection: VITE_SERVER_URL (split deployment) → localhost direct → tunnel proxy"
-  - "Vite env vars baked into build via import.meta.env static replacement"
+  - "Three-stage Dockerfile pattern: base → dev + client-build → production"
+  - "Client build stage runs bunx vite build with all dependencies"
+  - "Production stage copies pre-built assets from client-build stage"
 
 # Metrics
-duration: 2min
-completed: 2026-02-08
+duration: 3min
+completed: 2026-02-14
 ---
 
-# Phase 12 Plan 02: Client Split Deployment Configuration Summary
+# Phase 12 Plan 02: Unified Production Docker Image Summary
 
-**Client WebSocket connection supports split deployment via VITE_SERVER_URL with backward compatibility for local dev and tunnel modes**
+**Multi-stage Dockerfile building client assets and serving unified static files + WebSocket from single Bun process on port 3000**
 
 ## Performance
 
-- **Duration:** 2 min
-- **Started:** 2026-02-08T23:56:56Z
-- **Completed:** 2026-02-08T23:59:17Z
-- **Tasks:** 2
-- **Files modified:** 2
+- **Duration:** 3 min
+- **Started:** 2026-02-14T18:51:25Z
+- **Completed:** 2026-02-14T18:54:25Z
+- **Tasks:** 1
+- **Files modified:** 1
 
 ## Accomplishments
-- Updated client WebSocket URL construction to use VITE_SERVER_URL for production split deployment
-- Maintained backward compatibility for local development (direct localhost:3000) and tunnel modes
-- Added explicit Vite build configuration with outDir: 'dist' for CF Pages deployment
-- Cleaned up unused serverUrl variable and standardized Docker proxy configuration
+- Rewrote server Dockerfile with three-stage build (base, dev, client-build, production)
+- Production stage now includes client assets copied from client-build intermediate stage
+- Changed production port from 8080 to 3000 for unified server + client deployment
+- Verified ARM64 build compatibility for Oracle Cloud Ampere A1 VPS
+- Dev stage preserved for Docker Compose local development workflow
 
 ## Task Commits
 
 Each task was committed atomically:
 
-1. **Task 1: Update useGameSocket WebSocket URL for split deployment** - `5325e7a` (feat)
-2. **Task 2: Update Vite config for production build output** - `7757282` (feat)
+1. **Task 1: Update server Dockerfile for unified production build** - `ae15a72` (feat)
 
 ## Files Created/Modified
-- `packages/client/src/composables/useGameSocket.ts` - WebSocket URL construction with VITE_SERVER_URL support
-- `packages/client/vite.config.ts` - Build configuration for CF Pages and clean Docker proxy setup
+- `packages/server/Dockerfile` - Multi-stage build with client-build stage, unified production stage serving static files + WebSocket on port 3000
 
 ## Decisions Made
-
-**1. Replace VITE_WS_URL with VITE_SERVER_URL**
-- Rationale: Consistency with research phase (12-01) naming convention
-- Impact: Production deployments will set VITE_SERVER_URL instead of VITE_WS_URL
-
-**2. Three-tier WebSocket URL strategy**
-- VITE_SERVER_URL present: Use for split deployment (e.g., wss://shit-head-server.fly.dev)
-- localhost: Direct connection to localhost:3000 (bypasses Vite proxy)
-- tunnel/other: Proxy through current host with protocol detection
-- Rationale: Explicit branching logic clearer than nested ternary, handles all deployment modes
-
-**3. Remove unused serverUrl variable from vite.config.ts**
-- Rationale: Proxy targets hardcoded to host.docker.internal:3000 for Docker compatibility
-- Impact: Cleaner config, no misleading unused variables
+- **Production port changed from 8080 to 3000** - Unified deployment requires single port for both static files and WebSocket (server index.ts already supports serving client/dist when present)
+- **Client assets path is packages/client/dist** - Matches server's resolution path from index.ts: `join(import.meta.dir, '../../client/dist')` which from `/app/packages/server/src/` resolves to `/app/packages/client/dist/`
+- **Dev stage unchanged** - Preserves Docker Compose local development workflow without regression
 
 ## Deviations from Plan
 
@@ -92,27 +79,24 @@ None - plan executed exactly as written.
 
 ## Issues Encountered
 
-None
+None - ARM64 build completed successfully in under 30 seconds (cross-compilation was not needed on this development machine).
+
+## User Setup Required
+
+None - no external service configuration required.
 
 ## Next Phase Readiness
 
-**Ready for:**
-- Phase 12-03: Fly.io server deployment setup
-- Phase 12-04: Cloudflare Pages client deployment setup
-
-**Prerequisites complete:**
-- Client can connect to separate server origin via VITE_SERVER_URL
-- Vite build outputs to dist/ for CF Pages
-- Local development and tunnel modes continue to work without changes
-
-**Notes:**
-- VITE_SERVER_URL must be set at build time for CF Pages (build environment variable)
-- Format: wss://your-server.fly.dev (no trailing slash, path /game-ws appended by client)
+Ready for Phase 12 Plan 03 (Oracle Cloud + Infisical setup). The unified Docker image can now be deployed to a single Oracle Cloud VPS with:
+- Client static files served from /app/packages/client/dist
+- WebSocket + API on same port (3000)
+- ARM64 compatibility verified
+- Production environment variables: NODE_ENV=production, PORT=3000
 
 ---
 *Phase: 12-deployment-production-polish*
-*Completed: 2026-02-08*
+*Completed: 2026-02-14*
 
 ## Self-Check: PASSED
 
-All files exist and all commits verified.
+All files and commits verified.
