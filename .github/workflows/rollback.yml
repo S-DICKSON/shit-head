@@ -4,80 +4,57 @@ on:
   workflow_dispatch:
     inputs:
       target_sha:
-        description: 'Git SHA to rollback to (short or full)'
+        description: 'Git SHA to rollback to (must have been deployed previously)'
         required: true
         type: string
 
 jobs:
-  rollback-server:
+  rollback:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+      id-token: write
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
         with:
           ref: ${{ inputs.target_sha }}
 
-      - name: Install SOPS and age
-        run: |
-          SOPS_VERSION=3.9.4
-          AGE_VERSION=1.2.0
-          curl -fsSL -o /usr/local/bin/sops \
-            "https://github.com/getsops/sops/releases/download/v${SOPS_VERSION}/sops-v${SOPS_VERSION}.linux.amd64"
-          chmod +x /usr/local/bin/sops
-          curl -fsSL "https://github.com/FiloSottile/age/releases/download/v${AGE_VERSION}/age-v${AGE_VERSION}-linux-amd64.tar.gz" \
-            | tar -xz --strip-components=1 -C /usr/local/bin age/age age/age-keygen
-          chmod +x /usr/local/bin/age /usr/local/bin/age-keygen
-
-      - name: Decrypt secrets
-        env:
-          SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
-        run: |
-          sops -d --output-type json infra/secrets.sops.yaml | jq -r 'to_entries[] | "\(.key)=\(.value)"' >> "$GITHUB_ENV"
-
-      - name: Deploy rollback to Fly.io
-        uses: superfly/flyctl-actions/setup-flyctl@master
-
-      - run: flyctl deploy
-        env:
-          FLY_API_TOKEN: ${{ env.fly_api_token }}
-
-  rollback-client:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+      - name: Fetch Infisical secrets
+        uses: Infisical/secrets-action@v1.0.6
         with:
-          ref: ${{ inputs.target_sha }}
+          client-id: ${{ secrets.INFISICAL_CLIENT_ID }}
+          client-secret: ${{ secrets.INFISICAL_CLIENT_SECRET }}
+          env-slug: production
+          project-slug: shithead-game
+          export-type: env
 
-      - name: Install SOPS and age
-        run: |
-          SOPS_VERSION=3.9.4
-          AGE_VERSION=1.2.0
-          curl -fsSL -o /usr/local/bin/sops \
-            "https://github.com/getsops/sops/releases/download/v${SOPS_VERSION}/sops-v${SOPS_VERSION}.linux.amd64"
-          chmod +x /usr/local/bin/sops
-          curl -fsSL "https://github.com/FiloSottile/age/releases/download/v${AGE_VERSION}/age-v${AGE_VERSION}-linux-amd64.tar.gz" \
-            | tar -xz --strip-components=1 -C /usr/local/bin age/age age/age-keygen
-          chmod +x /usr/local/bin/age /usr/local/bin/age-keygen
-
-      - name: Decrypt secrets
-        env:
-          SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
-        run: |
-          sops -d --output-type json infra/secrets.sops.yaml | jq -r 'to_entries[] | "\(.key)=\(.value)"' >> "$GITHUB_ENV"
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
-
-      - name: Build client at target SHA
-        run: cd packages/client && bunx vite build
-        env:
-          VITE_SERVER_URL: ${{ env.vite_server_url }}
-
-      - name: Deploy to Cloudflare Pages
-        uses: cloudflare/wrangler-action@v3
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.1
         with:
-          apiToken: ${{ env.cloudflare_api_token }}
-          accountId: ${{ env.cloudflare_account_id }}
-          command: pages deploy packages/client/dist --project-name=shit-head
+          ssh-private-key: ${{ env.VPS_SSH_PRIVATE_KEY }}
+
+      - name: Rollback on VPS
+        env:
+          REPO_OWNER: ${{ github.repository_owner }}
+          TARGET_SHA: ${{ inputs.target_sha }}
+        run: |
+          ssh -o StrictHostKeyChecking=no ubuntu@${{ env.VPS_PUBLIC_IP }} << ENDSSH
+            # Pull specific version
+            docker pull ghcr.io/${REPO_OWNER}/shithead-server:${TARGET_SHA}
+
+            # Tag it as latest locally for systemd service
+            docker tag ghcr.io/${REPO_OWNER}/shithead-server:${TARGET_SHA} \
+              ghcr.io/${REPO_OWNER}/shithead-server:latest
+
+            # Restart service (picks up new :latest)
+            sudo systemctl restart shithead-game
+
+            # Wait and health check
+            sleep 10
+            curl -f http://localhost:3000/health || exit 1
+
+            echo "Rollback to ${TARGET_SHA} successful!"
+          ENDSSH
