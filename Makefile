@@ -1,5 +1,5 @@
 .PHONY: help dev start build test test-server test-client clean lint lint-fix type-check type-check-server type-check-shared tunnel \
-	deploy-server deploy-client deploy fly-secrets-set infra-init infra-plan infra-apply infra-destroy infra-edit-secrets infra-shell
+	infra-init infra-plan infra-apply infra-destroy infra-shell
 
 .DEFAULT_GOAL := help
 
@@ -56,31 +56,7 @@ clean: ## Clean up containers, volumes, and images
 tunnel: ## Start cloudflared tunnel for mobile testing (one command)
 	docker compose -f docker-compose.tunnel.yml up --build
 
-# --- Deployment ---
-
-SOPS_DECRYPT = cd infra && SOPS_AGE_KEY_FILE=~/.config/sops/age/keys.txt sops -d --extract
-
-FLYCTL = @FLY_TOKEN=$$($(SOPS_DECRYPT) '["fly_api_token"]' secrets.sops.yaml) && \
-	docker run --rm -v "$(CURDIR):/app" -w /app -e "FLY_API_TOKEN=$$FLY_TOKEN" flyio/flyctl:latest
-
-deploy-server: ## Deploy server to Fly.io
-	$(FLYCTL) deploy
-
-deploy-client: ## Deploy client to Cloudflare Pages
-	@export VITE_SERVER_URL=$$($(SOPS_DECRYPT) '["vite_server_url"]' secrets.sops.yaml) && \
-		cd packages/client && bunx vite build && cd ../.. && \
-		export CLOUDFLARE_API_TOKEN=$$($(SOPS_DECRYPT) '["cloudflare_api_token"]' secrets.sops.yaml) && \
-		export CLOUDFLARE_ACCOUNT_ID=$$($(SOPS_DECRYPT) '["cloudflare_account_id"]' secrets.sops.yaml) && \
-		bunx wrangler pages deploy packages/client/dist --project-name=shit-head
-
-deploy: ## Deploy both server and client
-	$(MAKE) deploy-server
-	$(MAKE) deploy-client
-
-fly-secrets-set: ## Set Fly.io secrets (usage: make fly-secrets-set SECRETS="KEY=val KEY2=val2")
-	$(FLYCTL) secrets set $(SECRETS)
-
-# --- Infrastructure (OpenTofu + SOPS) ---
+# --- Infrastructure (OpenTofu) ---
 
 INFRA_RUN = docker compose -f docker-compose.infra.yml run --rm infra
 
@@ -95,9 +71,6 @@ infra-apply: ## Apply infrastructure changes
 
 infra-destroy: ## Tear down all infrastructure
 	$(INFRA_RUN) destroy -auto-approve
-
-infra-edit-secrets: ## Edit encrypted secrets (requires local sops + age)
-	cd infra && EDITOR=nano SOPS_AGE_KEY_FILE=~/.config/sops/age/keys.txt sops secrets.sops.yaml
 
 infra-shell: ## Open debug shell in infra container
 	$(INFRA_RUN) bash
