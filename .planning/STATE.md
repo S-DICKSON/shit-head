@@ -9,19 +9,19 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 
 ## Current Position
 
-Phase: 15 of 15 (Mobile UX Improvements)
-Plan: 2 of 2 (Phase complete)
-Status: Phase complete
-Last activity: 2026-02-10 — Completed quick task 001: Visual 8-card offset on discard pile
+Phase: 12 of 15 (Deployment - Production Polish)
+Plan: 1 of 3 (In progress)
+Status: In progress
+Last activity: 2026-02-14 — Completed 12-01-PLAN.md
 
-Progress: [██████████] 100% (55 plans complete)
+Progress: [█████████░] 93% (56 plans complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 48
+- Total plans completed: 49
 - Average duration: 2.3 minutes
-- Total execution time: 1.96 hours
+- Total execution time: 2.00 hours
 
 **By Phase:**
 
@@ -38,14 +38,14 @@ Progress: [██████████] 100% (55 plans complete)
 | 09 | 7 | 1204s | 172s |
 | 10 | 3 | 451s | 150s |
 | 11 | 1 | 150s | 150s |
-| 12 | 2 | 503s | 252s |
+| 12 | 3 | 628s | 209s |
 | 13 | 1 | 118s | 118s |
 | 14 | 2 | 346s | 173s |
 | 15 | 2 | 506s | 253s |
 
 **Recent Trend:**
-- Last 5 plans: 12-02 (138s), 12-01 (243s), 12-03 (260s), 15-01 (281s), 15-02 (225s)
-- Trend: Steady ~2-4min execution times, mobile UX plans efficient with focused composable creation
+- Last 5 plans: 12-01 (243s), 12-03 (260s), 15-01 (281s), 15-02 (225s), 12-01 (125s)
+- Trend: New Phase 12 plan very efficient at 125s, infrastructure-only plans faster than full-stack
 
 *Updated after each plan completion*
 
@@ -389,7 +389,7 @@ Recent decisions affecting current work:
 - Vite build outputs to dist/ directory for CF Pages deployment
 - Env vars baked into client build via import.meta.env static replacement (build-time only)
 
-**From 12-01:**
+**From 12-01 (OLD - Cloudflare/Fly.io split deployment):**
 - Server no longer serves static files in split deployment (CF Pages serves client, Fly.io serves server)
 - ALLOWED_ORIGINS env var (comma-separated) validated in production mode for WebSocket upgrades
 - Development automatically allows localhost:5173 and localhost:4173 origins
@@ -397,6 +397,16 @@ Recent decisions affecting current work:
 - SIGTERM graceful shutdown: 55s timeout with 100ms polling to allow orderly connection closure
 - Room activity tracking with 24 hour abandonment threshold, cleanup every 5 minutes
 - Connection tracking via Set<ServerWebSocket> for graceful shutdown coordination
+
+**From 12-01 (NEW - Oracle Cloud unified deployment):**
+- Oracle Cloud Always Free Ampere A1 instance (4 OCPU, 24GB RAM, 100GB ARM64)
+- OpenTofu IaC with OCI provider for VCN, security lists, compute instance
+- All OCI credentials marked sensitive and injected via Infisical CLI at apply time
+- Oracle Cloud dual-firewall: Security Lists (cloud-level) + iptables (instance-level)
+- Cloud-init handles Docker + Caddy installation on first boot
+- Systemd service manages game container lifecycle with auto-restart
+- Game container binds to 127.0.0.1:3000, Caddy reverse proxy handles public HTTPS
+- Caddy provides automatic Let's Encrypt HTTPS with zero config
 
 ### Roadmap Evolution
 
@@ -417,14 +427,15 @@ Recent decisions affecting current work:
 
 ### Blockers/Concerns
 
-**User action required:** Render account setup and credentials (see 01-USER-SETUP.md)
-- Deploy workflow will fail until GitHub secrets are configured
-- OpenTofu requires API key to provision infrastructure
-- Not a blocker for development, only for deployment
+**User action required:** Oracle Cloud and Infisical setup (see 12-01-PLAN.md user_setup section)
+- Oracle Cloud account creation and API key generation required for infrastructure provisioning
+- Infisical project setup with OCI credentials required for `tofu apply`
+- GitHub Actions OIDC identity configuration in Infisical for automated deployment
+- Not a blocker for local development, only for infrastructure provisioning and deployment
 
 ## Session Continuity
 
-Last session: 2026-02-09
-Stopped at: Phase 15 verified and complete — all 15 phases delivered
+Last session: 2026-02-14
+Stopped at: Completed 12-01-PLAN.md (Oracle Cloud Infrastructure setup)
 Resume file: None
 
