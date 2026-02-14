@@ -23,7 +23,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 9: Connection Management & Reconnection** - Disconnect detection and reconnection flow
 - [x] **Phase 10: Client UI & Card Interactions** - Vue UI with card hand display and play actions
 - [x] **Phase 11: Game Feedback & Turn Indicators** - Turn state display and visual cues
-- [x] **Phase 12: Deployment & Production Polish** - Production build, hosting, and monitoring
+- [ ] **Phase 12: Deployment & Production Polish** - Oracle Cloud VPS deployment with OpenTofu, Infisical, and Caddy
 - [x] **Phase 13: ESLint Setup & Fixes** - Install ESLint for server and client, add to Makefile, fix issues
 - [x] **Phase 14: Ngrok Local Dev Sharing** - Ngrok tunnel so local dev can be shared and tested on mobile
 - [x] **Phase 15: Mobile UX Improvements** - Pickup pile safety, turn indicators, timer relocation, 8-card visibility, hand card grouping
@@ -227,7 +227,7 @@ Plans:
 - [x] 11-01-PLAN.md — Turn banner, enhanced opponent indicators, and ARIA accessibility
 
 ### Phase 12: Deployment & Production Polish
-**Goal**: Game is deployed to production and ready for real players
+**Goal**: Game is deployed to Oracle Cloud VPS with unified Docker deployment, OpenTofu IaC, Infisical secrets, and Caddy auto-HTTPS
 **Depends on**: Phase 11
 **Requirements**: None (deployment infrastructure)
 **Success Criteria** (what must be TRUE):
@@ -239,9 +239,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [x] 12-01-PLAN.md — Server production hardening (Origin validation, health metrics, graceful shutdown, room cleanup)
-- [x] 12-02-PLAN.md — Client split deployment URL (VITE_SERVER_URL support, Vite build config)
-- [x] 12-03-PLAN.md — Deployment infrastructure (Dockerfile, fly.toml, deploy/rollback workflows, OpenTofu IaC)
+- [ ] 12-01-PLAN.md — OpenTofu OCI infrastructure (VCN, subnet, security list, Ampere A1 instance, cloud-init)
+- [ ] 12-02-PLAN.md — Unified production Dockerfile (multi-stage build with client assets)
+- [ ] 12-03-PLAN.md — GitHub Actions deploy and rollback workflows (Infisical + GHCR + SSH)
 
 ### Phase 13: ESLint Setup & Fixes
 **Goal**: ESLint is configured for all packages with consistent rules and all issues are resolved
@@ -308,11 +308,11 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 9. Connection Management & Reconnection | 7/7 | Complete | 2026-02-08 |
 | 10. Client UI & Card Interactions | 3/3 | Complete | 2026-02-08 |
 | 11. Game Feedback & Turn Indicators | 1/1 | Complete | 2026-02-09 |
-| 12. Deployment & Production Polish | 3/3 | Complete | 2026-02-09 |
+| 12. Deployment & Production Polish | 0/3 | Replanning | - |
 | 13. ESLint Setup & Fixes | 1/1 | Complete | 2026-02-08 |
 | 14. Ngrok Local Dev Sharing | 2/2 | Complete | 2026-02-08 |
 | 15. Mobile UX Improvements | 2/2 | Complete | 2026-02-09 |
 
 ---
 *Roadmap created: 2026-02-07*
-*Last updated: 2026-02-09 after Phase 15 execution*
+*Last updated: 2026-02-14 after Phase 12 replanning (Oracle Cloud + Infisical architecture)*
