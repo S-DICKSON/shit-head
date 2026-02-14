@@ -2,78 +2,108 @@ name: Deploy to Production
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
 
 jobs:
-  deploy-client:
+  deploy:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      deployments: write
+      packages: write
+      id-token: write
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: Install SOPS and age
-        run: |
-          SOPS_VERSION=3.9.4
-          AGE_VERSION=1.2.0
-          curl -fsSL -o /usr/local/bin/sops \
-            "https://github.com/getsops/sops/releases/download/v${SOPS_VERSION}/sops-v${SOPS_VERSION}.linux.amd64"
-          chmod +x /usr/local/bin/sops
-          curl -fsSL "https://github.com/FiloSottile/age/releases/download/v${AGE_VERSION}/age-v${AGE_VERSION}-linux-amd64.tar.gz" \
-            | tar -xz --strip-components=1 -C /usr/local/bin age/age age/age-keygen
-          chmod +x /usr/local/bin/age /usr/local/bin/age-keygen
-
-      - name: Decrypt secrets
-        env:
-          SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
-        run: |
-          sops -d --output-type json infra/secrets.sops.yaml | jq -r 'to_entries[] | "\(.key)=\(.value)"' >> "$GITHUB_ENV"
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
-
-      - name: Build client
-        run: cd packages/client && bunx vite build
-        env:
-          VITE_SERVER_URL: ${{ env.vite_server_url }}
-
-      - name: Deploy to Cloudflare Pages
-        uses: cloudflare/wrangler-action@v3
+      - name: Fetch Infisical secrets
+        uses: Infisical/secrets-action@v1.0.6
         with:
-          apiToken: ${{ env.cloudflare_api_token }}
-          accountId: ${{ env.cloudflare_account_id }}
-          command: pages deploy packages/client/dist --project-name=shit-head
+          client-id: ${{ secrets.INFISICAL_CLIENT_ID }}
+          client-secret: ${{ secrets.INFISICAL_CLIENT_SECRET }}
+          env-slug: production
+          project-slug: shithead-game
+          export-type: env
 
-  deploy-server:
-    runs-on: ubuntu-latest
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-    steps:
-      - uses: actions/checkout@v4
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install SOPS and age
-        run: |
-          SOPS_VERSION=3.9.4
-          AGE_VERSION=1.2.0
-          curl -fsSL -o /usr/local/bin/sops \
-            "https://github.com/getsops/sops/releases/download/v${SOPS_VERSION}/sops-v${SOPS_VERSION}.linux.amd64"
-          chmod +x /usr/local/bin/sops
-          curl -fsSL "https://github.com/FiloSottile/age/releases/download/v${AGE_VERSION}/age-v${AGE_VERSION}-linux-amd64.tar.gz" \
-            | tar -xz --strip-components=1 -C /usr/local/bin age/age age/age-keygen
-          chmod +x /usr/local/bin/age /usr/local/bin/age-keygen
+      - name: Build and push ARM64 image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: packages/server/Dockerfile
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/shithead-server:latest,ghcr.io/${{ github.repository_owner }}/shithead-server:${{ github.sha }}
+          platforms: linux/arm64
+          target: production
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
-      - name: Decrypt secrets
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.1
+        with:
+          ssh-private-key: ${{ env.VPS_SSH_PRIVATE_KEY }}
+
+      - name: Deploy to Oracle Cloud VPS
         env:
-          SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GHCR_ACTOR: ${{ github.actor }}
+          REPO_OWNER: ${{ github.repository_owner }}
+          DEPLOY_DOMAIN: ${{ env.DOMAIN }}
+          DEPLOY_ORIGINS: ${{ env.ALLOWED_ORIGINS }}
         run: |
-          sops -d --output-type json infra/secrets.sops.yaml | jq -r 'to_entries[] | "\(.key)=\(.value)"' >> "$GITHUB_ENV"
+          ssh -o StrictHostKeyChecking=no ubuntu@${{ env.VPS_PUBLIC_IP }} << ENDSSH
+            # Login to GHCR (variables interpolated by runner before SSH)
+            echo "${GHCR_TOKEN}" | docker login ghcr.io -u ${GHCR_ACTOR} --password-stdin
 
-      - name: Deploy to Fly.io
-        uses: superfly/flyctl-actions/setup-flyctl@master
+            # Pull latest image
+            docker pull ghcr.io/${REPO_OWNER}/shithead-server:latest
 
-      - run: flyctl deploy
-        env:
-          FLY_API_TOKEN: ${{ env.fly_api_token }}
+            # Write .env file for the container
+            cat > /opt/shithead/.env << ENVEOF
+          NODE_ENV=production
+          PORT=3000
+          ALLOWED_ORIGINS=${DEPLOY_ORIGINS}
+          ENVEOF
+
+            # Update systemd service with correct image owner
+            sudo sed -i "s|ghcr.io/OWNER/|ghcr.io/${REPO_OWNER}/|g" /etc/systemd/system/shithead-game.service
+            sudo systemctl daemon-reload
+
+            # Configure Caddy with domain
+            cat | sudo tee /etc/caddy/Caddyfile << CADDYEOF
+          ${DEPLOY_DOMAIN} {
+              reverse_proxy localhost:3000
+              log {
+                  output file /var/log/caddy/shithead.log
+              }
+          }
+          CADDYEOF
+            sudo systemctl reload caddy || sudo systemctl restart caddy
+
+            # Restart game service
+            sudo systemctl enable shithead-game
+            sudo systemctl restart shithead-game
+
+            # Wait for startup
+            sleep 10
+
+            # Health check
+            curl -f http://localhost:3000/health || exit 1
+
+            echo "Deployment successful!"
+          ENDSSH
+
+      - name: Post-deploy health check
+        run: |
+          sleep 5
+          curl -f https://${{ env.DOMAIN }}/health || echo "External health check failed (DNS/SSL may still be propagating)"
