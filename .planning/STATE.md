@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 ## Current Position
 
 Phase: 12 of 15 (Deployment - Production Polish)
-Plan: 2 of 3 (In progress)
-Status: In progress
-Last activity: 2026-02-14 — Completed 12-02-PLAN.md
+Plan: 3 of 3 (Phase complete)
+Status: Phase complete
+Last activity: 2026-02-14 — Completed 12-03-PLAN.md
 
-Progress: [█████████░] 94% (57 plans complete)
+Progress: [█████████░] 95% (58 plans complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 50
+- Total plans completed: 51
 - Average duration: 2.3 minutes
-- Total execution time: 2.03 hours
+- Total execution time: 2.05 hours
 
 **By Phase:**
 
@@ -38,14 +38,14 @@ Progress: [█████████░] 94% (57 plans complete)
 | 09 | 7 | 1204s | 172s |
 | 10 | 3 | 451s | 150s |
 | 11 | 1 | 150s | 150s |
-| 12 | 4 | 808s | 202s |
+| 12 | 5 | 923s | 185s |
 | 13 | 1 | 118s | 118s |
 | 14 | 2 | 346s | 173s |
 | 15 | 2 | 506s | 253s |
 
 **Recent Trend:**
-- Last 5 plans: 12-03 (260s), 15-01 (281s), 15-02 (225s), 12-01 (125s), 12-02 (180s)
-- Trend: Phase 12 Docker plans efficient, infrastructure work faster than full-stack features
+- Last 5 plans: 12-03 (115s), 15-01 (281s), 15-02 (225s), 12-01 (125s), 12-02 (180s)
+- Trend: Phase 12 infrastructure automation extremely efficient, workflow updates faster than feature work
 
 *Updated after each plan completion*
 
@@ -415,6 +415,15 @@ Recent decisions affecting current work:
 - Game container binds to 127.0.0.1:3000, Caddy reverse proxy handles public HTTPS
 - Caddy provides automatic Let's Encrypt HTTPS with zero config
 
+**From 12-03:**
+- GitHub Actions CI/CD builds ARM64 image and deploys to Oracle Cloud VPS via SSH
+- Infisical client-id/client-secret authentication for GitHub Actions (simpler than OIDC)
+- SSH heredoc pattern: step-level env resolves GitHub Actions variables before remote execution
+- Dual image tagging (:latest and :sha) for flexible rollback capability
+- Caddy configuration written during deploy with domain from Infisical secrets
+- Rollback workflow pulls specific SHA-tagged image, retags as :latest, restarts systemd service
+- Health checks both internal (localhost:3000) and external (domain) after deployment
+
 ### Roadmap Evolution
 
 - Phase 13 added: ESLint Setup & Fixes — Install ESLint for server and client, add to Makefile, fix issues
@@ -434,15 +443,16 @@ Recent decisions affecting current work:
 
 ### Blockers/Concerns
 
-**User action required:** Oracle Cloud and Infisical setup (see 12-01-PLAN.md user_setup section)
+**User action required:** Oracle Cloud, Infisical, and GitHub setup (see 12-01-PLAN.md and 12-03-PLAN.md user_setup sections)
 - Oracle Cloud account creation and API key generation required for infrastructure provisioning
-- Infisical project setup with OCI credentials required for `tofu apply`
-- GitHub Actions OIDC identity configuration in Infisical for automated deployment
+- Infisical project setup with OCI credentials and production secrets (VPS_SSH_PRIVATE_KEY, VPS_PUBLIC_IP, DOMAIN, ALLOWED_ORIGINS)
+- GitHub Actions secrets configuration (INFISICAL_CLIENT_ID, INFISICAL_CLIENT_SECRET)
+- GHCR (GitHub Container Registry) enabled for repository
 - Not a blocker for local development, only for infrastructure provisioning and deployment
 
 ## Session Continuity
 
 Last session: 2026-02-14
-Stopped at: Completed 12-02-PLAN.md (Unified production Docker image)
+Stopped at: Completed 12-03-PLAN.md (Oracle Cloud CI/CD workflows) - Phase 12 complete
 Resume file: None
 
