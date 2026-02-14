@@ -1,964 +1,926 @@
 # Phase 12: Deployment & Production Polish - Research
 
-**Researched:** 2026-02-14 (RE-RESEARCHED with alternative deployment options)
-**Domain:** Bun monorepo deployment with WebSocket server and Vue/Vite SPA
-**Confidence:** HIGH
+**Researched:** 2026-02-14
+**Domain:** Infrastructure automation, deployment, secret management
+**Confidence:** MEDIUM
 
 ## Summary
 
-This research explores **alternative deployment architectures** for a Bun + WebSocket multiplayer game. The previous research recommended **split deployment** (Cloudflare Pages + Fly.io), but this re-research evaluates **simpler unified deployment** options that are easier to manage for small teams.
+This research focuses on deploying a Bun WebSocket game server to Oracle Cloud Always Free tier infrastructure. The user has made specific locked infrastructure choices: Oracle Cloud VPS (Ampere A1 ARM instances), OpenTofu for IaC, Infisical for secret management, and GitHub Actions for CI/CD.
 
-**Key finding:** For a small-scale multiplayer card game with WebSocket requirements, **unified deployment** (single platform hosting both client and server) offers significant advantages: simpler configuration, no CORS/Origin validation complexity, single deployment target, and easier debugging. The split architecture's CDN benefits are less relevant for a WebSocket-heavy app where most traffic is persistent connections, not static assets.
+The current codebase already has Docker containers configured and existing GitHub Actions workflows (currently deploying to Cloudflare Pages + Fly.io via SOPS). The migration involves:
+1. Provisioning Oracle Cloud Ampere A1 compute instance via OpenTofu
+2. Replacing SOPS with Infisical for secret management
+3. Deploying Docker container to VPS via SSH in GitHub Actions
+4. Configuring Caddy reverse proxy for automatic HTTPS and WebSocket support
+5. Setting up systemd services for container management
+6. Implementing monitoring and cleanup for production readiness
 
-**Primary recommendation:** **Railway Hobby Plan ($5/month)** with unified Bun.serve() deployment. Bun natively serves static files from built client assets while handling WebSocket connections on the same origin. Railway provides Docker deployment, persistent connections (no spin-down), automatic HTTPS, and usage-based pricing that fits hobby-scale projects perfectly.
+The server already supports unified deployment (serves both static files and WebSocket from single Bun process), has health check endpoint with metrics, 24-hour room cleanup, and graceful shutdown handling.
 
-**Alternative options:** Render paid tier ($7/month for persistent), self-hosted VPS with Coolify (Hetzner €4/month + free Coolify), or Fly.io unified ($0 free tier but more complex than Railway).
+**Primary recommendation:** Use Docker on VPS with Caddy reverse proxy, systemd service management, and Infisical CLI for secret injection during OpenTofu apply and GitHub Actions deploy.
 
-**Why unified over split:** For this project size (<100 concurrent users), a unified deployment eliminates split-architecture complexity (Origin validation, CORS, VITE_SERVER_URL management, coordinated rollbacks) while maintaining production-ready performance. The Docker container serves both client assets and WebSocket connections from a single Bun process.
+##User Constraints (from phase context)
 
-## Deployment Architecture Options
+### Locked Decisions
+- **Oracle Cloud Always Free Tier VPS** — Ampere A1 ARM instances (4 OCPUs, 24 GB RAM total)
+- **OpenTofu for IaC** — Infrastructure as Code using OpenTofu with OCI provider
+- **Infisical for secret management** — NOT GitHub Secrets alone, use Infisical for managing deployment secrets
+- **GitHub Actions for CI/CD** — Deploy pipeline using GitHub Actions
+- **Unified deployment** — Single VPS running both client and server (Bun serves static files + WebSocket)
 
-Comparison of viable deployment architectures for Bun + WebSocket + Vue SPA:
+### Claude's Discretion
+- Deployment method (Docker on VPS vs direct Bun install)
+- Reverse proxy setup (nginx, Caddy, or Bun direct)
+- SSL/TLS approach (Let's Encrypt, Caddy auto-SSL, etc.)
+- Monitoring approach
+- Backup strategy
 
-### Option 1: Unified Railway Deployment (RECOMMENDED)
+### Deferred Ideas (OUT OF SCOPE)
+- None specified
 
-**Architecture:** Single Docker container running Bun.serve() that serves both static client assets and WebSocket server.
+## Standard Stack
 
-| Aspect | Details |
-|--------|---------|
-| **Platform** | Railway Hobby Plan |
-| **Cost** | $5/month (includes $5 usage credit) |
-| **Deployment** | Docker image from GitHub Actions → Railway |
-| **Client Serving** | Bun.file() serves built client assets from `/dist` |
-| **WebSocket** | Same origin (no CORS/Origin issues) |
-| **HTTPS/SSL** | Automatic (Railway managed) |
-| **Persistence** | Always-on (no spin-down) |
-| **Limits** | 8 vCPU, 8 GB RAM per service (far exceeds needs) |
-| **Bandwidth** | Usage-based ($0.05/GB egress) |
-| **Complexity** | **LOW** - Single deployment target, one Dockerfile |
+### Core Infrastructure
+| Component | Version/Type | Purpose | Why Standard |
+|-----------|-------------|---------|--------------|
+| Oracle Cloud | Always Free tier | Hosting infrastructure | User requirement - free tier ARM instances |
+| OpenTofu | >= 1.8 | Infrastructure as Code | Open-source Terraform fork, user requirement |
+| Infisical | Latest | Secret management | User requirement - replaces SOPS |
+| GitHub Actions | N/A | CI/CD pipeline | User requirement - already in use |
+| Docker | Latest | Container runtime | Already configured, ARM64 support |
+| Bun | 1.x | Application runtime | Already in use - native WebSocket support |
 
-**Why recommended:**
-- **Simplicity:** Single platform, single deployment, no multi-service coordination
-- **Cost-effective:** $5/month covers typical hobby usage entirely
-- **No CORS complexity:** Same-origin = no Origin validation needed
-- **Easy debugging:** All logs in one place, single process to monitor
-- **WebSocket-friendly:** Persistent connections, no spin-down issues
-- **Docker-native:** Existing Dockerfile works with minimal changes
-
-**Limitations:**
-- Not free ($5/month minimum vs $0 for split CF Pages + Fly.io)
-- No global CDN edge caching (but WebSocket apps don't benefit much anyway)
-- Initial static asset load not CDN-accelerated
-
-### Option 2: Unified Fly.io Deployment
-
-**Architecture:** Single Docker container running Bun.serve() on Fly.io free tier.
-
-| Aspect | Details |
-|--------|---------|
-| **Platform** | Fly.io Free Tier |
-| **Cost** | $0/month (3 shared VMs, 256 MB each, 160 GB bandwidth) |
-| **Deployment** | Docker image → Fly.io via flyctl |
-| **Client Serving** | Bun.file() serves static assets |
-| **WebSocket** | Same origin |
-| **HTTPS/SSL** | Automatic |
-| **Persistence** | Always-on (auto_stop_machines = false) |
-| **Complexity** | **MEDIUM** - fly.toml config, flyctl CLI learning curve |
-
-**Why consider:**
-- **Free tier:** $0/month if usage stays within limits
-- **Same simplicity:** Unified deployment like Railway
-- **Global regions:** Can deploy to multiple regions for low latency
-
-**Limitations:**
-- More complex setup (fly.toml, flyctl commands, machine config)
-- Free tier uncertainty (community reports mixed on long-term viability)
-- 256 MB RAM limit on free tier (sufficient but less headroom than Railway)
-- CLI-centric workflow (less friendly than Railway's dashboard)
-
-### Option 3: Render Paid Tier
-
-**Architecture:** Unified deployment on Render's paid Web Service tier.
-
-| Aspect | Details |
-|--------|---------|
-| **Platform** | Render Web Service (paid) |
-| **Cost** | $7/month minimum (always-on) |
-| **Deployment** | Docker or native runtime → Render |
-| **Client Serving** | Bun.file() serves static assets |
-| **WebSocket** | Same origin, persistent connections |
-| **Persistence** | Always-on (no spin-down on paid tier) |
-| **Complexity** | **LOW** - Simple dashboard, render.yaml config |
-
-**Why consider:**
-- Simple UI and setup (beginner-friendly)
-- Predictable pricing ($7/month flat)
-- Good documentation for full-stack deployments
-
-**Limitations:**
-- **More expensive** than Railway ($7 vs $5)
-- **Free tier unusable** for WebSockets (15-min spin-down kills connections)
-- Less flexible pricing (flat $7 vs Railway's usage-based within $5 credit)
-
-### Option 4: Self-Hosted VPS + Coolify
-
-**Architecture:** VPS running Coolify (self-hosted PaaS) deploying Docker containers.
-
-| Aspect | Details |
-|--------|---------|
-| **Platform** | Hetzner VPS + Coolify |
-| **Cost** | €4-10/month VPS + $0 Coolify (open-source) |
-| **Deployment** | Coolify pulls from GitHub → Docker on VPS |
-| **Client Serving** | Bun.file() or Traefik reverse proxy |
-| **WebSocket** | Automatic SSL via Traefik + Let's Encrypt |
-| **Complexity** | **HIGH** - VPS management, Coolify setup, server maintenance |
-
-**Why consider:**
-- **Full control:** Own infrastructure, no vendor lock-in
-- **Cheapest long-term:** €4/month Hetzner VPS + free Coolify
-- **Learning opportunity:** Deep understanding of deployment infrastructure
-- **Scalable:** Upgrade VPS resources as needed
-
-**Limitations:**
-- **High complexity:** Server management, security updates, backups, monitoring
-- **Time investment:** Setup, maintenance, troubleshooting all on you
-- **Single point of failure:** No automatic redundancy/failover
-- **Requires DevOps skills:** Not beginner-friendly
-
-### Option 5: Split Deployment (Previous Research)
-
-**Architecture:** Cloudflare Pages (client) + Fly.io (server).
-
-| Aspect | Details |
-|--------|---------|
-| **Platform** | CF Pages + Fly.io |
-| **Cost** | $0/month (both free tiers) |
-| **Deployment** | Client → CF Pages via wrangler, Server → Fly.io via flyctl |
-| **Client Serving** | CF Pages CDN (300+ edge locations) |
-| **WebSocket** | Cross-origin (requires Origin validation) |
-| **Complexity** | **HIGH** - Two platforms, CORS config, Origin validation, VITE_SERVER_URL |
-
-**Why previous research recommended it:**
-- **Free tier:** $0/month total cost
-- **Global CDN:** Client assets served from 300+ edge locations
-- **Unlimited bandwidth:** CF Pages unlimited, Fly.io 160 GB/month
-- **Best CDN performance:** Static assets globally cached
-
-**Why reconsidering:**
-- **High complexity:** Managing two platforms, coordinating deployments, debugging cross-origin issues
-- **WebSocket-heavy app:** CDN benefits are minimal when 90%+ of traffic is persistent WebSocket connections
-- **CORS overhead:** Origin validation, ALLOWED_ORIGINS management, security surface area
-- **Rollback coordination:** Must roll back both client and server together
-- **Dev/prod parity gap:** Split in production, unified in development
-
-## Decision Matrix
-
-| Criterion | Railway Unified | Fly.io Unified | Render Paid | VPS + Coolify | CF Pages + Fly.io |
-|-----------|-----------------|----------------|-------------|---------------|-------------------|
-| **Cost** | $5/mo | $0/mo | $7/mo | €4-10/mo | $0/mo |
-| **Simplicity** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐ | ⭐⭐ |
-| **WebSocket Support** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
-| **Setup Time** | 30 min | 1-2 hrs | 30 min | 4-8 hrs | 2-3 hrs |
-| **Debugging** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐ |
-| **Dev/Prod Parity** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐ |
-| **Maintenance** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐ | ⭐⭐⭐ |
-| **Scalability** | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
-| **Free Tier** | ❌ | ✅ | ❌ | ❌ | ✅ |
-
-**Recommendation ranking for this project:**
-1. **Railway Unified** - Best balance of simplicity, cost, and features
-2. **Fly.io Unified** - Free tier but more complex setup
-3. **Render Paid** - Simple but $2 more expensive than Railway
-4. **VPS + Coolify** - Too complex for hobby project (overkill)
-5. **CF Pages + Fly.io** - Unnecessary complexity for unified app
-
-## Standard Stack (Unified Railway Deployment)
-
-### Core
-
-| Library/Tool | Version | Purpose | Why Standard |
-|--------------|---------|---------|--------------|
-| Railway | 2026 | Unified deployment platform | Docker-native, usage-based pricing, persistent connections, automatic HTTPS, simple dashboard |
-| Bun.serve() | 1.x | Full-stack server (static + WebSocket) | Native static file serving, WebSocket support, single process, production-ready |
-| Docker | Latest | Container packaging | Railway native, existing Dockerfiles work, reproducible builds |
-| GitHub Actions | 2026 | CI/CD pipeline | Free (2000 min/month), Docker build + Railway deploy, existing workflows reusable |
-| GitHub Container Registry | 2026 | Docker image storage | Free (500 MB private), SHA-tagged rollback, GitHub-native |
-
-### Supporting
-
-| Library/Tool | Version | Purpose | When to Use |
-|--------------|---------|---------|-------------|
-| railway CLI | Latest | Local deployment testing | Optional - can deploy via GitHub integration or CLI |
-| docker/build-push-action | v5 | Docker image builds in CI | Build server + client container in GitHub Actions |
-| docker/metadata-action | v5 | Docker tag generation | SHA-based tags for rollback capability |
-| Bun.build | 1.x | Client asset bundling | Pre-build client assets before Docker COPY |
+### Supporting Components
+| Component | Version | Purpose | When to Use |
+|-----------|---------|---------|-------------|
+| Caddy | 2.x | Reverse proxy + HTTPS | Automatic Let's Encrypt, WebSocket support |
+| systemd | N/A | Service management | Container lifecycle, auto-restart |
+| iptables | N/A | OS-level firewall | Required on Oracle Cloud Ubuntu/OL images |
+| cloud-init | N/A | VM initialization | Docker installation at instance creation |
 
 ### Alternatives Considered
-
 | Instead of | Could Use | Tradeoff |
 |------------|-----------|----------|
-| Railway | Fly.io unified | Free but more complex CLI setup |
-| Railway | Render paid | $7/mo vs $5/mo, similar simplicity |
-| Railway | VPS + Coolify | Cheaper long-term but high maintenance |
-| Unified deployment | Split (CF Pages + Fly.io) | Free but much more complex |
-| Bun.serve() static | Express + serve-static | More boilerplate, less performant |
-| GitHub Actions | Railway auto-deploy | GH Actions gives more control over build/test |
+| Caddy | nginx | nginx requires manual Let's Encrypt setup, more complex config |
+| Docker | Direct Bun install | Docker provides isolation, easier rollback, consistent environments |
+| systemd | Manual process | systemd provides auto-restart, boot startup, graceful shutdown |
 
-**Installation (Railway):**
-
+**Installation (on VPS):**
 ```bash
-# Install Railway CLI (optional - can use web dashboard)
-npm install -g @railway/cli
+# Docker installation via cloud-init
+curl -fsSL https://get.docker.com | sh
+usermod -aG docker ubuntu
 
-# Login to Railway
-railway login
-
-# Link project to Railway service (one-time)
-railway link
-
-# Deploy manually (or use GitHub integration)
-railway up
+# Caddy installation
+sudo apt install -y debian-keyring debian-archive-keyring apt-transport-https curl
+curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | sudo gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | sudo tee /etc/apt/sources.list.d/caddy-stable.list
+sudo apt update
+sudo apt install caddy
 ```
 
 ## Architecture Patterns
 
-### Recommended Project Structure (Unified Deployment)
-
+### Recommended Infrastructure Structure
 ```
-.github/workflows/
-├── ci.yml                      # PR checks (type-check, lint, test)
-└── deploy-railway.yml          # Deploy unified container to Railway
-packages/
-├── server/
-│   ├── Dockerfile              # Unified: builds client + serves with Bun
-│   ├── src/
-│   │   ├── index.ts            # Bun.serve with static file serving + WebSocket
-│   │   ├── websocket/handlers.ts
-│   │   └── rooms/RoomManager.ts
-│   └── package.json
-├── client/
-│   ├── src/
-│   │   ├── services/websocket.ts  # Connects to same origin (window.location)
-│   │   └── App.vue
-│   ├── vite.config.ts          # Build output to dist/
-│   └── package.json
-└── shared/
-    └── types/
-docker-compose.yml              # Local unified deployment for testing
-.dockerignore
+Oracle Cloud (OCI)
+├── VCN (Virtual Cloud Network)
+│   ├── Subnet (public)
+│   ├── Internet Gateway
+│   └── Security Lists (ports 80, 443, 22)
+├── Ampere A1 Compute Instance
+│   ├── VM.Standard.A1.Flex (4 OCPU, 24 GB RAM)
+│   ├── 200 GB boot volume
+│   └── Ubuntu 24.04 ARM64
+└── Reserved Public IP
+
+Local: infra/opentofu/
+├── main.tf              # Provider config, compute instance
+├── variables.tf         # Input variables
+├── outputs.tf          # Public IP, instance ID
+├── cloud-init.yaml     # Docker + initial setup
+└── terraform.tfvars    # Non-sensitive values
+
+VPS Layout:
+/opt/
+├── shithead/
+│   ├── docker-compose.yml
+│   ├── .env              # From Infisical
+│   └── Caddyfile
+└── backups/              # Optional: application state
 ```
 
-**Key differences from split deployment:**
-- Single Dockerfile builds both client and server
-- Server serves static files from built client assets
-- Client WebSocket connects to same origin (no VITE_SERVER_URL needed)
-- Single deployment workflow (not separate client/server jobs)
-- No Origin validation needed (same-origin = secure by default)
+### Pattern 1: OpenTofu with Infisical Secret Injection
+**What:** Use Infisical CLI to inject secrets at OpenTofu apply time
+**When to use:** Provisioning infrastructure with API keys, avoiding state file secrets
 
-### Pattern 1: Unified Dockerfile (Railway Deployment)
-
-**What:** Multi-stage Dockerfile that builds client assets and bundles them with Bun server
-**When to use:** Unified deployment on Railway, Fly.io, Render, or any Docker platform
 **Example:**
+```hcl
+# main.tf
+terraform {
+  required_version = ">= 1.8"
+  required_providers {
+    oci = {
+      source  = "oracle/oci"
+      version = "~> 6.0"
+    }
+  }
+}
 
-```dockerfile
-# Source: Bun fullstack docs + Railway best practices
-# packages/server/Dockerfile (UNIFIED deployment)
+provider "oci" {
+  tenancy_ocid     = var.tenancy_ocid
+  user_ocid        = var.user_ocid
+  fingerprint      = var.fingerprint
+  private_key_path = var.private_key_path
+  region           = var.region
+}
 
-FROM oven/bun:1 AS base
-WORKDIR /app
+variable "tenancy_ocid" {
+  description = "OCI Tenancy OCID"
+  type        = string
+  sensitive   = true
+}
 
-# ----- Build Client Stage -----
-FROM base AS build-client
-# Copy root dependencies
-COPY package.json bun.lockb* tsconfig.json ./
-COPY packages/client/package.json ./packages/client/
-COPY packages/shared/package.json ./packages/shared/
-# Install dependencies
-RUN bun install --frozen-lockfile
-# Copy client and shared source
-COPY packages/client/ ./packages/client/
-COPY packages/shared/ ./packages/shared/
-# Build client assets
-WORKDIR /app/packages/client
-RUN bun run build
-# Result: /app/packages/client/dist contains built assets
+variable "user_ocid" {
+  description = "OCI User OCID"
+  type        = string
+  sensitive   = true
+}
 
-# ----- Production Server Stage -----
-FROM base AS production
-WORKDIR /app
-# Copy package files for server dependencies
-COPY package.json bun.lockb* tsconfig.json ./
-COPY packages/server/package.json ./packages/server/
-COPY packages/shared/package.json ./packages/shared/
-# Install production dependencies only
-RUN bun install --frozen-lockfile --production
-# Copy server and shared source
-COPY packages/server/ ./packages/server/
-COPY packages/shared/ ./packages/shared/
-# Copy built client assets from build stage
-COPY --from=build-client /app/packages/client/dist ./packages/client/dist
-# Expose port (Railway assigns PORT env var dynamically)
-EXPOSE 3000
-# Set production environment
-ENV NODE_ENV=production
-# Start unified server (serves static files + WebSocket)
-CMD ["bun", "packages/server/src/index.ts"]
+variable "fingerprint" {
+  description = "API Key Fingerprint"
+  type        = string
+  sensitive   = true
+}
+
+variable "private_key_path" {
+  description = "Path to OCI API private key"
+  type        = string
+  default     = "~/.oci/oci_api_key.pem"
+}
+
+variable "region" {
+  description = "OCI Region"
+  type        = string
+  default     = "us-phoenix-1"
+}
+
+# Compute instance resource
+resource "oci_core_instance" "shithead_server" {
+  availability_domain = data.oci_identity_availability_domain.ad.name
+  compartment_id      = var.tenancy_ocid
+  shape               = "VM.Standard.A1.Flex"
+
+  shape_config {
+    ocpus         = 4
+    memory_in_gbs = 24
+  }
+
+  source_details {
+    source_type = "image"
+    source_id   = data.oci_core_images.ubuntu_arm.images[0].id
+    boot_volume_size_in_gbs = 100
+  }
+
+  create_vnic_details {
+    subnet_id        = oci_core_subnet.public.id
+    assign_public_ip = true
+  }
+
+  metadata = {
+    ssh_authorized_keys = var.ssh_public_key
+    user_data          = base64encode(file("${path.module}/cloud-init.yaml"))
+  }
+
+  display_name = "shithead-game-server"
+}
 ```
 
-**Key elements:**
-- Two stages: build-client (Vite build) + production (Bun server + client assets)
-- Client assets copied from build stage into server image
-- Server serves from `packages/client/dist` (already implemented in index.ts)
-- Single process, single port, single container
+**Apply with Infisical:**
+```bash
+# Inject secrets from Infisical at apply time
+infisical run --path=/infrastructure/oci -- tofu apply
+```
 
-### Pattern 2: Bun.serve() Unified Server (Static + WebSocket)
+### Pattern 2: Unified Bun Server (Static + WebSocket)
+**What:** Single Bun.serve() handles both static files and WebSocket
+**When to use:** Unified deployment on single VPS (user requirement)
 
-**What:** Bun.serve() serves static client assets from built dist folder AND handles WebSocket connections
-**When to use:** Unified deployment (already implemented in project)
-**Example:**
-
+**Example (already implemented in codebase):**
 ```typescript
-// Source: Existing packages/server/src/index.ts (no changes needed!)
-// This pattern is ALREADY IMPLEMENTED in the project
-
-import { APP_VERSION } from '@shit-head/shared';
-import { handleMessage, handleClose, handleOpen, roomManager } from './websocket/handlers';
-import type { WebSocketData } from './websocket/handlers';
-import { nanoid } from 'nanoid';
-import type { ServerWebSocket } from 'bun';
-import { join } from 'path';
-
-const NODE_ENV = process.env.NODE_ENV || 'development';
-
-// Static file serving: check if client dist exists
+// packages/server/src/index.ts (simplified)
 const clientDistPath = join(import.meta.dir, '../../client/dist');
-const indexHtml = Bun.file(join(clientDistPath, 'index.html'));
-const serveStaticFiles = await indexHtml.exists();
+const serveStaticFiles = await Bun.file(join(clientDistPath, 'index.html')).exists();
 
-// Connection tracking for graceful shutdown
-const activeConnections = new Set<ServerWebSocket<WebSocketData>>();
-
-const server = Bun.serve<WebSocketData>({
+const server = Bun.serve({
   port: Number(process.env.PORT) || 3000,
 
   async fetch(req, server) {
     const url = new URL(req.url);
 
-    // Health check endpoint
+    // Health check with metrics
     if (url.pathname === '/health') {
-      return new Response(
-        JSON.stringify({
-          status: 'ok',
-          version: APP_VERSION,
-          uptime: process.uptime(),
-          activeRooms: roomManager.getRoomCount(),
-          activePlayers: roomManager.getPlayerCount(),
-          activeConnections: activeConnections.size,
-        }),
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-          },
-        }
-      );
+      return new Response(JSON.stringify({
+        status: 'ok',
+        activeRooms: roomManager.getRoomCount(),
+        activePlayers: roomManager.getPlayerCount(),
+        activeConnections: activeConnections.size,
+      }));
     }
 
-    // WebSocket upgrade endpoint (NO Origin validation needed - same origin!)
+    // WebSocket upgrade
     if (url.pathname === '/game-ws') {
-      const reconnectPlayerId = url.searchParams.get('playerId');
-
-      const upgraded = server.upgrade(req, {
-        data: {
-          playerId: reconnectPlayerId || nanoid(),
-          roomCode: null,
-        },
-      });
-
-      if (upgraded) return undefined;
-      return new Response('WebSocket upgrade failed', { status: 500 });
+      return server.upgrade(req, { data: { playerId: nanoid() } })
+        ? undefined
+        : new Response('Upgrade failed', { status: 500 });
     }
 
-    // Serve static files from client/dist (unified deployment)
+    // Serve static files (client build)
     if (serveStaticFiles) {
       const filePath = join(clientDistPath, url.pathname === '/' ? 'index.html' : url.pathname);
       const file = Bun.file(filePath);
-      if (await file.exists()) {
-        return new Response(file);
-      }
-      // SPA fallback: serve index.html for client-side routes
-      return new Response(indexHtml);
+      if (await file.exists()) return new Response(file);
+      return new Response(Bun.file(join(clientDistPath, 'index.html'))); // SPA fallback
     }
 
     return new Response('Not Found', { status: 404 });
   },
 
   websocket: {
-    open(ws) {
-      activeConnections.add(ws);
-      handleOpen(ws);
-    },
-    message(ws, message) {
-      const msgStr = typeof message === 'string' ? message : new TextDecoder().decode(message);
-      handleMessage(ws, msgStr, roomManager);
-    },
-    close(ws) {
-      activeConnections.delete(ws);
-      handleClose(ws, roomManager);
-    },
+    open(ws) { /* ... */ },
+    message(ws, message) { /* ... */ },
+    close(ws) { /* ... */ },
   },
 });
-
-// Graceful shutdown (SIGTERM handler)
-process.on('SIGTERM', async () => {
-  server.stop();
-  for (const ws of activeConnections) {
-    ws.close(1000, 'Server shutting down');
-  }
-  // Wait up to 55 seconds for connections to close
-  const shutdownTimeout = 55000;
-  const startTime = Date.now();
-  while (activeConnections.size > 0 && Date.now() - startTime < shutdownTimeout) {
-    await new Promise(resolve => setTimeout(resolve, 100));
-  }
-  process.exit(0);
-});
-
-console.log(`Server listening on port ${server.port}`);
-console.log(`Environment: ${NODE_ENV}`);
-console.log(`Serving static files: ${serveStaticFiles}`);
 ```
 
-**Key elements:**
-- Serves static files from `../../client/dist` when present
-- SPA fallback: returns index.html for unknown routes (client-side routing)
-- Same-origin WebSocket: no CORS/Origin validation needed
-- Graceful shutdown for Railway deployments
-- Health endpoint for monitoring
+### Pattern 3: Systemd Service for Docker Container
+**What:** Manage Docker container lifecycle with systemd
+**When to use:** Production VPS deployment with auto-restart, graceful shutdown
 
-### Pattern 3: Client WebSocket Connection (Same Origin)
-
-**What:** Client connects to WebSocket at same origin (no VITE_SERVER_URL config needed)
-**When to use:** Unified deployment where client and server on same origin
 **Example:**
+```ini
+# /etc/systemd/system/shithead-game.service
+[Unit]
+Description=Shithead Game Server (Docker)
+After=docker.service
+Requires=docker.service
+Wants=network-online.target
 
-```typescript
-// Source: Simplified from existing websocket.ts
-// packages/client/src/services/websocket.ts (SIMPLIFIED for unified)
+[Service]
+Type=simple
+Restart=on-failure
+RestartSec=15
+StartLimitIntervalSec=300
+StartLimitBurst=5
 
-export class WebSocketManager {
-  private ws: WebSocket | null = null;
-  private reconnectAttempts = 0;
-  private maxReconnectAttempts = 10;
+WorkingDirectory=/opt/shithead
+EnvironmentFile=/opt/shithead/.env
 
-  connect() {
-    // Same-origin WebSocket URL (no env var needed!)
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}/game-ws`;
+# Cleanup old container
+ExecStartPre=-/usr/bin/docker stop shithead-game
+ExecStartPre=-/usr/bin/docker rm shithead-game
 
-    this.ws = new WebSocket(wsUrl);
+# Pull latest image
+ExecStartPre=/usr/bin/docker pull ghcr.io/user/shithead-game:latest
 
-    this.ws.onopen = () => {
-      console.log('WebSocket connected');
-      this.reconnectAttempts = 0;
-    };
+# Start container
+ExecStart=/usr/bin/docker run \
+  --name shithead-game \
+  --rm \
+  --log-driver=journald \
+  -p 3000:3000 \
+  --env-file /opt/shithead/.env \
+  ghcr.io/user/shithead-game:latest
 
-    this.ws.onclose = (event) => {
-      console.log('WebSocket closed', event.code);
+# Graceful shutdown (SIGTERM to container)
+ExecStop=/usr/bin/docker stop -t 60 shithead-game
 
-      // Don't reconnect if closed normally
-      if (event.code === 1000 || event.wasClean) return;
+TimeoutStartSec=120
+TimeoutStopSec=65
 
-      // Exponential backoff with jitter
-      if (this.reconnectAttempts < this.maxReconnectAttempts) {
-        const baseDelay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000);
-        const jitter = Math.random() * 1000;
-        const delay = baseDelay + jitter;
+[Install]
+WantedBy=multi-user.target
+```
 
-        console.log(`Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts + 1})`);
-        setTimeout(() => this.connect(), delay);
-        this.reconnectAttempts++;
-      }
-    };
+**Commands:**
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable shithead-game
+sudo systemctl start shithead-game
+sudo systemctl status shithead-game
+journalctl -u shithead-game -f  # View logs
+```
 
-    this.ws.onerror = (error) => {
-      console.error('WebSocket error', error);
-    };
-  }
+### Pattern 4: Caddy Reverse Proxy with Auto-HTTPS
+**What:** Caddy handles HTTPS, WebSocket proxying, automatic Let's Encrypt
+**When to use:** Production deployment requiring SSL/TLS
 
-  send(data: object) {
-    if (this.ws?.readyState === WebSocket.OPEN) {
-      this.ws.send(JSON.stringify(data));
+**Example:**
+```caddyfile
+# /etc/caddy/Caddyfile
+shithead.example.com {
+    reverse_proxy localhost:3000
+
+    # Caddy automatically handles WebSocket upgrades
+    # No special configuration needed for WebSocket
+
+    log {
+        output file /var/log/caddy/shithead.log
     }
-  }
-
-  disconnect() {
-    if (this.ws) {
-      this.ws.close(1000, 'Client disconnecting');
-      this.ws = null;
-    }
-  }
 }
 ```
 
-**Key differences from split deployment:**
-- Uses `window.location.host` instead of env var
-- No VITE_SERVER_URL configuration needed
-- Automatically works in dev (localhost) and production (Railway domain)
-- No build-time env var injection complexity
+**Key features:**
+- Automatic HTTPS via Let's Encrypt (ports 80/443 must be open)
+- WebSocket upgrade detection (no special config needed)
+- HTTP/2 support
+- Automatic certificate renewal
 
-### Pattern 4: GitHub Actions Railway Deployment
+### Pattern 5: GitHub Actions SSH Deploy
+**What:** Deploy to VPS via SSH, pull Docker image, restart service
+**When to use:** CI/CD pipeline for VPS deployment
 
-**What:** Build unified Docker image and deploy to Railway
-**When to use:** Production deployments from GitHub
 **Example:**
-
 ```yaml
-# Source: Railway deployment docs + Docker best practices
-# .github/workflows/deploy-railway.yml
-
-name: Deploy to Railway
+# .github/workflows/deploy.yml
+name: Deploy to Oracle Cloud
 
 on:
+  workflow_dispatch:
   push:
-    branches: [main, production]
+    branches: [main]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write  # Required for Infisical OIDC
 
     steps:
       - uses: actions/checkout@v4
 
+      # Fetch secrets from Infisical
+      - name: Fetch Infisical secrets
+        uses: Infisical/secrets-action@v1
+        with:
+          method: oidc
+          env-slug: production
+          project-slug: shithead-game
+
+      # Build and push Docker image
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Log in to GitHub Container Registry
+      - name: Login to GHCR
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ghcr.io/${{ github.repository }}
-          tags: |
-            type=ref,event=branch
-            type=sha,prefix=sha-
-          flavor: |
-            latest=true
-
-      - name: Build and push unified image
+      - name: Build and push (ARM64)
         uses: docker/build-push-action@v5
         with:
           context: .
           file: packages/server/Dockerfile
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ghcr.io/${{ github.repository_owner }}/shithead-server:latest
+          platforms: linux/arm64
+          target: production
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          platforms: linux/amd64
 
-      - name: Deploy to Railway
+      # Deploy to VPS
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ env.VPS_SSH_PRIVATE_KEY }}
+
+      - name: Deploy to Oracle Cloud VPS
         run: |
-          npm install -g @railway/cli
-          railway link ${{ secrets.RAILWAY_PROJECT_ID }}
-          railway up --service ${{ secrets.RAILWAY_SERVICE_ID }}
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          ssh -o StrictHostKeyChecking=no ubuntu@${{ env.VPS_PUBLIC_IP }} << 'ENDSSH'
+            # Pull latest image
+            docker pull ghcr.io/${{ github.repository_owner }}/shithead-server:latest
+
+            # Restart systemd service
+            sudo systemctl restart shithead-game
+
+            # Wait and health check
+            sleep 10
+            curl -f http://localhost:3000/health || exit 1
+
+            echo "Deployment successful!"
+          ENDSSH
 ```
-
-**Alternative (simpler): Railway GitHub Integration**
-
-Railway can auto-deploy from GitHub without custom workflows:
-1. Connect Railway to GitHub repository
-2. Railway automatically builds and deploys on push to main
-3. No GitHub Actions workflow needed
-
-**GitHub Secrets required (CLI deployment):**
-- `RAILWAY_TOKEN` - Railway API token (from railway.app dashboard)
-- `RAILWAY_PROJECT_ID` - Project ID (from railway.app)
-- `RAILWAY_SERVICE_ID` - Service ID (from railway.app)
-
-### Pattern 5: Room Cleanup (Same as Before)
-
-**What:** Periodic sweep deleting rooms inactive for 24 hours
-**When to use:** Production (success criteria requirement)
-**Example:**
-
-```typescript
-// Source: Existing RoomManager implementation (no changes needed)
-// packages/server/src/rooms/RoomManager.ts
-
-export class RoomManager {
-  private rooms: Map<string, Room>;
-  private lastActivityTimes: Map<string, number>;
-
-  constructor() {
-    this.rooms = new Map();
-    this.lastActivityTimes = new Map();
-
-    // Run cleanup every 5 minutes
-    setInterval(() => this.cleanupAbandonedRooms(), 5 * 60 * 1000);
-  }
-
-  markActivity(roomCode: string) {
-    this.lastActivityTimes.set(roomCode, Date.now());
-  }
-
-  private cleanupAbandonedRooms() {
-    const now = Date.now();
-    const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
-
-    for (const [roomCode, lastActivity] of this.lastActivityTimes) {
-      if (now - lastActivity > TWENTY_FOUR_HOURS) {
-        console.log(`Cleaning up abandoned room: ${roomCode}`);
-        this.rooms.delete(roomCode);
-        this.lastActivityTimes.delete(roomCode);
-      }
-    }
-  }
-
-  getRoomCount(): number { return this.rooms.size; }
-  getPlayerCount(): number {
-    return Array.from(this.rooms.values())
-      .reduce((sum, room) => sum + room.getState().players.length, 0);
-  }
-}
-```
-
-**Call markActivity() on:**
-- Room creation
-- Player join/leave
-- Game start
-- Any card play or game action
 
 ### Anti-Patterns to Avoid
-
-- **Don't use split deployment for WebSocket-heavy apps:** CDN benefits are minimal when 90%+ of traffic is persistent connections. Unified is simpler.
-- **Don't overcomplicate with Origin validation in unified:** Same-origin = secure by default. No ALLOWED_ORIGINS needed.
-- **Don't forget to build client before Docker COPY:** Multi-stage build must `vite build` before copying dist to server image.
-- **Don't use Render free tier for WebSockets:** 15-minute spin-down kills all connections. Paid tier only.
-- **Don't hardcode PORT in Dockerfile:** Railway assigns dynamic PORT via env var. Use `process.env.PORT`.
-- **Don't skip graceful shutdown:** Railway sends SIGTERM on redeploy. Handle it or connections close abruptly.
-- **Don't commit Railway tokens:** Use GitHub Secrets for `RAILWAY_TOKEN`, never commit to code.
+- **Secrets in Terraform state:** Use Infisical CLI injection, not direct values in .tf files
+- **Building on VPS:** Build Docker images in GitHub Actions, not on the VPS (ARM compile is slow)
+- **No health checks:** Always verify service is healthy before considering deploy successful
+- **Hardcoded IPs:** Use Terraform outputs, environment variables for dynamic values
+- **Manual SSL management:** Use Caddy auto-HTTPS, not manual certbot
+- **Ignoring iptables:** Oracle Cloud instances require iptables rules IN ADDITION to Security Lists
 
 ## Don't Hand-Roll
 
 | Problem | Don't Build | Use Instead | Why |
 |---------|-------------|-------------|-----|
-| Static file serving | Custom routing logic | Bun.file() + Response | Built-in, performant, handles MIME types automatically |
-| HTTPS/SSL | Manual Let's Encrypt setup | Railway/Fly.io managed SSL | Automatic certificate provisioning and renewal |
-| Container orchestration | Custom deployment scripts | Railway/Fly.io Docker platform | Handles builds, deployments, rollbacks, health checks |
-| WebSocket reconnection | Custom retry logic | Exponential backoff with jitter | Prevents thundering herd, well-tested pattern |
-| Room ID generation | Math.random() or UUID | nanoid (already in use) | Shorter codes, collision-resistant, URL-safe |
-| Log aggregation | Custom log server | Railway/Fly.io built-in logs | Automatic stdout capture, searchable, persistent |
-| Health checks | Custom monitoring | `/health` endpoint + platform monitoring | Standard pattern, platform health checks built-in |
-| Docker image caching | Manual layer optimization | GitHub Actions cache (type=gha) | 10GB free, automatic, 2-3x faster builds |
+| HTTPS certificates | Manual certbot + cron | Caddy auto-HTTPS | Caddy handles issuance, renewal, serving automatically |
+| Secret injection | Bash scripts parsing YAML | Infisical CLI | Secure auth (OIDC), audit logs, dynamic secrets, proper encryption |
+| Container orchestration | Custom bash restart scripts | systemd services | Handles dependencies, restarts, logging, graceful shutdown |
+| Zero-downtime deploy | Custom rolling update | Docker health checks + systemd | Proven pattern, handles rollback, health verification |
+| Log aggregation | Custom file parsing | journalctl (systemd) | Structured logs, automatic capture of stdout/stderr, filtering |
+| Infrastructure provisioning | Manual OCI console | OpenTofu/Terraform | Reproducible, version controlled, dependency tracking |
 
-**Key insight:** Railway and Fly.io provide production-ready infrastructure (HTTPS, health checks, logs, metrics) out of the box. For a unified deployment, focus on game logic, not DevOps plumbing.
+**Key insight:** Oracle Cloud + VPS deployment has well-established tooling. Use Caddy for HTTPS (not manual certbot), Infisical CLI for secrets (not env files in git), systemd for container management (not custom scripts).
 
 ## Common Pitfalls
 
-### Pitfall 1: Using Render Free Tier for WebSockets
+### Pitfall 1: Oracle Cloud Requires TWO Firewall Layers
+**What goes wrong:** You open ports in OCI Security Lists but connections still fail
+**Why it happens:** Oracle Cloud Ubuntu/Oracle Linux images have iptables rules that block traffic by default
+**How to avoid:** Configure BOTH Security Lists (OCI) AND iptables rules (OS)
+**Warning signs:** Security List shows ports 80/443 open but `curl` from outside times out
 
-**What goes wrong:** Render free tier spins down after 15 minutes, killing all WebSocket connections
-**Why it happens:** Free tier designed for low-traffic websites, not persistent connections
-**How to avoid:** Use Railway Hobby ($5), Fly.io free tier, or Render paid tier ($7) - all support persistent connections
-**Warning signs:** Players disconnected after 15 min idle, "service unavailable" on reconnect
+**Solution:**
+```bash
+# 1. OCI Security List (via OpenTofu)
+resource "oci_core_security_list" "public" {
+  # ... VCN/compartment config ...
 
-**Source:** [Render Free Tier Docs](https://render.com/docs/free)
+  ingress_security_rules {
+    protocol = "6"  # TCP
+    source   = "0.0.0.0/0"
+    tcp_options {
+      min = 80
+      max = 80
+    }
+  }
 
-### Pitfall 2: Forgetting to Build Client in Docker
+  ingress_security_rules {
+    protocol = "6"  # TCP
+    source   = "0.0.0.0/0"
+    tcp_options {
+      min = 443
+      max = 443
+    }
+  }
+}
 
-**What goes wrong:** Docker build fails or server serves empty dist folder
-**Why it happens:** Forgot `bun run build` in Dockerfile build stage
-**How to avoid:** Use multi-stage Dockerfile with explicit build-client stage (Pattern 1)
-**Warning signs:** Docker build succeeds but `packages/client/dist` is empty in container
+# 2. iptables rules (via cloud-init or manual)
+# Edit /etc/iptables/rules.v4 and add BEFORE the final REJECT rule:
+-A INPUT -p tcp -m state --state NEW -m tcp --dport 80 -j ACCEPT
+-A INPUT -p tcp -m state --state NEW -m tcp --dport 443 -j ACCEPT
 
-### Pitfall 3: Hardcoding PORT in Production
+# Apply: sudo iptables-restore < /etc/iptables/rules.v4
+```
 
-**What goes wrong:** Railway assigns dynamic PORT (e.g., 8443), but server listens on hardcoded 3000
-**Why it happens:** Dockerfile has `EXPOSE 3000` and ignores `process.env.PORT`
-**How to avoid:** Always use `Number(process.env.PORT) || 3000` in Bun.serve()
-**Warning signs:** Health checks fail, Railway shows "service unhealthy"
+### Pitfall 2: ARM64 Architecture Build Issues
+**What goes wrong:** Docker image builds fail or container won't start on Oracle Cloud
+**Why it happens:** Oracle Cloud Always Free uses ARM64 (Ampere A1), not x86_64
+**How to avoid:** Build for `linux/arm64` platform explicitly, test locally with ARM emulation
+**Warning signs:** "exec format error" when running container on VPS
 
-### Pitfall 4: No Graceful Shutdown on Railway
+**Solution:**
+```yaml
+# GitHub Actions: specify platform
+- name: Build and push
+  uses: docker/build-push-action@v5
+  with:
+    platforms: linux/arm64  # CRITICAL: ARM architecture
 
-**What goes wrong:** Railway redeploys, sends SIGTERM, server ignores it, connections close with 1006 (abnormal)
-**Why it happens:** No SIGTERM handler, Railway forcefully kills after 60 seconds
-**How to avoid:** Implement graceful shutdown (Pattern 2), close connections with code 1000
-**Warning signs:** Client logs show 1006 during deploys instead of 1000
+# Test locally with ARM emulation:
+docker buildx build --platform linux/arm64 -t myapp:arm64 .
+docker run --platform linux/arm64 myapp:arm64
+```
 
-### Pitfall 5: Exceeding Railway $5 Credit
+### Pitfall 3: Infisical Secrets Not Available at OpenTofu Apply
+**What goes wrong:** OpenTofu apply fails with "variable not set" errors
+**Why it happens:** Terraform/OpenTofu doesn't know about Infisical secrets without CLI wrapper
+**How to avoid:** Use `infisical run` wrapper to inject secrets as environment variables
+**Warning signs:** Variables marked `sensitive=true` have empty values during apply
 
-**What goes wrong:** Usage exceeds $5, unexpected charges
-**Why it happens:** High traffic, inefficient resource usage, or forgot to monitor
-**How to avoid:** Monitor Railway dashboard metrics, set up billing alerts, optimize resource usage
-**Warning signs:** Bandwidth spikes in metrics, Railway email warnings
+**Solution:**
+```bash
+# DON'T: tofu apply
+# Secrets not available to Terraform
 
-**Railway pricing:**
-- RAM: $10/GB/month
-- CPU: $20/vCPU/month
-- Bandwidth: $0.05/GB egress
+# DO: Wrap with Infisical CLI
+infisical run --path=/infrastructure/oci -- tofu apply
 
-**Example usage on $5 credit:**
-- 0.5 GB RAM + 0.5 vCPU + 50 GB egress = ~$5/month
-- Typical hobby app: 256 MB RAM + 0.25 vCPU + 20 GB egress = ~$2-3/month
+# Infisical reads secrets, injects as TF_VAR_* environment variables
+# Terraform picks them up automatically
+```
 
-### Pitfall 6: Missing Static Assets in Production
+### Pitfall 4: Docker Container Exits Immediately on VPS
+**What goes wrong:** systemd service starts but container exits with code 0
+**Why it happens:** Bun server fails to start (missing env vars, port conflict)
+**How to avoid:** Check logs with `journalctl -u service-name -n 50`, ensure health check passes
+**Warning signs:** systemd shows "active" briefly then "inactive (dead)"
 
-**What goes wrong:** Server returns 404 for all client routes, only `/health` works
-**Why it happens:** Client build failed or assets not copied to Docker image
-**How to avoid:** Verify multi-stage Dockerfile copies `--from=build-client` correctly
-**Warning signs:** `/health` returns 200, but `GET /` returns 404
+**Solution:**
+```bash
+# Check container logs
+journalctl -u shithead-game -n 100
 
-### Pitfall 7: Split Architecture Dev/Prod Parity
+# Run container manually to debug
+docker run --rm -it --env-file /opt/shithead/.env ghcr.io/user/shithead-game:latest
 
-**What goes wrong:** Works perfectly in dev (unified), breaks in production (split)
-**Why it happens:** Different architectures: dev uses Vite proxy, prod uses split CF Pages + Fly.io
-**How to avoid:** Use unified deployment (Railway/Fly.io) for dev/prod parity
-**Warning signs:** CORS errors only in production, Origin validation failures
+# Check health endpoint
+curl http://localhost:3000/health
 
-### Pitfall 8: Abandoned Rooms Consume Memory
+# Common issues:
+# - Missing .env file on VPS
+# - PORT environment variable not set
+# - ALLOWED_ORIGINS empty in production
+```
 
-**What goes wrong:** Players disconnect without leaving room, rooms persist forever, memory leak
-**Why it happens:** RoomManager deletes rooms only when host explicitly leaves
-**How to avoid:** Implement time-based cleanup (Pattern 5), sweep every 5 minutes, delete 24h inactive
-**Warning signs:** `/health` activeRooms metric increases indefinitely, memory usage grows
+### Pitfall 5: Let's Encrypt Rate Limits During Testing
+**What goes wrong:** Caddy fails to get HTTPS certificate after multiple attempts
+**Why it happens:** Let's Encrypt rate limits (5 failures per hour, 50 certs per domain per week)
+**How to avoid:** Test with HTTP first, use staging environment, ensure DNS is correct BEFORE enabling HTTPS
+**Warning signs:** Caddy logs show "429 Too Many Requests" from Let's Encrypt
 
-### Pitfall 9: Railway Service Unhealthy After Deploy
+**Solution:**
+```bash
+# 1. Test HTTP first (no TLS)
+# Caddyfile:
+http://shithead.example.com {
+    reverse_proxy localhost:3000
+}
 
-**What goes wrong:** Railway shows "unhealthy", rolls back deployment
-**Why it happens:** Health check fails, server not responding on assigned PORT
-**How to avoid:** Implement `/health` endpoint, use `process.env.PORT`, test locally with Docker
-**Warning signs:** Railway dashboard shows "unhealthy", deploy logs show health check failures
+# 2. Verify DNS propagation BEFORE enabling HTTPS
+dig +short shithead.example.com  # Should show VPS public IP
 
-### Pitfall 10: Docker Build OOM (Out of Memory)
+# 3. Use Caddy staging (testing)
+https://shithead.example.com {
+    tls {
+        ca https://acme-staging-v02.api.letsencrypt.org/directory
+    }
+    reverse_proxy localhost:3000
+}
 
-**What goes wrong:** GitHub Actions Docker build fails with "out of memory"
-**Why it happens:** Client build (Vite) consumes too much memory in GitHub Actions runner
-**How to avoid:** Use Docker BuildKit with `--memory` limits, or split client build into separate step
-**Warning signs:** GitHub Actions logs show "npm ERR! ENOMEM" or "killed"
+# 4. Once working, remove staging CA line for production
+```
+
+### Pitfall 6: WebSocket Connections Drop After 60 Seconds
+**What goes wrong:** WebSocket connections close unexpectedly after ~60 seconds idle
+**Why it happens:** Load balancer/proxy idle timeout, no keepalive ping/pong
+**How to avoid:** Implement WebSocket ping/pong heartbeat every 30 seconds
+**Warning signs:** Connections close with code 1006 (abnormal closure) when idle
+
+**Solution (already in codebase via Bun native support):**
+```typescript
+// Bun.serve() websocket config
+websocket: {
+  idleTimeout: 120,  // 2 minutes
+  maxPayloadLength: 64 * 1024,  // 64KB
+
+  // Bun automatically sends ping frames
+  // Implement application-level heartbeat for extra reliability:
+  open(ws) {
+    ws.data.heartbeatInterval = setInterval(() => {
+      ws.send(JSON.stringify({ type: 'ping' }));
+    }, 30000);  // Every 30 seconds
+  },
+
+  close(ws) {
+    clearInterval(ws.data.heartbeatInterval);
+  },
+}
+```
 
 ## Code Examples
 
-Verified patterns from official sources:
+Verified patterns from official sources and existing codebase:
 
-### Complete Unified Server Example
+### Oracle Cloud Compute Instance (OpenTofu)
+```hcl
+# Source: https://github.com/AmpereComputing/terraform-oci-ampere-a1
+# Adapted for Always Free tier limits
 
-See Pattern 2 above for full unified server code (already implemented in project).
+# Get Ubuntu ARM64 image
+data "oci_core_images" "ubuntu_arm" {
+  compartment_id           = var.tenancy_ocid
+  operating_system         = "Canonical Ubuntu"
+  operating_system_version = "24.04"
+  shape                    = "VM.Standard.A1.Flex"
+  sort_by                  = "TIMECREATED"
+  sort_order               = "DESC"
+}
 
-### Complete Client WebSocket Manager (Unified)
+# Availability domain
+data "oci_identity_availability_domain" "ad" {
+  compartment_id = var.tenancy_ocid
+  ad_number      = 1
+}
 
-See Pattern 3 above for simplified same-origin WebSocket client.
+# VCN and networking
+resource "oci_core_vcn" "main" {
+  compartment_id = var.tenancy_ocid
+  display_name   = "shithead-vcn"
+  cidr_blocks    = ["10.0.0.0/16"]
+  dns_label      = "shithead"
+}
 
-### Railway Deployment via GitHub Actions
+resource "oci_core_internet_gateway" "main" {
+  compartment_id = var.tenancy_ocid
+  vcn_id         = oci_core_vcn.main.id
+  display_name   = "shithead-igw"
+}
 
-See Pattern 4 above for full CI/CD pipeline.
+resource "oci_core_route_table" "public" {
+  compartment_id = var.tenancy_ocid
+  vcn_id         = oci_core_vcn.main.id
+  display_name   = "shithead-public-rt"
 
-### Local Docker Compose Testing
+  route_rules {
+    destination       = "0.0.0.0/0"
+    network_entity_id = oci_core_internet_gateway.main.id
+  }
+}
 
-```yaml
-# docker-compose.yml (root of project)
-# Test unified deployment locally before Railway
+resource "oci_core_security_list" "public" {
+  compartment_id = var.tenancy_ocid
+  vcn_id         = oci_core_vcn.main.id
+  display_name   = "shithead-public-sl"
 
-version: '3.8'
+  # SSH
+  ingress_security_rules {
+    protocol = "6"
+    source   = "0.0.0.0/0"
+    tcp_options {
+      min = 22
+      max = 22
+    }
+  }
 
-services:
-  app:
-    build:
-      context: .
-      dockerfile: packages/server/Dockerfile
-      target: production
-    ports:
-      - "3000:3000"
-    environment:
-      - NODE_ENV=production
-      - PORT=3000
-    volumes:
-      # Optional: Mount for hot reload during testing
-      - ./packages/server/src:/app/packages/server/src
-      - ./packages/shared:/app/packages/shared
+  # HTTP
+  ingress_security_rules {
+    protocol = "6"
+    source   = "0.0.0.0/0"
+    tcp_options {
+      min = 80
+      max = 80
+    }
+  }
+
+  # HTTPS
+  ingress_security_rules {
+    protocol = "6"
+    source   = "0.0.0.0/0"
+    tcp_options {
+      min = 443
+      max = 443
+    }
+  }
+
+  # Allow all outbound
+  egress_security_rules {
+    protocol    = "all"
+    destination = "0.0.0.0/0"
+  }
+}
+
+resource "oci_core_subnet" "public" {
+  compartment_id    = var.tenancy_ocid
+  vcn_id            = oci_core_vcn.main.id
+  cidr_block        = "10.0.1.0/24"
+  display_name      = "shithead-public-subnet"
+  route_table_id    = oci_core_route_table.public.id
+  security_list_ids = [oci_core_security_list.public.id]
+  dns_label         = "public"
+}
+
+# Compute instance (Always Free: 4 OCPU, 24 GB RAM)
+resource "oci_core_instance" "shithead_server" {
+  availability_domain = data.oci_identity_availability_domain.ad.name
+  compartment_id      = var.tenancy_ocid
+  shape               = "VM.Standard.A1.Flex"
+
+  shape_config {
+    ocpus         = 4   # Max for Always Free
+    memory_in_gbs = 24  # Max for Always Free
+  }
+
+  source_details {
+    source_type             = "image"
+    source_id               = data.oci_core_images.ubuntu_arm.images[0].id
+    boot_volume_size_in_gbs = 100  # Max 200 GB total (save space for backups)
+  }
+
+  create_vnic_details {
+    subnet_id        = oci_core_subnet.public.id
+    assign_public_ip = true
+    display_name     = "shithead-vnic"
+  }
+
+  metadata = {
+    ssh_authorized_keys = var.ssh_public_key
+    user_data           = base64encode(file("${path.module}/cloud-init.yaml"))
+  }
+
+  display_name = "shithead-game-server"
+}
+
+output "public_ip" {
+  value = oci_core_instance.shithead_server.public_ip
+}
 ```
 
-**Usage:**
+### Cloud-Init Script (Docker Installation)
+```yaml
+# cloud-init.yaml
+# Source: https://www.ateam-oracle.com/automate-docker-setup-on-your-oci-compute-instance
 
+#cloud-config
+
+# Update and upgrade packages
+package_update: true
+package_upgrade: true
+
+# Install required packages
+packages:
+  - apt-transport-https
+  - ca-certificates
+  - curl
+  - gnupg
+  - lsb-release
+
+runcmd:
+  # Install Docker
+  - curl -fsSL https://get.docker.com | sh
+  - usermod -aG docker ubuntu
+
+  # Install Docker Compose
+  - curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+  - chmod +x /usr/local/bin/docker-compose
+
+  # Open ports in iptables (CRITICAL for Oracle Cloud)
+  - iptables -I INPUT 6 -m state --state NEW -p tcp --dport 80 -j ACCEPT
+  - iptables -I INPUT 6 -m state --state NEW -p tcp --dport 443 -j ACCEPT
+  - netfilter-persistent save
+
+  # Create application directory
+  - mkdir -p /opt/shithead
+  - chown ubuntu:ubuntu /opt/shithead
+
+  # Enable Docker service
+  - systemctl enable docker
+  - systemctl start docker
+
+final_message: "Cloud-init complete. Docker installed. Ports 80/443 open."
+```
+
+### Infisical CLI with OpenTofu
 ```bash
-# Build and run unified container
-docker-compose up --build
+# Source: https://infisical.com/blog/how-to-manage-secrets-on-terraform-using-infisical
 
-# Test health endpoint
-curl http://localhost:3000/health
+# Install Infisical CLI
+curl -1sLf 'https://dl.cloudsmith.io/public/infisical/infisical-cli/setup.deb.sh' | sudo -E bash
+sudo apt-get update && sudo apt-get install -y infisical
 
-# Test static assets
-curl http://localhost:3000/
+# Authenticate (one-time setup)
+infisical login
 
-# Test WebSocket (use browser or wscat)
-wscat -c ws://localhost:3000/game-ws
+# Apply OpenTofu with secret injection
+# Infisical reads secrets from project, injects as TF_VAR_* env vars
+infisical run --path=/infrastructure/oci --env=production -- tofu apply
+
+# Example: Secret named "tenancy_ocid" becomes TF_VAR_tenancy_ocid
+# OpenTofu reads it as variable "tenancy_ocid"
+```
+
+### Room Cleanup (Already Implemented)
+```typescript
+// Source: packages/server/src/rooms/RoomManager.ts (existing code)
+
+export class RoomManager {
+  private lastActivityTimes: Map<string, number>; // roomCode -> timestamp
+
+  constructor() {
+    this.rooms = new Map();
+    this.playerRoomIndex = new Map();
+    this.lastActivityTimes = new Map();
+
+    // Start cleanup interval - runs every 5 minutes
+    setInterval(() => this.cleanupAbandonedRooms(), 5 * 60 * 1000);
+  }
+
+  markActivity(roomCode: string): void {
+    this.lastActivityTimes.set(roomCode, Date.now());
+  }
+
+  private cleanupAbandonedRooms(): void {
+    const now = Date.now();
+    const abandonedThreshold = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+
+    for (const [roomCode, lastActivity] of this.lastActivityTimes.entries()) {
+      if (now - lastActivity > abandonedThreshold) {
+        console.log(`Cleaning up abandoned room: ${roomCode}`);
+
+        const room = this.rooms.get(roomCode);
+        if (room) {
+          const state = room.getState();
+          state.players.forEach(player => {
+            this.playerRoomIndex.delete(player.id);
+          });
+        }
+
+        this.rooms.delete(roomCode);
+        this.lastActivityTimes.delete(roomCode);
+      }
+    }
+  }
+}
+
+// Activity tracking happens on:
+// - createRoom()
+// - joinRoom()
+// - startGame()
+// - leaveRoom() (if room still exists)
 ```
 
 ## State of the Art
 
 | Old Approach | Current Approach | When Changed | Impact |
 |--------------|------------------|--------------|--------|
-| Split deployment default | Unified for WebSocket-heavy apps | 2024-2026 trend | Simpler architecture, same-origin security, better dev/prod parity |
-| Heroku free tier | Railway/Fly.io free tiers | Heroku ended free (2022) | Railway $5/mo is new "good enough" tier |
-| Manual CORS config | Same-origin by default | WebSocket app awareness (2024+) | Eliminates CORS complexity for unified apps |
-| Environment vars for server URL | window.location for same-origin | Unified deployment pattern | No build-time config needed |
-| Nginx + Node.js | Bun.serve() unified | Bun 1.0 (2023) | Single process serves static + WebSocket, simpler stack |
-| Express + serve-static | Bun.file() + Response | Bun native APIs (2023+) | Less boilerplate, better performance |
-| Render free tier for WebSockets | Railway Hobby or Render paid | Render free spin-down (always) | $5-7/mo now minimum for persistent WebSocket |
-| Multi-service Docker Compose | Single unified container | Monolith revival (2024-2026) | Simpler for small teams, easier debugging |
-| CDN-first architecture | App-first architecture | WebSocket prevalence (2024+) | CDN benefits minimal for WebSocket-heavy apps |
-| Vercel/Netlify free tiers | Railway/Fly.io Docker platforms | Edge function limitations | Better WebSocket/Docker support on Railway/Fly.io |
+| SOPS for secrets | Infisical | 2024-2025 | Better OIDC auth, audit logs, dynamic secrets, easier GitOps |
+| Terraform | OpenTofu | 2023 | Open-source fork after Terraform license change (BSL) |
+| Manual certbot | Caddy auto-HTTPS | 2020+ | Zero-config HTTPS, automatic renewal, simpler deployment |
+| nginx + manual WebSocket config | Caddy transparent WebSocket | 2020+ | No special WebSocket proxy config needed |
+| Long-lived deploy keys | GitHub Actions OIDC | 2023+ | No static secrets, automatic rotation, better security |
+| Docker Compose restart | systemd + health checks | 2024+ | Better integration with OS, graceful shutdown, journald logs |
 
 **Deprecated/outdated:**
-- **Split deployment for unified apps:** Adds complexity without performance benefit for WebSocket-heavy apps
-- **Render free tier for real-time apps:** 15-minute spin-down makes it unusable
-- **Heroku free tier:** Ended in 2022
-- **VITE_SERVER_URL for unified:** No longer needed with same-origin deployment
-- **Origin validation in unified:** Same-origin = no CORS/CSWSH risk
-- **Separate CDN for WebSocket apps:** CDN benefits minimal when most traffic is persistent connections
+- **Manual Let's Encrypt with certbot:** Caddy handles automatically, no cron jobs needed
+- **SOPS with age/gpg keys:** Infisical provides OIDC auth, no key management
+- **Terraform after BSL license:** OpenTofu is the open-source continuation
+- **Long-lived SSH keys in GitHub Secrets:** Use SSH keys from Infisical, rotatable
+- **Building Docker images on VPS:** Build in GitHub Actions (faster, cached, ARM64 platform specified)
 
 ## Open Questions
 
-Things that couldn't be fully resolved:
+1. **Oracle Cloud Always Free capacity availability**
+   - What we know: Ampere A1 instances often show "Out of host capacity" errors
+   - What's unclear: Which regions have actual availability in 2026
+   - Recommendation: Try multiple regions (Phoenix, Ashburn, Frankfurt, London), use automated provisioning script that retries
 
-1. **Railway $5 credit actual usage for this app**
-   - What we know: 256 MB RAM + 0.25 vCPU + 20 GB egress ≈ $2-3/month typical usage
-   - What's unclear: Actual usage with 10-50 concurrent users (need production metrics)
-   - Recommendation: Start with Railway, monitor dashboard, expect to stay within $5 credit
+2. **Backup strategy for in-memory game state**
+   - What we know: Game rooms are in-memory only, no database
+   - What's unclear: Whether to add persistence layer or accept ephemeral state
+   - Recommendation: Start with ephemeral (matches "abandoned rooms cleaned up after 24 hours" requirement), add Redis persistence if needed later
 
-2. **Fly.io free tier long-term viability**
-   - What we know: Free tier exists (3 VMs, 256 MB each), no official spin-down
-   - What's unclear: Community reports mixed, some report surprise charges
-   - Recommendation: Railway safer bet for "set and forget" deployment
+3. **Monitoring/alerting approach**
+   - What we know: Health endpoint exposes activeRooms, activePlayers, activeConnections
+   - What's unclear: Whether to add external monitoring (UptimeRobot, Grafana) or just rely on journalctl logs
+   - Recommendation: Start with journalctl + manual health checks, add UptimeRobot free tier for uptime monitoring
 
-3. **Bun.serve() static file performance vs nginx**
-   - What we know: Bun.file() is fast, production-ready
-   - What's unclear: Benchmark comparison vs nginx for static files at scale
-   - Recommendation: Start with Bun.file(), only add nginx if benchmarks show need
-
-4. **Railway vs Render for 100+ concurrent users**
-   - What we know: Railway usage-based, Render flat $7/mo
-   - What's unclear: Which is cheaper at higher traffic (breakeven point)
-   - Recommendation: Railway usage-based is safer (pay for what you use), Render if predictable traffic
-
-5. **Docker image size optimization**
-   - What we know: Current multi-stage build includes client build dependencies
-   - What's unclear: Can we further optimize by using alpine base or distroless?
-   - Recommendation: Start with oven/bun:1, optimize if image size becomes issue
+4. **Rollback strategy if deployment fails**
+   - What we know: systemd pulls :latest tag, no version pinning
+   - What's unclear: How to quickly rollback to previous version
+   - Recommendation: Tag images with git SHA (${{ github.sha }}), document manual rollback process (update systemd to use specific SHA tag, restart)
 
 ## Sources
 
 ### Primary (HIGH confidence)
-
-- [Railway Pricing Plans 2026](https://docs.railway.com/reference/pricing/plans) - Hobby plan details, resource limits
-- [Railway vs Render Comparison 2026](https://northflank.com/blog/railway-vs-render) - Platform comparison
-- [Bun Fullstack Dev Server Docs](https://bun.sh/docs/bundler/fullstack) - Static file serving patterns
-- [How to Deploy Bun Applications to Production](https://oneuptime.com/blog/post/2026-01-31-bun-production-deployment/view) - Production best practices
-- [Render Free Tier Limitations](https://render.com/docs/free) - Spin-down behavior documented
-- [Railway Free Tier Infographic 2025](https://www.freetiers.com/directory/railway) - Usage limits verified
-- [Coolify Open-Source PaaS](https://coolify.io/) - Self-hosted alternative overview
-- [Hetzner VPS Pricing 2026](https://costgoat.com/pricing/hetzner) - VPS cost comparison
+- [Oracle Cloud Always Free Resources](https://docs.oracle.com/en-us/iaas/Content/FreeTier/freetier_topic-Always_Free_Resources.htm) - Always Free tier limits (4 OCPU, 24 GB, 200 GB storage)
+- [Infisical GitHub Actions Integration](https://infisical.com/docs/integrations/cicd/githubactions) - OIDC auth for GitHub Actions
+- [Infisical Terraform/OpenTofu](https://infisical.com/blog/how-to-manage-secrets-on-terraform-using-infisical) - Secret injection with Infisical CLI
+- [AmpereComputing terraform-oci-ampere-a1](https://github.com/AmpereComputing/terraform-oci-ampere-a1) - Terraform module for A1 instances
+- [Bun WebSocket Servers](https://oneuptime.com/blog/post/2026-01-31-bun-websocket-servers/view) - Production-ready Bun.serve() patterns
+- [Docker Containers as Systemd Services](https://oneuptime.com/blog/post/2026-02-08-how-to-use-docker-containers-as-systemd-services/view) - Complete systemd service template
 
 ### Secondary (MEDIUM confidence)
+- [Oracle Cloud Automate Docker Setup](https://www.ateam-oracle.com/automate-docker-setup-on-your-oci-compute-instance) - cloud-init Docker installation
+- [Caddy Reverse Proxy Quick-Start](https://caddyserver.com/docs/quick-starts/reverse-proxy) - Automatic HTTPS configuration
+- [Deploy Docker Containers to VPS with GitHub Actions](https://davidhuertas.dev/en/posts/deploy-docker-containers-in-vps-with-github-actions/) - SSH deployment pattern
+- [OCI Terraform Provider Configuration](https://docs.oracle.com/en-us/iaas/Content/dev/terraform/configuring.htm) - API key authentication
+- [Oracle Cloud Security Rules](https://docs.oracle.com/en-us/iaas/Content/Network/Concepts/securityrules.htm) - Security Lists and ingress rules
+- [Opening Ports 80/443 on Oracle Cloud](https://marcinmitruk.link/posts/how-to-open-ports-80-and-443-on-an-oracle-cloud-instance/) - iptables + Security Lists
 
-- [Railway vs Fly.io vs Render ROI Comparison](https://medium.com/ai-disruption/railway-vs-fly-io-vs-render-which-cloud-gives-you-the-best-roi-2e3305399e5b) - Cost analysis
-- [Unified vs Split Deployment Comparison](https://bastakiss.com/blog/web-17/beyond-the-frontend-backend-split-when-a-monolithic-approach-makes-sense-610) - Architecture tradeoffs
-- [Monorepo Benefits and Challenges](https://circleci.com/blog/monorepo-dev-practices/) - Unified deployment advantages
-- [Fly.io Free Tier Community Discussion](https://community.fly.io/t/is-there-an-inactivity-delay-for-free-tier/10855) - Free tier behavior
-- [DigitalOcean App Platform WebSocket Support](https://www.digitalocean.com/community/questions/how-do-i-run-a-web-service-with-websockets-on-app-platform) - Alternative platform details
-
-### Tertiary (LOW confidence - requires verification)
-
-- [Bun Production Deployment Reality Check 2026](https://vocal.media/01/bun-package-manager-reality-check-2026) - Community perspective
-- [Railway Hobby Plan Discussions](https://station.railway.com/questions/what-is-the-hobby-plan-f4f36048) - User experiences
+### Tertiary (LOW confidence - needs validation)
+- [WebSocket Room Cleanup Patterns](https://medium.com/voodoo-engineering/websockets-on-production-with-node-js-bdc82d07bb9f) - Cleanup interval patterns (verified in existing codebase)
+- [VPS Backup Strategies 2026](https://www.youstable.com/blog/set-up-and-manage-vps-server-backups) - Backup frequency and retention recommendations
+- [Zero Downtime Docker Compose](https://github.com/wowu/docker-rollout) - docker-rollout tool (not using Docker Compose, but pattern applies)
 
 ## Metadata
 
 **Confidence breakdown:**
-- Railway Hobby plan viability: HIGH - Official docs, clear pricing, verified limits
-- Unified deployment benefits: HIGH - Well-documented pattern, existing code supports it
-- Bun.serve() static file capability: HIGH - Official Bun docs, production-ready
-- Railway vs alternatives: MEDIUM-HIGH - Mix of official docs and community comparisons
-- Cost projections: MEDIUM - Based on documented pricing but actual usage varies
-- Pitfalls: HIGH - Mix of official docs, community reports, and testing
+- Standard stack: HIGH - Oracle Cloud docs, Infisical docs, official GitHub Actions, Caddy docs are all authoritative
+- Architecture: MEDIUM - Patterns from official sources but not all tested together (OCI + Infisical + Caddy combination is novel)
+- Pitfalls: MEDIUM - Oracle Cloud dual-firewall is documented, ARM64 builds are known issue, Infisical CLI usage confirmed
+- Deployment pattern: MEDIUM - systemd + Docker is standard, GitHub Actions SSH deploy is well-documented, but Oracle Cloud specific nuances need testing
 
 **Research date:** 2026-02-14
-**Valid until:** 2026-04-14 (60 days - pricing and platform features change quarterly)
+**Valid until:** 2026-03-14 (30 days - infrastructure tools are relatively stable)
 
-**Key decisions made in this research:**
-
-1. **Unified deployment recommended over split** - Simpler for WebSocket-heavy app, same-origin security, better dev/prod parity
-2. **Railway Hobby as primary recommendation** - Best balance of cost ($5/mo), simplicity, and WebSocket support
-3. **Existing server code already supports unified** - No major refactor needed, server already serves static files
-4. **Docker multi-stage build pattern** - Build client assets in Docker, copy to server image
-5. **Same-origin WebSocket pattern** - Use window.location instead of VITE_SERVER_URL
-
-**Cost comparison summary:**
-
-| Option | Monthly Cost | Complexity | Recommendation |
-|--------|--------------|------------|----------------|
-| Railway Unified | $5 | Low | ⭐ PRIMARY |
-| Fly.io Unified | $0 | Medium | ⭐⭐ Alternative |
-| Render Paid | $7 | Low | Alternative |
-| VPS + Coolify | €4-10 | Very High | Advanced users only |
-| CF Pages + Fly.io | $0 | High | Not recommended (over-engineered) |
-
-**Blockers resolved:**
-
-- ✅ Identified simpler deployment option (unified Railway vs split CF+Fly)
-- ✅ Verified existing server code supports unified deployment (static file serving)
-- ✅ Documented Railway Hobby plan pricing and limits ($5/mo covers typical usage)
-- ✅ Provided multi-stage Dockerfile pattern for unified deployment
-- ✅ Simplified client WebSocket connection (same-origin, no env vars)
-- ✅ Compared free tier options (Fly.io free vs Railway $5)
-- ✅ Evaluated VPS self-hosted option (too complex for hobby project)
-- ✅ Analyzed split vs unified tradeoffs (unified wins for this project)
-
-**Next phase planning will create tasks for:**
-
-1. Update unified Dockerfile (multi-stage: build client + serve with Bun)
-2. Verify server static file serving (already implemented, may need tweaks)
-3. Simplify client WebSocket connection (use window.location, remove VITE_SERVER_URL)
-4. Create Railway project and configure service
-5. Update GitHub Actions deploy workflow (build + push + Railway deploy)
-6. Test Docker image locally with docker-compose
-7. Deploy to Railway and verify health endpoint
-8. Test WebSocket connections in production
-9. Verify room cleanup after 24 hours (monitor /health metrics)
-10. Set up Railway billing alerts (stay within $5 credit)
-11. Document rollback procedure (Railway CLI or dashboard)
-12. Create production monitoring checklist (health, logs, metrics)
-
-Sources:
-
-- [Deploy Bun WebSockets on Railway](https://railway.com/deploy/BLofAq)
-- [Deploy a Bun application on Railway - Bun](https://bun.com/docs/guides/deployment/railway)
-- [Railway | The all-in-one intelligent cloud provider](https://railway.com/)
-- [Full-Stack Deployment Without DevOps Headaches | Render](https://render.com/articles/full-stack-deployment-without-devops-headaches)
-- [Deploy a Bun application on Render - Bun](https://bun.com/docs/guides/deployment/render)
-- [App Platform Pricing | DigitalOcean](https://www.digitalocean.com/pricing/app-platform)
-- [How do I run a web service with websockets on app platform? | DigitalOcean](https://www.digitalocean.com/community/questions/how-do-i-run-a-web-service-with-websockets-on-app-platform)
-- [Coolify](https://coolify.io/)
-- [GitHub - coollabsio/coolify](https://github.com/coollabsio/coolify)
-- [Pricing Plans | Railway Docs](https://docs.railway.com/reference/pricing/plans)
-- [Railway Pricing 2026: $5 Free Credit + Hobby $5/mo](https://www.saaspricepulse.com/tools/railway)
-- [Do Web Services on a free tier go to sleep after some time inactive? - Render](https://community.render.com/t/do-web-services-on-a-free-tier-go-to-sleep-after-some-time-inactive/3303)
-- [Deploy for Free – Render Docs](https://render.com/docs/free)
-- [Beyond the Frontend-Backend Split: When a Monolithic Approach Makes Sense](https://bastakiss.com/blog/web-17/beyond-the-frontend-backend-split-when-a-monolithic-approach-makes-sense-610)
-- [Railway vs Render (2026): Which cloud platform fits your workflow better](https://northflank.com/blog/railway-vs-render)
-- [Railway vs Fly.io vs Render: Which Cloud Gives You the Best ROI?](https://medium.com/ai-disruption/railway-vs-fly-io-vs-render-which-cloud-gives-you-the-best-roi-2e3305399e5b)
-- [Hetzner Cloud VPS Pricing Calculator (Feb 2026)](https://costgoat.com/pricing/hetzner)
-- [Best VPS Providers for Self-Hosting in 2026](https://selfhostable.dev/blog/best-vps-providers-for-self-hosting-2026/)
-- [Railway Hobby Plan Details](https://docs.railway.com/reference/pricing/plans)
-- [Is there an "Inactivity Delay" for Free Tier? - Fly.io](https://community.fly.io/t/is-there-an-inactivity-delay-for-free-tier/10855)
-- [How to Deploy Bun Applications to Production](https://oneuptime.com/blog/post/2026-01-31-bun-production-deployment/view)
-- [Benefits and challenges of monorepo development practices - CircleCI](https://circleci.com/blog/monorepo-dev-practices/)
+**Key uncertainties:**
+- Oracle Cloud Ampere A1 availability (capacity issues common)
+- Infisical + OpenTofu integration (documented but not widely used yet)
+- ARM64 Docker build compatibility with existing Dockerfiles (likely works but needs testing)
+- Bun production deployment patterns (Bun is still maturing for production use)
