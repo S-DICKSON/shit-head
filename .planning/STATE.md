@@ -5,7 +5,7 @@
 See: .planning/PROJECT.md (updated 2026-02-07)
 
 **Core value:** Friends can play a complete, rule-accurate game of Shithead together online with zero friction
-**Current focus:** Phase 15 complete — all milestone phases delivered
+**Current focus:** Phase 12 complete — all 15 milestone phases delivered
 
 ## Current Position
 
