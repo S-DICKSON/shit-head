@@ -1,13 +1,16 @@
-# Fly.io configuration
-fly_api_token = "fo1_your_fly_api_token_here"
-fly_org       = "personal"
-fly_region    = "sjc"
+# Oracle Cloud Infrastructure credentials
+# These are injected via Infisical CLI: infisical run -- tofu apply
+# Only needed if running tofu apply manually without Infisical
+tenancy_ocid     = "ocid1.tenancy.oc1..your_tenancy_ocid"
+user_ocid        = "ocid1.user.oc1..your_user_ocid"
+fingerprint      = "aa:bb:cc:dd:ee:ff:00:11:22:33:44:55:66:77:88:99"
+private_key_path = "~/.oci/oci_api_key.pem"
 
-# Cloudflare configuration
-cloudflare_api_token  = "your_cloudflare_api_token_here"
-cloudflare_account_id = "your_cloudflare_account_id_here"
+# Region (default: us-phoenix-1)
+region = "us-phoenix-1"
 
-# Project configuration
-project_name    = "shit-head"
-github_repo     = "YOUR_USERNAME/shit-head"
-allowed_origins = "https://shit-head.pages.dev"
+# SSH public key for VPS access
+ssh_public_key = "ssh-rsa AAAA... your-email@example.com"
+
+# Domain for Caddy HTTPS
+domain = "splatmonkey.com"
