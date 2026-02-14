@@ -1,22 +1,40 @@
-variable "cloudflare_api_token" {
-  description = "Cloudflare API token for Pages deployment"
+variable "tenancy_ocid" {
+  description = "OCI tenancy OCID"
   type        = string
   sensitive   = true
 }
 
-variable "cloudflare_account_id" {
-  description = "Cloudflare account ID"
+variable "user_ocid" {
+  description = "OCI user OCID"
   type        = string
+  sensitive   = true
 }
 
-variable "project_name" {
-  description = "Project name prefix for services"
+variable "fingerprint" {
+  description = "OCI API key fingerprint"
   type        = string
-  default     = "shit-head"
+  sensitive   = true
 }
 
-variable "vite_server_url" {
-  description = "WebSocket URL for the game server"
+variable "private_key_path" {
+  description = "Path to OCI API private key"
   type        = string
-  default     = "wss://shit-head-server.fly.dev"
+  default     = "~/.oci/oci_api_key.pem"
+}
+
+variable "region" {
+  description = "OCI region"
+  type        = string
+  default     = "us-phoenix-1"
+}
+
+variable "ssh_public_key" {
+  description = "SSH public key to install on the instance"
+  type        = string
+  sensitive   = true
+}
+
+variable "domain" {
+  description = "Domain name for Caddy HTTPS"
+  type        = string
 }

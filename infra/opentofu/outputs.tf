@@ -1,9 +1,14 @@
-output "client_url" {
-  description = "URL of the deployed client"
-  value       = "https://${cloudflare_pages_project.client.name}.pages.dev"
+output "public_ip" {
+  description = "Public IP address of the compute instance"
+  value       = oci_core_instance.shithead_server.public_ip
 }
 
-output "cf_pages_project" {
-  description = "Cloudflare Pages project name"
-  value       = cloudflare_pages_project.client.name
+output "instance_id" {
+  description = "OCID of the compute instance"
+  value       = oci_core_instance.shithead_server.id
+}
+
+output "domain" {
+  description = "Domain name for reference"
+  value       = var.domain
 }
