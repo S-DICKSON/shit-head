@@ -4,6 +4,12 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
+    paths:
+      - 'packages/**'
+      - 'bun.lock'
+      - 'package.json'
+      - 'Dockerfile'
+      - '.github/workflows/deploy.yml'
 
 jobs:
   deploy:
