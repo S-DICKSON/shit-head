@@ -76,6 +76,7 @@ export class GameEngine {
       discardPile: [],
       currentPlayerIndex,
       dealerIndex,
+      firstTurn: false,
     };
   }
 
@@ -113,6 +114,7 @@ export class GameEngine {
       discardPile: state.discardPile,
       currentPlayerIndex: state.currentPlayerIndex,
       dealerIndex: state.dealerIndex,
+      firstTurn: state.firstTurn,
     };
   }
 
@@ -338,6 +340,38 @@ export class GameEngine {
       }
     }
 
+    // First-turn validation: must play lowest card(s)
+    if (state.firstTurn) {
+      // Find player's lowest rank in hand (skip 2s, same as determineFirstPlayer)
+      const scanOrder = RANK_ORDER.slice(1); // Skip '2'
+      let lowestRank: string | null = null;
+      for (const rank of scanOrder) {
+        if (player.hand.some(c => c.kind === 'standard' && c.rank === rank)) {
+          lowestRank = rank;
+          break;
+        }
+      }
+      // Fallback: if only 2s (extremely rare), lowest is '2'
+      if (!lowestRank) lowestRank = '2';
+
+      // Validate ALL played cards are of the lowest rank
+      const firstPlayedRank = cardsToPlay[0].kind === 'standard' ? cardsToPlay[0].rank : null;
+      if (firstPlayedRank !== lowestRank) {
+        return { success: false, error: 'Must play your lowest card(s) on the first turn', code: 'MUST_PLAY_LOWEST' as ErrorCode };
+      }
+
+      // Validate player is playing ALL cards of that rank from their hand
+      const allLowestIndices = player.hand
+        .map((c, i) => (c.kind === 'standard' && c.rank === lowestRank) ? i : -1)
+        .filter(i => i !== -1);
+      const sortedPlayedIndices = [...cardIndices].sort((a, b) => a - b);
+      const sortedLowestIndices = [...allLowestIndices].sort((a, b) => a - b);
+      if (sortedPlayedIndices.length !== sortedLowestIndices.length ||
+          !sortedPlayedIndices.every((v, i) => v === sortedLowestIndices[i])) {
+        return { success: false, error: 'Must play ALL of your lowest cards on the first turn', code: 'MUST_PLAY_LOWEST' as ErrorCode };
+      }
+    }
+
     // Validate play is legal using full special card rules
     const firstPlayedCard = cardsToPlay[0]; // All cards same rank, just check first
     if (!canPlayOnPile(firstPlayedCard, state.discardPile)) {
@@ -410,6 +444,7 @@ export class GameEngine {
       ...intermediateState,
       discardPile: finalDiscardPile,
       currentPlayerIndex: nextPlayerIndex,
+      firstTurn: false,
     };
 
     // Check for game end after burn (if player was eliminated by the burn)
@@ -1007,6 +1042,25 @@ export class GameEngine {
     const playSource = this.determinePlaySource(player, state.drawPile.length === 0);
 
     if (playSource === 'hand') {
+      // On first turn, must play all lowest-ranked cards
+      if (state.firstTurn) {
+        const scanOrder = RANK_ORDER.slice(1);
+        let lowestRank: string | null = null;
+        for (const rank of scanOrder) {
+          if (player.hand.some(c => c.kind === 'standard' && c.rank === rank)) {
+            lowestRank = rank;
+            break;
+          }
+        }
+        if (!lowestRank) lowestRank = '2';
+        const lowestIndices = player.hand
+          .map((c, i) => (c.kind === 'standard' && c.rank === lowestRank) ? i : -1)
+          .filter(i => i !== -1);
+        const playResult = this.playCards(state, playerId, lowestIndices);
+        if (!playResult.success) return playResult;
+        return { success: true, data: { state: playResult.data, wasBlindPlay: false } };
+      }
+
       // Find all valid cards in hand
       const validIndices: number[] = [];
       for (let i = 0; i < player.hand.length; i++) {

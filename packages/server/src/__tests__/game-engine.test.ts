@@ -953,6 +953,7 @@ describe('GameEngine', () => {
           discardPile: [{ kind: 'standard', suit: 'spades', rank: '3' }],
           currentPlayerIndex: 0,
           dealerIndex: 0,
+          firstTurn: false,
         };
 
         const result = GameEngine.playCards(state, 'p1', [0]);
@@ -995,6 +996,7 @@ describe('GameEngine', () => {
           discardPile: [{ kind: 'standard', suit: 'spades', rank: '5' }],
           currentPlayerIndex: 0,
           dealerIndex: 0,
+          firstTurn: false,
         };
 
         const result = GameEngine.playCards(state, 'p1', [0]);
@@ -1041,6 +1043,7 @@ describe('GameEngine', () => {
           discardPile: [{ kind: 'standard', suit: 'spades', rank: '3' }],
           currentPlayerIndex: 0,
           dealerIndex: 0,
+          firstTurn: false,
         };
 
         const result = GameEngine.playCards(state, 'p1', [0]);
@@ -1093,6 +1096,7 @@ describe('GameEngine', () => {
           discardPile: [{ kind: 'standard', suit: 'spades', rank: '3' }],
           currentPlayerIndex: 0,
           dealerIndex: 0,
+          firstTurn: false,
         };
 
         const result = GameEngine.playCards(state, 'p1', [0]);
@@ -1128,6 +1132,7 @@ describe('GameEngine', () => {
           discardPile: [{ kind: 'standard', suit: 'spades', rank: '5' }],
           currentPlayerIndex: 0,
           dealerIndex: 0,
+          firstTurn: false,
         };
 
         const result = GameEngine.playCards(state, 'p1', [0]);
@@ -2826,6 +2831,7 @@ describe('GameEngine', () => {
         discardPile: config.discardPile || [],
         currentPlayerIndex: config.currentPlayerIndex ?? 0,
         dealerIndex: 0,
+        firstTurn: false,
       };
     }
 
@@ -3367,6 +3373,132 @@ describe('GameEngine', () => {
           expect(result.data.state.currentPlayerIndex).toBe(1);
         }
       });
+    });
+  });
+
+  describe('firstTurn enforcement', () => {
+    // Helper function to create a test card
+    const c = (rank: Rank, suit: Suit = 'hearts'): Card => ({
+      kind: 'standard',
+      suit,
+      rank,
+    });
+
+    // Helper to create a GameState for first turn testing
+    const createFirstTurnState = (handCards: Card[]): GameState => {
+      return {
+        phase: 'playing',
+        players: [
+          {
+            playerId: 'p1',
+            nickname: 'Alice',
+            hand: handCards,
+            faceUp: [c('K'), c('Q'), c('J')],
+            faceDown: [c('10'), c('9'), c('8')],
+          },
+          {
+            playerId: 'p2',
+            nickname: 'Bob',
+            hand: [c('7'), c('6'), c('5')],
+            faceUp: [c('4'), c('3'), c('2')],
+            faceDown: [c('A'), c('K'), c('Q')],
+          },
+        ],
+        drawPile: [],
+        discardPile: [],
+        currentPlayerIndex: 0,
+        dealerIndex: 1,
+        firstTurn: true,
+      };
+    };
+
+    it('rejects play of non-lowest card on first turn', () => {
+      const state = createFirstTurnState([c('3'), c('5'), c('K')]);
+      // Try to play the 5 (not lowest)
+      const result = GameEngine.playCards(state, 'p1', [1]);
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.code).toBe('MUST_PLAY_LOWEST');
+        expect(result.error).toContain('lowest');
+      }
+    });
+
+    it('rejects partial play of lowest cards on first turn', () => {
+      const state = createFirstTurnState([c('3', 'hearts'), c('3', 'diamonds'), c('K')]);
+      // Try to play only one 3 (must play both)
+      const result = GameEngine.playCards(state, 'p1', [0]);
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.code).toBe('MUST_PLAY_LOWEST');
+        expect(result.error).toContain('ALL');
+      }
+    });
+
+    it('accepts play of all lowest cards on first turn', () => {
+      const state = createFirstTurnState([c('3', 'hearts'), c('3', 'diamonds'), c('K')]);
+      // Play both 3s
+      const result = GameEngine.playCards(state, 'p1', [0, 1]);
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.firstTurn).toBe(false);
+        expect(result.data.discardPile).toHaveLength(2);
+      }
+    });
+
+    it('accepts play of single lowest card when only one exists', () => {
+      const state = createFirstTurnState([c('3'), c('5'), c('K')]);
+      // Play the single 3
+      const result = GameEngine.playCards(state, 'p1', [0]);
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.firstTurn).toBe(false);
+        expect(result.data.discardPile).toHaveLength(1);
+        expect(cardRank(result.data.discardPile[0])).toBe('3');
+      }
+    });
+
+    it('sets firstTurn to false after successful first play', () => {
+      const state = createFirstTurnState([c('3'), c('5'), c('K')]);
+      const result = GameEngine.playCards(state, 'p1', [0]);
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.firstTurn).toBe(false);
+      }
+    });
+
+    it('normal play rules apply after first turn', () => {
+      const state = createFirstTurnState([c('3'), c('5'), c('K')]);
+      // Manually set firstTurn to false to simulate post-first-turn
+      const normalState: GameState = { ...state, firstTurn: false, discardPile: [c('4')] };
+
+      // Should be able to play 5 on top of 4
+      const result = GameEngine.playCards(normalState, 'p1', [1]);
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.discardPile).toHaveLength(2);
+        expect(cardRank(result.data.discardPile[1])).toBe('5');
+      }
+    });
+
+    it('autoPlayOnTimeout plays lowest cards on first turn', () => {
+      const state = createFirstTurnState([c('3', 'hearts'), c('3', 'diamonds'), c('K')]);
+      const result = GameEngine.autoPlayOnTimeout(state, 'p1');
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.wasBlindPlay).toBe(false);
+        expect(result.data.state.firstTurn).toBe(false);
+        expect(result.data.state.discardPile).toHaveLength(2);
+        // Both 3s should have been played
+        expect(result.data.state.players[0].hand).toHaveLength(1);
+        expect(cardRank(result.data.state.players[0].hand[0])).toBe('K');
+      }
     });
   });
 });

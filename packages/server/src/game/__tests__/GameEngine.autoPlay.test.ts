@@ -30,6 +30,7 @@ describe('GameEngine.autoPlayOnTimeout', () => {
       discardPile: [{ kind: 'standard', suit: 'spades', rank: '4' }],
       currentPlayerIndex: 0,
       dealerIndex: 0,
+      firstTurn: false,
     };
 
     return { ...defaultState, ...overrides };

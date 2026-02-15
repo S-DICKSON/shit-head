@@ -370,6 +370,7 @@ export function handleMessage(
                       faceUp: view.faceUp,
                       faceDownCount: view.faceDownCount,
                       opponents: view.opponents,
+                      firstTurn: view.firstTurn,
                     });
                   }
                 }
@@ -463,6 +464,7 @@ export function handleMessage(
                 discardPile: view.discardPile,
                 currentPlayerIndex: view.currentPlayerIndex,
                 dealerIndex: view.dealerIndex,
+                firstTurn: view.firstTurn,
               });
             }
           }
@@ -600,6 +602,7 @@ export function handleMessage(
             faceUp: view.faceUp,
             faceDownCount: view.faceDownCount,
             opponents: view.opponents,
+            firstTurn: view.firstTurn,
           });
         }
       }
@@ -746,6 +749,7 @@ export function handleMessage(
           discardPile: gameView.discardPile,
           currentPlayerIndex: gameView.currentPlayerIndex,
           dealerIndex: gameView.dealerIndex,
+          firstTurn: gameView.firstTurn,
         });
       }
 

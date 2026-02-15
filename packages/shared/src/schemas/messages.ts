@@ -162,6 +162,7 @@ export const gameDealtSchema = z.object({
   discardPile: z.array(cardSchema),
   currentPlayerIndex: z.number(),
   dealerIndex: z.number(),
+  firstTurn: z.boolean(),
 });
 
 export const swapTimerTickSchema = z.object({
@@ -198,6 +199,7 @@ export const cardPlayedSchema = z.object({
   faceUp: z.array(cardSchema).optional(),
   faceDownCount: z.number().optional(),
   opponents: z.array(opponentViewSchema).optional(),
+  firstTurn: z.boolean(),
 });
 
 export const pilePickupSchema = z.object({
@@ -288,6 +290,7 @@ export const errorSchema = z.object({
     'ALREADY_IN_ROOM',
     'NOT_YOUR_TURN',
     'GAME_OVER',
+    'MUST_PLAY_LOWEST',
   ]),
 });
 

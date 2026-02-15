@@ -32,6 +32,7 @@ export type GameState = {
   discardPile: Card[];
   currentPlayerIndex: number;
   dealerIndex: number;
+  firstTurn: boolean;
 };
 
 /**
@@ -63,4 +64,5 @@ export type PlayerGameView = {
   discardPile: Card[];       // Top card(s) visible to all
   currentPlayerIndex: number;
   dealerIndex: number;
+  firstTurn: boolean;
 };

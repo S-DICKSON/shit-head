@@ -448,6 +448,7 @@ export class Room {
           ...this.gameState,
           phase: 'playing',
           currentPlayerIndex: firstPlayer,
+          firstTurn: true,
         };
         // Notify that playing phase has started with first player
         this.onPlayPhaseStart?.(this.gameState.currentPlayerIndex);

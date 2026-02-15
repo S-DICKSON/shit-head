@@ -94,4 +94,5 @@ export type ErrorCode =
   | 'PLAYER_NOT_FOUND'
   | 'ALREADY_IN_ROOM'
   | 'NOT_YOUR_TURN'
-  | 'GAME_OVER';
+  | 'GAME_OVER'
+  | 'MUST_PLAY_LOWEST';
