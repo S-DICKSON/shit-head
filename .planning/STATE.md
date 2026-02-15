@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 Phase: 12 of 15 (Deployment - Production Polish)
 Plan: 3 of 3 (Phase complete)
 Status: Phase complete
-Last activity: 2026-02-15 — Completed quick task 011: Mobile action buttons fix
+Last activity: 2026-02-15 — Completed quick task 012: Add client Vitest coverage for composables
 
 Progress: [█████████░] 95% (58 plans complete)
 
@@ -448,6 +448,7 @@ Recent decisions affecting current work:
 | 008 | Cleanup stale Docker and infra files | 2026-02-15 | d7ab01d | [008-cleanup-stale-docker-and-infra-files](./quick/008-cleanup-stale-docker-and-infra-files/) |
 | 009 | Auto-sort hand cards (normal then special) | 2026-02-15 | 2330749 | [009-auto-sort-hand-cards-normal-then-special](./quick/009-auto-sort-hand-cards-normal-then-special/) |
 | 011 | Mobile action buttons cover cards fix | 2026-02-15 | 2c4d1ec | [011-mobile-action-buttons-cover-cards](./quick/011-mobile-action-buttons-cover-cards/) |
+| 012 | Add client Vitest coverage for composables | 2026-02-15 | f5168db | [012-add-client-vitest-coverage-composables](./quick/012-add-client-vitest-coverage-composables/) |
 
 ### Blockers/Concerns
 
@@ -461,6 +462,6 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-15
-Stopped at: Completed quick task 011 (Mobile action buttons cover cards fix)
+Stopped at: Completed quick task 012 (Add client Vitest coverage for composables)
 Resume file: None
 
