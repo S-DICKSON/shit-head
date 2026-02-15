@@ -7,42 +7,9 @@ Multiplayer browser-based Shithead card game. Play with 2-4 friends online -- no
 ## Getting Started
 
 ### Prerequisites
-- Docker and Docker Compose (all dev tooling runs in containers)
-- Git
-
-#### Windows Users
-
-This project uses Make for task automation. Windows does not include `make` by default. Choose one option:
-
-**Option A: WSL (Recommended)**
-
-Best option for Windows developers. Since the project runs everything in Docker containers, WSL 2 integrates natively with Docker Desktop.
-
-1. Open PowerShell as Administrator
-2. Run `wsl --install` (installs Ubuntu by default)
-3. Requires Windows 10 version 2004+ or Windows 11
-4. Enable Docker Desktop's WSL 2 backend (enabled by default on new installs)
-5. Clone and run the project from within WSL -- all `make` commands work natively
-
-**Option B: Install Make via Chocolatey**
-
-If you prefer PowerShell/CMD without WSL:
-
-1. Install Chocolatey: https://chocolatey.org/install
-2. Run `choco install make`
-3. All `make` commands work from PowerShell after installation
-
-**Option C: Run Docker Compose directly**
-
-If you don't want to install Make, run Docker Compose commands directly:
-
-| Make Command | Docker Compose Equivalent |
-|--------------|---------------------------|
-| `make dev` | `docker compose up --build` |
-| `make test` | `docker compose run --rm client bunx vitest run` <br> `docker compose run --rm server bunx vitest run` |
-| `make lint` | `docker compose run --rm server sh -c "cd /app/packages/shared && bunx eslint ."` <br> `docker compose run --rm server sh -c "cd /app/packages/server && bunx eslint ."` <br> `docker compose run --rm client bunx eslint .` |
-| `make type-check` | `docker compose run --rm server bunx tsc --build packages/shared/tsconfig.json` <br> `docker compose run --rm server bunx tsc --noEmit -p packages/server/tsconfig.json` <br> `docker compose run --rm client bunx vue-tsc --noEmit` |
-| `make clean` | `docker compose down -v --rmi local --remove-orphans` |
+- [Git](https://git-scm.com/)
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (all dev tooling runs in containers)
+- **Windows only:** [Chocolatey](https://chocolatey.org/install) and Make (`choco install make`)
 
 ### Development
 1. Clone the repo
