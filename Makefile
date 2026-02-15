@@ -1,4 +1,4 @@
-.PHONY: help dev start build test test-server test-client clean lint lint-fix type-check type-check-server type-check-shared tunnel
+.PHONY: help dev test test-server test-client clean lint lint-fix type-check type-check-server type-check-shared tunnel
 
 .DEFAULT_GOAL := help
 
@@ -7,12 +7,6 @@ help: ## Show available targets
 
 dev: ## Start development environment with hot reload
 	docker compose up --build
-
-start: ## Start production-like environment
-	docker compose -f docker-compose.prod.yml up --build
-
-build: ## Build production images
-	docker compose -f docker-compose.prod.yml build
 
 test: ## Run all tests
 	docker compose run --rm client bunx vitest run
@@ -48,7 +42,6 @@ type-check-server: ## Run server type checking
 
 clean: ## Clean up containers, volumes, and images
 	docker compose down -v --rmi local --remove-orphans
-	docker compose -f docker-compose.prod.yml down -v --rmi local --remove-orphans
 	docker compose -f docker-compose.tunnel.yml down -v --remove-orphans
 
 tunnel: ## Start cloudflared tunnel for mobile testing (one command)
