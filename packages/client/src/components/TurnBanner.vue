@@ -2,9 +2,11 @@
   <Transition name="banner">
     <div
       v-if="visible"
-      class="fixed top-24 left-1/2 -translate-x-1/2 z-50 bg-yellow-400 text-black font-bold text-lg px-6 py-2 rounded-full shadow-lg"
+      class="flex justify-center pointer-events-none"
     >
-      YOUR TURN
+      <div class="bg-yellow-400 text-black font-bold text-lg px-6 py-2 rounded-full shadow-lg">
+        YOUR TURN
+      </div>
     </div>
   </Transition>
 </template>
@@ -42,12 +44,12 @@ watch(
 .banner-enter-from,
 .banner-leave-to {
   opacity: 0;
-  transform: translateX(-50%) scale(0.9);
+  transform: scale(0.9);
 }
 
 .banner-enter-to {
   opacity: 1;
-  transform: translateX(-50%) scale(1);
+  transform: scale(1);
 }
 
 @media (prefers-reduced-motion: reduce) {

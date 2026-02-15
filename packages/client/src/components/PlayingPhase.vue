@@ -70,16 +70,19 @@ watch(
       </div>
     </div>
 
-    <!-- Turn Banner -->
-    <TurnBanner :visible="isMyTurn" />
+    <!-- Center game area: Turn Banner + Draw/Discard Piles -->
+    <div class="flex-1 flex flex-col items-center justify-center px-4">
+      <!-- Turn Banner (inline within center area) -->
+      <TurnBanner :visible="isMyTurn" />
 
-    <!-- Center game area: Draw Pile + Discard Pile -->
-    <div class="flex-1 flex items-center justify-center gap-6 sm:gap-8 px-4">
-      <DrawPile :count="gameView?.drawPileCount ?? 0" />
-      <DiscardPile
-        :cards="gameView?.discardPile ?? []"
-        :burn-animation="burnTriggered"
-      />
+      <!-- Draw Pile + Discard Pile -->
+      <div class="flex items-center justify-center gap-6 sm:gap-8 mb-2">
+        <DrawPile :count="gameView?.drawPileCount ?? 0" />
+        <DiscardPile
+          :cards="gameView?.discardPile ?? []"
+          :burn-animation="burnTriggered"
+        />
+      </div>
     </div>
 
     <!-- Player's cards area (scrollable on mobile with many cards) -->
