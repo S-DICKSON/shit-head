@@ -1,0 +1,10 @@
+services:
+  infra:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./opentofu:/infra
+    stdin_open: true
+    tty: true
+    entrypoint: ["tail", "-f", "/dev/null"]

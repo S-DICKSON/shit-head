@@ -1,11 +1,11 @@
 output "public_ip" {
-  description = "Public IP address of the compute instance"
-  value       = oci_core_instance.shithead_server.public_ip
+  description = "Public IP address of the server"
+  value       = hcloud_server.shithead.ipv4_address
 }
 
-output "instance_id" {
-  description = "OCID of the compute instance"
-  value       = oci_core_instance.shithead_server.id
+output "server_id" {
+  description = "Hetzner server ID"
+  value       = hcloud_server.shithead.id
 }
 
 output "domain" {

@@ -11,20 +11,10 @@ jobs:
     permissions:
       contents: read
       packages: write
-      id-token: write
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Fetch Infisical secrets
-        uses: Infisical/secrets-action@v1.0.6
-        with:
-          client-id: ${{ secrets.INFISICAL_CLIENT_ID }}
-          client-secret: ${{ secrets.INFISICAL_CLIENT_SECRET }}
-          env-slug: production
-          project-slug: shithead-game
-          export-type: env
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -51,17 +41,17 @@ jobs:
       - name: Setup SSH
         uses: webfactory/ssh-agent@v0.9.1
         with:
-          ssh-private-key: ${{ env.VPS_SSH_PRIVATE_KEY }}
+          ssh-private-key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
 
-      - name: Deploy to Oracle Cloud VPS
+      - name: Deploy to Hetzner VPS
         env:
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GHCR_ACTOR: ${{ github.actor }}
           REPO_OWNER: ${{ github.repository_owner }}
-          DEPLOY_DOMAIN: ${{ env.DOMAIN }}
-          DEPLOY_ORIGINS: ${{ env.ALLOWED_ORIGINS }}
+          DEPLOY_DOMAIN: splatmonkey.com
+          DEPLOY_ORIGINS: https://splatmonkey.com
         run: |
-          ssh -o StrictHostKeyChecking=no ubuntu@${{ env.VPS_PUBLIC_IP }} << ENDSSH
+          ssh -o StrictHostKeyChecking=no root@${{ secrets.VPS_PUBLIC_IP }} << ENDSSH
             # Login to GHCR (variables interpolated by runner before SSH)
             echo "${GHCR_TOKEN}" | docker login ghcr.io -u ${GHCR_ACTOR} --password-stdin
 
@@ -76,11 +66,11 @@ jobs:
           ENVEOF
 
             # Update systemd service with correct image owner
-            sudo sed -i "s|ghcr.io/OWNER/|ghcr.io/${REPO_OWNER}/|g" /etc/systemd/system/shithead-game.service
-            sudo systemctl daemon-reload
+            sed -i "s|ghcr.io/OWNER/|ghcr.io/${REPO_OWNER}/|g" /etc/systemd/system/shithead-game.service
+            systemctl daemon-reload
 
             # Configure Caddy with domain
-            cat | sudo tee /etc/caddy/Caddyfile << CADDYEOF
+            cat > /etc/caddy/Caddyfile << CADDYEOF
           ${DEPLOY_DOMAIN} {
               reverse_proxy localhost:3000
               log {
@@ -88,11 +78,11 @@ jobs:
               }
           }
           CADDYEOF
-            sudo systemctl reload caddy || sudo systemctl restart caddy
+            systemctl reload caddy || systemctl restart caddy
 
             # Restart game service
-            sudo systemctl enable shithead-game
-            sudo systemctl restart shithead-game
+            systemctl enable shithead-game
+            systemctl restart shithead-game
 
             # Wait for startup
             sleep 10
@@ -106,4 +96,4 @@ jobs:
       - name: Post-deploy health check
         run: |
           sleep 5
-          curl -f https://${{ env.DOMAIN }}/health || echo "External health check failed (DNS/SSL may still be propagating)"
+          curl -f https://splatmonkey.com/health || echo "External health check failed (DNS/SSL may still be propagating)"

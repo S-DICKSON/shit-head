@@ -8,8 +8,6 @@ packages:
   - ca-certificates
   - curl
   - gnupg
-  - lsb-release
-  - netfilter-persistent
 
 write_files:
   - path: /etc/systemd/system/shithead-game.service
@@ -30,7 +28,6 @@ write_files:
 
       ExecStartPre=/usr/bin/docker stop shithead-game || true
       ExecStartPre=/usr/bin/docker rm shithead-game || true
-      ExecStartPre=/usr/bin/docker pull ghcr.io/OWNER/shithead-server:latest
       ExecStart=/usr/bin/docker run --name shithead-game --rm --log-driver=journald -p 127.0.0.1:3000:3000 --env-file /opt/shithead/.env ghcr.io/OWNER/shithead-server:latest
       ExecStop=/usr/bin/docker stop -t 60 shithead-game
 
@@ -46,16 +43,9 @@ write_files:
 runcmd:
   # Install Docker
   - curl -fsSL https://get.docker.com | sh
-  - usermod -aG docker ubuntu
-
-  # Open iptables ports for Oracle Cloud dual-firewall
-  - iptables -I INPUT 6 -m state --state NEW -p tcp --dport 80 -j ACCEPT
-  - iptables -I INPUT 6 -m state --state NEW -p tcp --dport 443 -j ACCEPT
-  - netfilter-persistent save
 
   # Create application directory
   - mkdir -p /opt/shithead
-  - chown ubuntu:ubuntu /opt/shithead
 
   # Enable and start Docker
   - systemctl enable docker
@@ -70,4 +60,4 @@ runcmd:
   # Stop Caddy initially (will be configured during first deploy)
   - systemctl stop caddy
 
-final_message: "Cloud-init complete. Docker and Caddy installed. Ports 80/443 open."
+final_message: "Cloud-init complete. Docker and Caddy installed."

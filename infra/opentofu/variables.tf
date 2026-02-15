@@ -1,35 +1,17 @@
-variable "tenancy_ocid" {
-  description = "OCI tenancy OCID"
+variable "hcloud_token" {
+  description = "Hetzner Cloud API token"
   type        = string
   sensitive   = true
-}
-
-variable "user_ocid" {
-  description = "OCI user OCID"
-  type        = string
-  sensitive   = true
-}
-
-variable "fingerprint" {
-  description = "OCI API key fingerprint"
-  type        = string
-  sensitive   = true
-}
-
-variable "private_key_path" {
-  description = "Path to OCI API private key"
-  type        = string
-  default     = "~/.oci/oci_api_key.pem"
-}
-
-variable "region" {
-  description = "OCI region"
-  type        = string
-  default     = "us-phoenix-1"
 }
 
 variable "ssh_public_key" {
-  description = "SSH public key to install on the instance"
+  description = "SSH public key to install on the server"
+  type        = string
+  sensitive   = true
+}
+
+variable "cloudflare_api_token" {
+  description = "Cloudflare API token with DNS edit permissions"
   type        = string
   sensitive   = true
 }
@@ -37,4 +19,5 @@ variable "ssh_public_key" {
 variable "domain" {
   description = "Domain name for Caddy HTTPS"
   type        = string
+  default     = "splatmonkey.com"
 }

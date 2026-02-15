@@ -1,16 +1,10 @@
-# Oracle Cloud Infrastructure credentials
-# These are injected via Infisical CLI: infisical run -- tofu apply
+# Hetzner Cloud credentials
+# These are injected via Infisical: infisical run -- tofu apply
 # Only needed if running tofu apply manually without Infisical
-tenancy_ocid     = "ocid1.tenancy.oc1..your_tenancy_ocid"
-user_ocid        = "ocid1.user.oc1..your_user_ocid"
-fingerprint      = "aa:bb:cc:dd:ee:ff:00:11:22:33:44:55:66:77:88:99"
-private_key_path = "~/.oci/oci_api_key.pem"
-
-# Region (default: us-phoenix-1)
-region = "us-phoenix-1"
+hcloud_token   = "your-hetzner-api-token"
 
 # SSH public key for VPS access
-ssh_public_key = "ssh-rsa AAAA... your-email@example.com"
+ssh_public_key = "ssh-ed25519 AAAA... your-email@example.com"
 
-# Domain for Caddy HTTPS
-domain = "splatmonkey.com"
+# Domain for Caddy HTTPS (default: splatmonkey.com)
+# domain = "splatmonkey.com"
