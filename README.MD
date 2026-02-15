@@ -10,6 +10,40 @@ Multiplayer browser-based Shithead card game. Play with 2-4 friends online -- no
 - Docker and Docker Compose (all dev tooling runs in containers)
 - Git
 
+#### Windows Users
+
+This project uses Make for task automation. Windows does not include `make` by default. Choose one option:
+
+**Option A: WSL (Recommended)**
+
+Best option for Windows developers. Since the project runs everything in Docker containers, WSL 2 integrates natively with Docker Desktop.
+
+1. Open PowerShell as Administrator
+2. Run `wsl --install` (installs Ubuntu by default)
+3. Requires Windows 10 version 2004+ or Windows 11
+4. Enable Docker Desktop's WSL 2 backend (enabled by default on new installs)
+5. Clone and run the project from within WSL -- all `make` commands work natively
+
+**Option B: Install Make via Chocolatey**
+
+If you prefer PowerShell/CMD without WSL:
+
+1. Install Chocolatey: https://chocolatey.org/install
+2. Run `choco install make`
+3. All `make` commands work from PowerShell after installation
+
+**Option C: Run Docker Compose directly**
+
+If you don't want to install Make, run Docker Compose commands directly:
+
+| Make Command | Docker Compose Equivalent |
+|--------------|---------------------------|
+| `make dev` | `docker compose up --build` |
+| `make test` | `docker compose run --rm client bunx vitest run` <br> `docker compose run --rm server bunx vitest run` |
+| `make lint` | `docker compose run --rm server sh -c "cd /app/packages/shared && bunx eslint ."` <br> `docker compose run --rm server sh -c "cd /app/packages/server && bunx eslint ."` <br> `docker compose run --rm client bunx eslint .` |
+| `make type-check` | `docker compose run --rm server bunx tsc --build packages/shared/tsconfig.json` <br> `docker compose run --rm server bunx tsc --noEmit -p packages/server/tsconfig.json` <br> `docker compose run --rm client bunx vue-tsc --noEmit` |
+| `make clean` | `docker compose down -v --rmi local --remove-orphans` |
+
 ### Development
 1. Clone the repo
 2. Run `make dev` to start the development environment with hot reload
@@ -53,6 +87,42 @@ CI/CD is handled by GitHub Actions (`.github/workflows/`):
 - `ci.yml` -- type-check, lint, and test on every PR
 - `deploy.yml` -- build and deploy on merge to main
 - `rollback.yml` -- rollback to a previous deployment
+
+## Development Workflow
+
+This project uses **Claude Code** (Anthropic's CLI tool) with the **GSD (Get Shit Done)** workflow system for AI-assisted development.
+
+### What is GSD?
+
+GSD is a structured project management system that lives in the `.planning/` directory. It provides:
+- Phase-based roadmap with atomic, executable plans
+- Project state tracking across sessions
+- Autonomous execution with per-task commits
+- Quick task system for bugs and small features
+
+### Key Commands
+
+- `/gsd:quick` -- Create and execute quick tasks (bugs, small features)
+- `/gsd:plan-phase` -- Plan a new phase with multiple plans
+- `/gsd:execute-phase` -- Execute a phase plan autonomously
+
+### Planning Directory
+
+The `.planning/` directory contains:
+- `STATE.md` -- Current project position, decisions, and session continuity
+- `ROADMAP.md` -- Multi-phase project roadmap
+- `phases/` -- Completed phase plans and summaries
+- `quick/` -- Quick task history with plans and summaries
+
+### Contributing with Claude Code + GSD
+
+1. Install Claude Code: https://claude.com/claude-code
+2. Clone the repo and open it in Claude Code
+3. Run `/gsd:quick` to create a quick task for your change
+4. Claude will plan, execute, test, lint, and commit atomically
+5. Submit a PR with the generated commits
+
+GSD ensures all changes pass tests, linting, and type checking before committing. Every task produces atomic commits with clear messages.
 
 ## Game Rules
 
