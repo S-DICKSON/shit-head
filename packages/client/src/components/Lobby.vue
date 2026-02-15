@@ -216,13 +216,13 @@ onUnmounted(() => {
                 >(You)</span>
               </span>
 
-              <!-- Edit button for current player -->
+              <!-- Rename button for current player -->
               <button
                 v-if="player.id === playerId && !isRenaming"
-                class="text-xs text-gray-500 hover:text-gray-700 hover:underline"
+                class="px-3 py-1 text-sm font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition-all"
                 @click="startRenaming"
               >
-                edit
+                Rename
               </button>
 
               <!-- Editing state: show input -->
