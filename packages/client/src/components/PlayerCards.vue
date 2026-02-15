@@ -1,143 +1,146 @@
 <template>
-  <div class="flex flex-col">
-    <!-- Table cards: face-down underneath face-up (stacked) -->
-    <div
-      v-if="faceUp.length > 0 || faceDownCount > 0"
-      class="mb-3"
-    >
-      <div class="text-center mb-1">
-        <span class="text-xs text-green-300 uppercase tracking-wide">Table</span>
-      </div>
-      <div class="flex justify-center gap-3 sm:gap-4 flex-wrap">
-        <!-- Each table position is a stack: face-down card on bottom, face-up card on top -->
-        <div
-          v-for="i in Math.max(faceUp.length, faceDownCount)"
-          :key="'table-' + i"
-          class="relative w-14 h-21 sm:w-16 sm:h-24"
-        >
-          <!-- Face-down card (bottom layer) -->
-          <button
-            v-if="i <= faceDownCount"
-            class="absolute inset-0 w-14 h-21 sm:w-16 sm:h-24 bg-blue-800 rounded border-2 border-blue-600 flex items-center justify-center text-lg text-blue-300 transition-all"
-            :class="[
-              i <= faceUp.length ? 'translate-y-1 translate-x-0.5' : '',
-              activeSource === 'face-down' ? 'cursor-pointer hover:border-blue-400' : 'opacity-60 cursor-not-allowed'
-            ]"
-            :style="{ zIndex: 0 }"
-            @click="$emit('select-face-down', i - 1)"
+  <div class="flex flex-col h-full">
+    <!-- Scrollable card area (mobile only) -->
+    <div class="overflow-y-auto max-h-[35vh] sm:max-h-none flex-1">
+      <!-- Table cards: face-down underneath face-up (stacked) -->
+      <div
+        v-if="faceUp.length > 0 || faceDownCount > 0"
+        class="mb-3"
+      >
+        <div class="text-center mb-1">
+          <span class="text-xs text-green-300 uppercase tracking-wide">Table</span>
+        </div>
+        <div class="flex justify-center gap-3 sm:gap-4 flex-wrap">
+          <!-- Each table position is a stack: face-down card on bottom, face-up card on top -->
+          <div
+            v-for="i in Math.max(faceUp.length, faceDownCount)"
+            :key="'table-' + i"
+            class="relative w-14 h-21 sm:w-16 sm:h-24"
           >
-            ?
-          </button>
-          <!-- Face-up card (top layer, overlays the face-down) -->
+            <!-- Face-down card (bottom layer) -->
+            <button
+              v-if="i <= faceDownCount"
+              class="absolute inset-0 w-14 h-21 sm:w-16 sm:h-24 bg-blue-800 rounded border-2 border-blue-600 flex items-center justify-center text-lg text-blue-300 transition-all"
+              :class="[
+                i <= faceUp.length ? 'translate-y-1 translate-x-0.5' : '',
+                activeSource === 'face-down' ? 'cursor-pointer hover:border-blue-400' : 'opacity-60 cursor-not-allowed'
+              ]"
+              :style="{ zIndex: 0 }"
+              @click="$emit('select-face-down', i - 1)"
+            >
+              ?
+            </button>
+            <!-- Face-up card (top layer, overlays the face-down) -->
+            <button
+              v-if="i <= faceUp.length"
+              class="absolute inset-0 w-14 h-21 sm:w-16 sm:h-24 bg-white text-black rounded border-2 flex flex-col items-center justify-center text-xs sm:text-sm transition-all"
+              :class="[
+                selectedFaceUpIndex === (i - 1)
+                  ? 'ring-2 ring-yellow-400 -translate-y-2 border-yellow-400 shadow-lg'
+                  : 'border-gray-300',
+                activeSource !== 'face-up'
+                  ? 'opacity-40 cursor-not-allowed'
+                  : 'cursor-pointer hover:border-gray-400'
+              ]"
+              :style="{ zIndex: 1 }"
+              @click="$emit('select-face-up', i - 1)"
+            >
+              <span class="font-bold">{{ faceUp[i - 1].kind === 'standard' ? faceUp[i - 1].rank : 'JKR' }}</span>
+              <span :class="suitColor(faceUp[i - 1])">
+                {{ faceUp[i - 1].kind === 'standard' ? suitSymbol(faceUp[i - 1].suit) : '★' }}
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hand cards section -->
+      <div
+        v-if="hand.length > 0"
+        class="mb-3"
+      >
+        <div class="text-center mb-1">
+          <span class="text-xs text-green-300 uppercase tracking-wide">Hand ({{ hand.length }})</span>
+        </div>
+
+        <!-- Mobile grouped view (> 5 cards on mobile) -->
+        <div
+          v-if="shouldShowGrouped"
+          class="flex flex-col gap-2 max-h-[30vh] overflow-y-auto px-2"
+        >
+          <div
+            v-for="group in groupedCards"
+            :key="group.rank"
+            class="bg-gray-800/50 rounded-lg p-2 flex items-center gap-3"
+          >
+            <!-- Sample card visual -->
+            <div class="w-10 h-15 bg-white text-black rounded border-2 border-gray-300 flex flex-col items-center justify-center text-xs flex-shrink-0">
+              <span class="font-bold">{{ group.rank }}</span>
+              <span :class="suitColor(group.cards[0])">
+                {{ group.cards[0].kind === 'standard' ? suitSymbol(group.cards[0].suit) : '★' }}
+              </span>
+            </div>
+
+            <!-- Rank label -->
+            <div class="flex-1 text-sm text-green-200">
+              {{ group.count }}× {{ group.rank }}{{ group.count > 1 ? 's' : '' }}
+            </div>
+
+            <!-- Quantity selectors -->
+            <div class="flex items-center gap-2">
+              <button
+                class="w-8 h-8 rounded-full bg-gray-600 text-white font-bold flex items-center justify-center disabled:opacity-30 transition-colors"
+                :disabled="activeSource !== 'hand' || !isMyTurn || getSelectedCount(group.rank) === 0"
+                @click="decrementSelection(group.rank)"
+              >
+                −
+              </button>
+              <span class="w-6 text-center text-sm font-bold text-yellow-400">
+                {{ getSelectedCount(group.rank) }}
+              </span>
+              <button
+                class="w-8 h-8 rounded-full bg-gray-600 text-white font-bold flex items-center justify-center disabled:opacity-30 transition-colors"
+                :disabled="activeSource !== 'hand' || !isMyTurn || getSelectedCount(group.rank) >= group.count"
+                @click="incrementSelection(group.rank)"
+              >
+                +
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Desktop/small hand view (normal card buttons) -->
+        <TransitionGroup
+          v-else
+          name="card-list"
+          tag="div"
+          class="flex justify-center gap-1 sm:gap-2 flex-wrap"
+        >
           <button
-            v-if="i <= faceUp.length"
-            class="absolute inset-0 w-14 h-21 sm:w-16 sm:h-24 bg-white text-black rounded border-2 flex flex-col items-center justify-center text-xs sm:text-sm transition-all"
+            v-for="(card, i) in hand"
+            :key="cardKey(card)"
+            class="w-14 h-21 sm:w-16 sm:h-24 bg-white text-black rounded border-2 flex flex-col items-center justify-center text-xs sm:text-sm transition-all"
             :class="[
-              selectedFaceUpIndex === (i - 1)
+              selectedHandIndices.has(i)
                 ? 'ring-2 ring-yellow-400 -translate-y-2 border-yellow-400 shadow-lg'
                 : 'border-gray-300',
-              activeSource !== 'face-up'
+              activeSource !== 'hand'
                 ? 'opacity-40 cursor-not-allowed'
                 : 'cursor-pointer hover:border-gray-400'
             ]"
-            :style="{ zIndex: 1 }"
-            @click="$emit('select-face-up', i - 1)"
+            @click="$emit('toggle-hand-card', i)"
           >
-            <span class="font-bold">{{ faceUp[i - 1].kind === 'standard' ? faceUp[i - 1].rank : 'JKR' }}</span>
-            <span :class="suitColor(faceUp[i - 1])">
-              {{ faceUp[i - 1].kind === 'standard' ? suitSymbol(faceUp[i - 1].suit) : '★' }}
+            <span class="font-bold">{{ card.kind === 'standard' ? card.rank : 'JKR' }}</span>
+            <span :class="suitColor(card)">
+              {{ card.kind === 'standard' ? suitSymbol(card.suit) : '★' }}
             </span>
           </button>
-        </div>
+        </TransitionGroup>
       </div>
     </div>
 
-    <!-- Hand cards section -->
-    <div
-      v-if="hand.length > 0"
-      class="mb-3"
-    >
-      <div class="text-center mb-1">
-        <span class="text-xs text-green-300 uppercase tracking-wide">Hand ({{ hand.length }})</span>
-      </div>
-
-      <!-- Mobile grouped view (> 5 cards on mobile) -->
-      <div
-        v-if="shouldShowGrouped"
-        class="flex flex-col gap-2 max-h-[30vh] overflow-y-auto px-2"
-      >
-        <div
-          v-for="group in groupedCards"
-          :key="group.rank"
-          class="bg-gray-800/50 rounded-lg p-2 flex items-center gap-3"
-        >
-          <!-- Sample card visual -->
-          <div class="w-10 h-15 bg-white text-black rounded border-2 border-gray-300 flex flex-col items-center justify-center text-xs flex-shrink-0">
-            <span class="font-bold">{{ group.rank }}</span>
-            <span :class="suitColor(group.cards[0])">
-              {{ group.cards[0].kind === 'standard' ? suitSymbol(group.cards[0].suit) : '★' }}
-            </span>
-          </div>
-
-          <!-- Rank label -->
-          <div class="flex-1 text-sm text-green-200">
-            {{ group.count }}× {{ group.rank }}{{ group.count > 1 ? 's' : '' }}
-          </div>
-
-          <!-- Quantity selectors -->
-          <div class="flex items-center gap-2">
-            <button
-              class="w-8 h-8 rounded-full bg-gray-600 text-white font-bold flex items-center justify-center disabled:opacity-30 transition-colors"
-              :disabled="activeSource !== 'hand' || !isMyTurn || getSelectedCount(group.rank) === 0"
-              @click="decrementSelection(group.rank)"
-            >
-              −
-            </button>
-            <span class="w-6 text-center text-sm font-bold text-yellow-400">
-              {{ getSelectedCount(group.rank) }}
-            </span>
-            <button
-              class="w-8 h-8 rounded-full bg-gray-600 text-white font-bold flex items-center justify-center disabled:opacity-30 transition-colors"
-              :disabled="activeSource !== 'hand' || !isMyTurn || getSelectedCount(group.rank) >= group.count"
-              @click="incrementSelection(group.rank)"
-            >
-              +
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Desktop/small hand view (normal card buttons) -->
-      <TransitionGroup
-        v-else
-        name="card-list"
-        tag="div"
-        class="flex justify-center gap-1 sm:gap-2 flex-wrap"
-      >
-        <button
-          v-for="(card, i) in hand"
-          :key="cardKey(card)"
-          class="w-14 h-21 sm:w-16 sm:h-24 bg-white text-black rounded border-2 flex flex-col items-center justify-center text-xs sm:text-sm transition-all"
-          :class="[
-            selectedHandIndices.has(i)
-              ? 'ring-2 ring-yellow-400 -translate-y-2 border-yellow-400 shadow-lg'
-              : 'border-gray-300',
-            activeSource !== 'hand'
-              ? 'opacity-40 cursor-not-allowed'
-              : 'cursor-pointer hover:border-gray-400'
-          ]"
-          @click="$emit('toggle-hand-card', i)"
-        >
-          <span class="font-bold">{{ card.kind === 'standard' ? card.rank : 'JKR' }}</span>
-          <span :class="suitColor(card)">
-            {{ card.kind === 'standard' ? suitSymbol(card.suit) : '★' }}
-          </span>
-        </button>
-      </TransitionGroup>
-    </div>
-
-    <!-- Action buttons (sticky on mobile) -->
-    <div class="sticky bottom-0 bg-green-900/95 backdrop-blur-sm py-2 -mx-2 px-2">
+    <!-- Action buttons (always visible below scrollable area) -->
+    <div class="flex-shrink-0 bg-green-900 py-2 -mx-2 px-2">
       <div class="flex flex-col items-center gap-2">
         <div class="flex justify-center gap-4">
           <button

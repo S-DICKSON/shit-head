@@ -86,7 +86,7 @@ watch(
     </div>
 
     <!-- Player's cards area (scrollable on mobile with many cards) -->
-    <div class="flex-shrink-0 px-2 pb-3 max-h-[45vh] overflow-y-auto">
+    <div class="flex-shrink-0 px-2 pb-3 flex flex-col max-h-[45vh]">
       <PlayerCards
         :hand="gameView?.hand ?? []"
         :face-up="gameView?.faceUp ?? []"
