@@ -6,7 +6,7 @@ import SwapPhase from './SwapPhase.vue';
 import PlayingPhase from './PlayingPhase.vue';
 
 const router = useRouter();
-const { gameView } = useGameSocket();
+const { gameView, shitheadNickname } = useGameSocket();
 
 // Guard against direct URL access without game state
 onMounted(() => {
@@ -31,8 +31,16 @@ onMounted(() => {
       v-else-if="gameView.phase === 'finished'"
       class="min-h-screen flex items-center justify-center bg-green-900 text-white"
     >
-      <div class="text-2xl font-bold">
-        Game Over
+      <div class="text-center">
+        <div class="text-4xl font-bold mb-4">
+          Game Over
+        </div>
+        <div
+          v-if="shitheadNickname"
+          class="text-3xl font-bold text-yellow-400"
+        >
+          Loser! {{ shitheadNickname }} 💩
+        </div>
       </div>
     </div>
 
