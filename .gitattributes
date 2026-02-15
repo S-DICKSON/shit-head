@@ -1,0 +1,53 @@
+# Git Line Ending Normalization
+#
+# Purpose: Enforce LF line endings on commit across all operating systems.
+# This prevents Windows contributors from accidentally committing CRLF line endings,
+# which cause noisy diffs and can break shell scripts, Makefiles, and Dockerfiles.
+#
+# Global default: normalize all text files to LF on commit and checkout
+* text=auto eol=lf
+
+# Explicit text file patterns (reinforces auto-detection)
+*.ts        text eol=lf
+*.tsx       text eol=lf
+*.js        text eol=lf
+*.mjs       text eol=lf
+*.cjs       text eol=lf
+*.vue       text eol=lf
+*.css       text eol=lf
+*.html      text eol=lf
+*.json      text eol=lf
+*.jsonc     text eol=lf
+*.yaml      text eol=lf
+*.yml       text eol=lf
+*.toml      text eol=lf
+*.md        text eol=lf
+*.MD        text eol=lf
+*.txt       text eol=lf
+*.sh        text eol=lf
+*.env       text eol=lf
+*.env.*     text eol=lf
+Makefile    text eol=lf
+Dockerfile* text eol=lf
+*.tf        text eol=lf
+*.hcl       text eol=lf
+.gitattributes  text eol=lf
+.gitignore      text eol=lf
+.editorconfig   text eol=lf
+*.lock      text eol=lf
+
+# Binary files (prevent Git from mangling these)
+*.png       binary
+*.jpg       binary
+*.jpeg      binary
+*.gif       binary
+*.ico       binary
+*.webp      binary
+*.svg       binary
+*.woff      binary
+*.woff2     binary
+*.ttf       binary
+*.eot       binary
+*.zip       binary
+*.tar.gz    binary
+*.tgz       binary
