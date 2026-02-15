@@ -97,6 +97,11 @@ export const reconnectSchema = z.object({
   roomCode: z.string().length(6),
 });
 
+export const renamePlayerSchema = z.object({
+  type: z.literal('rename-player'),
+  nickname: z.string().min(1).max(20).trim(),
+});
+
 export const clientMessageSchema = z.discriminatedUnion('type', [
   createRoomSchema,
   joinRoomSchema,
@@ -108,6 +113,7 @@ export const clientMessageSchema = z.discriminatedUnion('type', [
   pickupPileSchema,
   playFaceDownSchema,
   reconnectSchema,
+  renamePlayerSchema,
 ]);
 
 // Server-to-client message schemas

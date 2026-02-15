@@ -11,6 +11,7 @@ import type {
   pickupPileSchema,
   playFaceDownSchema,
   reconnectSchema,
+  renamePlayerSchema,
   roomCreatedSchema,
   roomJoinedSchema,
   roomUpdatedSchema,
@@ -47,6 +48,7 @@ export type PlayCardsMessage = z.infer<typeof playCardsSchema>;
 export type PickupPileMessage = z.infer<typeof pickupPileSchema>;
 export type PlayFaceDownMessage = z.infer<typeof playFaceDownSchema>;
 export type ReconnectMessage = z.infer<typeof reconnectSchema>;
+export type RenamePlayerMessage = z.infer<typeof renamePlayerSchema>;
 
 export type ClientMessage = z.infer<typeof clientMessageSchema>;
 

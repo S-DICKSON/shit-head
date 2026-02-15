@@ -727,6 +727,58 @@ export function handleMessage(
 
       break;
     }
+
+    case 'rename-player': {
+      const roomCode = ws.data.roomCode;
+
+      if (!roomCode) {
+        sendMessage(ws, {
+          type: 'error',
+          message: 'Not in a room',
+          code: 'ROOM_NOT_FOUND',
+        });
+        return;
+      }
+
+      const room = manager.getRoom(roomCode);
+
+      if (!room) {
+        sendMessage(ws, {
+          type: 'error',
+          message: 'Room not found',
+          code: 'ROOM_NOT_FOUND',
+        });
+        return;
+      }
+
+      const result = room.renamePlayer(ws.data.playerId, message.nickname);
+
+      if (!result.success) {
+        sendMessage(ws, {
+          type: 'error',
+          message: result.error,
+          code: result.code,
+        });
+        return;
+      }
+
+      // Broadcast updated room state to all players
+      const updatedRoom = room.getState();
+
+      // Send to the renaming player
+      sendMessage(ws, {
+        type: 'room-updated',
+        room: updatedRoom,
+      });
+
+      // Notify other players
+      publishToRoom(ws, roomCode, {
+        type: 'room-updated',
+        room: updatedRoom,
+      });
+
+      break;
+    }
   }
 }
 

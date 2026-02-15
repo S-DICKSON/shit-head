@@ -237,6 +237,10 @@ export class Room {
     this.onPlayerRemoved = callbacks.onRemoved;
   }
 
+  hasDisconnectCallbacks(): boolean {
+    return this.onPlayerRemoved !== undefined;
+  }
+
   swapCards(playerId: string, handIndex: number, faceUpIndex: number): OperationResult {
     // Validate game exists
     if (!this.gameState) {
