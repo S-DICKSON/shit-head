@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 Phase: 12 of 15 (Deployment - Production Polish)
 Plan: 3 of 3 (Phase complete)
 Status: Phase complete
-Last activity: 2026-02-15 — Completed quick task 013: Play Again returns to lobby after game
+Last activity: 2026-02-15 — Completed quick task 014: Fix game stuck when player eliminated in 3+ player game
 
 Progress: [█████████░] 95% (58 plans complete)
 
@@ -450,6 +450,7 @@ Recent decisions affecting current work:
 | 011 | Mobile action buttons cover cards fix | 2026-02-15 | 2c4d1ec | [011-mobile-action-buttons-cover-cards](./quick/011-mobile-action-buttons-cover-cards/) |
 | 012 | Add client Vitest coverage for composables | 2026-02-15 | f5168db | [012-add-client-vitest-coverage-composables](./quick/012-add-client-vitest-coverage-composables/) |
 | 013 | Play Again returns to lobby after game | 2026-02-15 | 2ef6cb3 | [013-play-again-returns-to-lobby-after-game](./quick/013-play-again-returns-to-lobby-after-game/) |
+| 014 | Fix game stuck when player eliminated | 2026-02-15 | fb0c59d | [014-fix-game-stuck-when-player-eliminated-in](./quick/014-fix-game-stuck-when-player-eliminated-in/) |
 
 ### Blockers/Concerns
 
