@@ -1,4 +1,12 @@
 <template>
+  <!-- Leave button -->
+  <button
+    class="fixed top-2 left-2 z-40 px-3 py-1 text-xs font-medium bg-gray-800/70 hover:bg-gray-800/90 text-gray-300 hover:text-white rounded-full backdrop-blur-sm transition-all"
+    @click="emit('leave')"
+  >
+    Leave
+  </button>
+
   <!-- Transition overlay -->
   <div
     v-if="isTransitioning"
@@ -117,6 +125,10 @@
 
 <script setup lang="ts">
 import { useSwapPhase } from '../composables/useSwapPhase';
+
+const emit = defineEmits<{
+  leave: [];
+}>();
 
 const {
   gameView,

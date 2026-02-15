@@ -9,6 +9,10 @@ import DrawPile from './DrawPile.vue';
 import DiscardPile from './DiscardPile.vue';
 import PlayerCards from './PlayerCards.vue';
 
+const emit = defineEmits<{
+  leave: [];
+}>();
+
 const {
   gameView,
   roomState,
@@ -58,6 +62,14 @@ watch(
 
 <template>
   <div class="flex flex-col h-screen bg-green-900 text-white overflow-hidden">
+    <!-- Leave button -->
+    <button
+      class="fixed top-2 left-2 z-40 px-3 py-1 text-xs font-medium bg-gray-800/70 hover:bg-gray-800/90 text-gray-300 hover:text-white rounded-full backdrop-blur-sm transition-all"
+      @click="emit('leave')"
+    >
+      Leave
+    </button>
+
     <!-- Top bar: Opponents -->
     <div class="flex-shrink-0 pt-2">
       <div class="flex flex-wrap justify-center gap-2 sm:gap-4 px-2 mb-1">
