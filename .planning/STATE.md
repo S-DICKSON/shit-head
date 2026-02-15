@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 Phase: 12 of 15 (Deployment - Production Polish)
 Plan: 3 of 3 (Phase complete)
 Status: Phase complete
-Last activity: 2026-02-15 — Completed quick task 015: Leave game button with confirmation modal
+Last activity: 2026-02-15 — Completed quick task 016: Cleanup fly.toml and update README
 
 Progress: [█████████░] 95% (58 plans complete)
 
@@ -452,6 +452,7 @@ Recent decisions affecting current work:
 | 013 | Play Again returns to lobby after game | 2026-02-15 | 2ef6cb3 | [013-play-again-returns-to-lobby-after-game](./quick/013-play-again-returns-to-lobby-after-game/) |
 | 014 | Fix game stuck when player eliminated in 3+ player game | 2026-02-15 | e2aa233 | [014-fix-game-stuck-when-player-eliminated-in](./quick/014-fix-game-stuck-when-player-eliminated-in/) |
 | 015 | Leave game button with confirmation modal | 2026-02-15 | a6df066 | [015-need-a-return-to-lobby-button-as-sometim](./quick/015-need-a-return-to-lobby-button-as-sometim/) |
+| 016 | Cleanup fly.toml and update README | 2026-02-15 | 71f18d0 | [016-cleanup-fly-toml-and-update-readme](./quick/016-cleanup-fly-toml-and-update-readme/) |
 
 ### Blockers/Concerns
 
@@ -465,6 +466,6 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-15
-Stopped at: Completed quick task 015 (Leave game button with confirmation modal)
+Stopped at: Completed quick task 016 (Cleanup fly.toml and update README)
 Resume file: None
 
