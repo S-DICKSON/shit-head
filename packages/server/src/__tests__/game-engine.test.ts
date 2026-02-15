@@ -920,6 +920,231 @@ describe('GameEngine', () => {
       expect(state.players[0].hand).toHaveLength(originalHandLength);
       expect(state.discardPile).toHaveLength(originalDiscardLength);
     });
+
+    describe('3+ player elimination', () => {
+      it('advances turn past eliminated player in 3-player game', () => {
+        // Setup: P0 current with one card, P1 eliminated, P2 has cards, draw pile empty
+        const state: GameState = {
+          phase: 'playing',
+          players: [
+            {
+              playerId: 'p1',
+              nickname: 'Alice',
+              hand: [{ kind: 'standard', suit: 'hearts', rank: '5' }],
+              faceUp: [],
+              faceDown: [],
+            },
+            {
+              playerId: 'p2',
+              nickname: 'Bob',
+              hand: [], // Eliminated
+              faceUp: [],
+              faceDown: [],
+            },
+            {
+              playerId: 'p3',
+              nickname: 'Charlie',
+              hand: [{ kind: 'standard', suit: 'clubs', rank: '7' }],
+              faceUp: [],
+              faceDown: [],
+            },
+          ],
+          drawPile: [],
+          discardPile: [{ kind: 'standard', suit: 'spades', rank: '3' }],
+          currentPlayerIndex: 0,
+          dealerIndex: 0,
+        };
+
+        const result = GameEngine.playCards(state, 'p1', [0]);
+
+        expect(result.success).toBe(true);
+        if (result.success) {
+          // P0 eliminated after play, P1 already eliminated, should skip to P2
+          expect(result.data!.currentPlayerIndex).toBe(2);
+        }
+      });
+
+      it('handles burn + elimination in 3-player game', () => {
+        // Setup: P0 plays 10 (burn) as last card, P1 has cards, P2 has cards
+        const state: GameState = {
+          phase: 'playing',
+          players: [
+            {
+              playerId: 'p1',
+              nickname: 'Alice',
+              hand: [{ kind: 'standard', suit: 'hearts', rank: '10' }],
+              faceUp: [],
+              faceDown: [],
+            },
+            {
+              playerId: 'p2',
+              nickname: 'Bob',
+              hand: [{ kind: 'standard', suit: 'clubs', rank: '7' }],
+              faceUp: [],
+              faceDown: [],
+            },
+            {
+              playerId: 'p3',
+              nickname: 'Charlie',
+              hand: [{ kind: 'standard', suit: 'diamonds', rank: '6' }],
+              faceUp: [],
+              faceDown: [],
+            },
+          ],
+          drawPile: [],
+          discardPile: [{ kind: 'standard', suit: 'spades', rank: '5' }],
+          currentPlayerIndex: 0,
+          dealerIndex: 0,
+        };
+
+        const result = GameEngine.playCards(state, 'p1', [0]);
+
+        expect(result.success).toBe(true);
+        if (result.success) {
+          // Burn happened
+          expect(result.data!.discardPile).toHaveLength(0);
+          // Turn stays on P0 (burn rules, even though eliminated)
+          expect(result.data!.currentPlayerIndex).toBe(0);
+          // Game continues (2 players with cards)
+          expect(result.data!.phase).toBe('playing');
+        }
+      });
+
+      it('detects game-over when elimination leaves one player with cards', () => {
+        // Setup: P0 with one card, P1 eliminated, P2 has cards
+        const state: GameState = {
+          phase: 'playing',
+          players: [
+            {
+              playerId: 'p1',
+              nickname: 'Alice',
+              hand: [{ kind: 'standard', suit: 'hearts', rank: '5' }],
+              faceUp: [],
+              faceDown: [],
+            },
+            {
+              playerId: 'p2',
+              nickname: 'Bob',
+              hand: [], // Eliminated
+              faceUp: [],
+              faceDown: [],
+            },
+            {
+              playerId: 'p3',
+              nickname: 'Charlie',
+              hand: [{ kind: 'standard', suit: 'clubs', rank: '7' }],
+              faceUp: [],
+              faceDown: [],
+            },
+          ],
+          drawPile: [],
+          discardPile: [{ kind: 'standard', suit: 'spades', rank: '3' }],
+          currentPlayerIndex: 0,
+          dealerIndex: 0,
+        };
+
+        const result = GameEngine.playCards(state, 'p1', [0]);
+
+        expect(result.success).toBe(true);
+        if (result.success) {
+          // Game over
+          expect(result.data!.phase).toBe('finished');
+          // P3 is the shithead (last player with cards)
+          const shitheadId = GameEngine.findShithead(result.data!);
+          expect(shitheadId).toBe('p3');
+        }
+      });
+
+      it('skips multiple eliminated players', () => {
+        // Setup: P0 with one card, P1 and P2 eliminated, P3 has cards
+        const state: GameState = {
+          phase: 'playing',
+          players: [
+            {
+              playerId: 'p1',
+              nickname: 'Alice',
+              hand: [{ kind: 'standard', suit: 'hearts', rank: '5' }],
+              faceUp: [],
+              faceDown: [],
+            },
+            {
+              playerId: 'p2',
+              nickname: 'Bob',
+              hand: [], // Eliminated
+              faceUp: [],
+              faceDown: [],
+            },
+            {
+              playerId: 'p3',
+              nickname: 'Charlie',
+              hand: [], // Eliminated
+              faceUp: [],
+              faceDown: [],
+            },
+            {
+              playerId: 'p4',
+              nickname: 'Diana',
+              hand: [{ kind: 'standard', suit: 'clubs', rank: '7' }],
+              faceUp: [],
+              faceDown: [],
+            },
+          ],
+          drawPile: [],
+          discardPile: [{ kind: 'standard', suit: 'spades', rank: '3' }],
+          currentPlayerIndex: 0,
+          dealerIndex: 0,
+        };
+
+        const result = GameEngine.playCards(state, 'p1', [0]);
+
+        expect(result.success).toBe(true);
+        if (result.success) {
+          // P0 eliminated, skip P1 and P2 (both eliminated), go to P3
+          expect(result.data!.currentPlayerIndex).toBe(3);
+        }
+      });
+
+      it('detects game-over on burn + elimination in 2-player game', () => {
+        // Setup: P0 plays 10 (burn) as last card in 2-player game
+        const state: GameState = {
+          phase: 'playing',
+          players: [
+            {
+              playerId: 'p1',
+              nickname: 'Alice',
+              hand: [{ kind: 'standard', suit: 'hearts', rank: '10' }],
+              faceUp: [],
+              faceDown: [],
+            },
+            {
+              playerId: 'p2',
+              nickname: 'Bob',
+              hand: [{ kind: 'standard', suit: 'clubs', rank: '7' }],
+              faceUp: [],
+              faceDown: [],
+            },
+          ],
+          drawPile: [],
+          discardPile: [{ kind: 'standard', suit: 'spades', rank: '5' }],
+          currentPlayerIndex: 0,
+          dealerIndex: 0,
+        };
+
+        const result = GameEngine.playCards(state, 'p1', [0]);
+
+        expect(result.success).toBe(true);
+        if (result.success) {
+          // Burn happened
+          expect(result.data!.discardPile).toHaveLength(0);
+          // Turn stays on P0 (burn rules)
+          expect(result.data!.currentPlayerIndex).toBe(0);
+          // Game over (only P2 has cards)
+          expect(result.data!.phase).toBe('finished');
+          const shitheadId = GameEngine.findShithead(result.data!);
+          expect(shitheadId).toBe('p2');
+        }
+      });
+    });
   });
 
   // Helper for concise card creation (matches pattern from card-rules.test.ts)
