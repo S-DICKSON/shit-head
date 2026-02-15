@@ -455,7 +455,7 @@ Recent decisions affecting current work:
 | 016 | Cleanup fly.toml and update README | 2026-02-15 | 71f18d0 | [016-cleanup-fly-toml-and-update-readme](./quick/016-cleanup-fly-toml-and-update-readme/) |
 | 017 | CI/CD path filters for packages/ code | 2026-02-15 | 7d477af | [017-ci-cd-path-filters-for-packages-code](./quick/017-ci-cd-path-filters-for-packages-code/) |
 | 018 | Update README - Windows dev prerequisites and Claude Code/GSD workflow | 2026-02-15 | 466c49f | [018-update-readme-windows-dev-prerequisites](./quick/018-update-readme-windows-dev-prerequisites/) |
-| 019 | Add Caddy to Docker Compose to match production | 2026-02-15 | a202aac | [019-add-caddy-to-docker-compose-to-match-pro](./quick/019-add-caddy-to-docker-compose-to-match-pro/) |
+| 019 | Add Caddy to Docker Compose to match production | 2026-02-15 | cbc02cd | [019-add-caddy-to-docker-compose-to-match-pro](./quick/019-add-caddy-to-docker-compose-to-match-pro/) |
 
 ### Blockers/Concerns
 
