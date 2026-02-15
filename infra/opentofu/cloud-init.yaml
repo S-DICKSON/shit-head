@@ -26,8 +26,8 @@ write_files:
       TimeoutStartSec=120
       TimeoutStopSec=65
 
-      ExecStartPre=/usr/bin/docker stop shithead-game || true
-      ExecStartPre=/usr/bin/docker rm shithead-game || true
+      ExecStartPre=-/usr/bin/docker stop shithead-game
+      ExecStartPre=-/usr/bin/docker rm shithead-game
       ExecStart=/usr/bin/docker run --name shithead-game --rm --log-driver=journald -p 127.0.0.1:3000:3000 --env-file /opt/shithead/.env ghcr.io/OWNER/shithead-server:latest
       ExecStop=/usr/bin/docker stop -t 60 shithead-game
 
