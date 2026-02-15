@@ -6,7 +6,7 @@ help: ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}'
 
 install: ## Install dependencies locally (for IDE support)
-	bun install
+	docker run --rm -v $(PWD):/app -w /app oven/bun:1 bun install
 
 dev: install ## Start development environment with hot reload
 	docker compose up --build
