@@ -6,7 +6,7 @@ import RoomCode from './RoomCode.vue';
 
 const router = useRouter();
 const route = useRoute();
-const { send, onMessage, roomState, playerId, gameView, status } = useGameSocket();
+const { send, onMessage, roomState, playerId, gameView, status, reconnecting } = useGameSocket();
 
 // Component state
 const countdown = ref<number | null>(null);
@@ -80,7 +80,22 @@ const joinAsGuest = (code: string) => {
 // Check if player has joined a room on mount
 onMounted(() => {
   if (!roomState.value || !playerId.value) {
-    // Share link: auto-join if route has a room code
+    // If reconnecting, wait for reconnect to complete instead of joining as guest
+    const storedPlayerId = localStorage.getItem('shithead-player-id');
+    const storedRoomCode = localStorage.getItem('shithead-room-code');
+    if (storedPlayerId && storedRoomCode) {
+      // Reconnect flow will handle restoring the session — wait for it
+      const unwatch = watch(roomState, (state) => {
+        if (state) {
+          unwatch();
+        }
+      });
+      // Timeout: if reconnect fails within 5s, redirect to landing
+      setTimeout(() => { unwatch(); if (!roomState.value) { router.push('/'); } }, 5000);
+      return;
+    }
+
+    // Share link: auto-join if route has a room code (new player, no stored session)
     const code = route.params.code as string | undefined;
     if (code) {
       if (status.value === 'OPEN') {
@@ -115,6 +130,12 @@ const unregister = onMessage((msg) => {
     isJoining.value = false;
     roomState.value = null;
     router.push('/');
+    return;
+  }
+
+  // Ignore ALREADY_IN_ROOM — happens during reconnect race condition, harmless
+  if (msg.type === 'error' && msg.code === 'ALREADY_IN_ROOM') {
+    isJoining.value = false;
     return;
   }
 

@@ -80,6 +80,15 @@ export class Room {
       };
     }
 
+    // Check if player already in room (prevent duplicate join during reconnect race)
+    if (this.players.has(id)) {
+      return {
+        success: false,
+        error: 'Player already in room',
+        code: 'ALREADY_IN_ROOM',
+      };
+    }
+
     // Check if room is full
     if (this.players.size >= this.maxPlayers) {
       return {

@@ -275,6 +275,7 @@ export const errorSchema = z.object({
     'INVALID_MESSAGE',
     'INVALID_ACTION',
     'PLAYER_NOT_FOUND',
+    'ALREADY_IN_ROOM',
     'NOT_YOUR_TURN',
     'GAME_OVER',
   ]),
