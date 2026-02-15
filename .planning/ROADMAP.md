@@ -47,10 +47,14 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. WebSocket connection works through Discord proxy (tested with cloudflared tunnel)
   3. URL mapping rules documented with production deployment checklist
   4. Existing Bun WebSocket server accepts connections routed through discordsays.com proxy
-**Plans**: TBD
+**Plans**: 5 plans
 
 Plans:
-- [ ] 16-01: TBD during planning
+- [ ] 16-01-PLAN.md — Proxy configuration (Vite /.proxy routes, server origin validation, client URL resolution)
+- [ ] 16-02-PLAN.md — Connection resilience (exponential backoff, reconnecting overlay, retry button)
+- [ ] 16-03-PLAN.md — Discord dev workflow (make dev-discord, docker-compose, DISCORD-SETUP.md)
+- [ ] 16-04-PLAN.md — Automated tests (URL resolution tests, origin validation tests, experimental CI tunnel)
+- [ ] 16-05-PLAN.md — Final verification (automated checks + visual checkpoint)
 
 ### Phase 17: Platform Abstraction
 **Goal**: Establish clean dual-mode architecture that prevents tech debt
@@ -147,7 +151,7 @@ Phases execute in numeric order: 16 → 17 → 18 → 19 → 20 → 21 → 22
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 16. Networking Foundation | 0/TBD | Not started | - |
+| 16. Networking Foundation | 0/5 | Planning complete | - |
 | 17. Platform Abstraction | 0/TBD | Not started | - |
 | 18. Discord Authentication | 0/TBD | Not started | - |
 | 19. Discord Room Management | 0/TBD | Not started | - |
