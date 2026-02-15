@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 Phase: 12 of 15 (Deployment - Production Polish)
 Plan: 3 of 3 (Phase complete)
 Status: Phase complete
-Last activity: 2026-02-14 — Completed 12-03-PLAN.md
+Last activity: 2026-02-15 — Completed quick task 005: Fix guest returning to home page on lobby refresh
 
 Progress: [█████████░] 95% (58 plans complete)
 
@@ -442,7 +442,7 @@ Recent decisions affecting current work:
 | 001 | Visual 8-card offset on discard pile | 2026-02-10 | 2de53d3 | [001-visual-8-card-offset-on-discard-pile](./quick/001-visual-8-card-offset-on-discard-pile/) |
 | 003 | Fix burn mechanic for face-down 10 plays | 2026-02-15 | c689a60 | [003-bug-when-playing-10-when-its-face-down-t](./quick/003-bug-when-playing-10-when-its-face-down-t/) |
 | 004 | Fix eliminated player forced to pick up | 2026-02-15 | f2e662e | [004-fix-eliminated-player-forced-to-pick-up-](./quick/004-fix-eliminated-player-forced-to-pick-up-/) |
-| 005 | Fix guest returning to home page on lobby refresh | 2026-02-15 | 7b0c055 | [005-fix-guest-returning-to-home-page-on-lobb](./quick/005-fix-guest-returning-to-home-page-on-lobb/) |
+| 005 | Fix guest returning to home page on lobby refresh | 2026-02-15 | 86fb299 | [005-fix-guest-returning-to-home-page-on-lobb](./quick/005-fix-guest-returning-to-home-page-on-lobb/) |
 
 ### Blockers/Concerns
 
