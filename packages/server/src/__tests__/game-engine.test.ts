@@ -3007,5 +3007,134 @@ describe('GameEngine', () => {
         }
       });
     });
+
+    describe('burn detection', () => {
+      it('blind 10 on pile -> burns pile (discard cleared to empty), same player goes again', () => {
+        const state = createEndgameState({
+          faceDown: [c('10')],
+          discardPile: [c('5')],
+          otherPlayerCards: true,
+        });
+
+        const result = GameEngine.playFaceDownBlind(state, 'p1', 0);
+
+        expect(result.success).toBe(true);
+        if (result.success) {
+          expect(result.data.playable).toBe(true);
+          expect(result.data.card).toEqual(c('10'));
+          // Pile should be burned (empty)
+          expect(result.data.state.discardPile).toEqual([]);
+          // Same player goes again
+          expect(result.data.state.currentPlayerIndex).toBe(0);
+        }
+      });
+
+      it('blind 10 on empty pile -> burns pile, same player goes again', () => {
+        const state = createEndgameState({
+          faceDown: [c('10')],
+          discardPile: [],
+          otherPlayerCards: true,
+        });
+
+        const result = GameEngine.playFaceDownBlind(state, 'p1', 0);
+
+        expect(result.success).toBe(true);
+        if (result.success) {
+          expect(result.data.playable).toBe(true);
+          expect(result.data.card).toEqual(c('10'));
+          // Pile should be burned (empty)
+          expect(result.data.state.discardPile).toEqual([]);
+          // Same player goes again
+          expect(result.data.state.currentPlayerIndex).toBe(0);
+        }
+      });
+
+      it('four-of-a-kind from face-down -> burns pile', () => {
+        const state = createEndgameState({
+          faceDown: [c('6', 'spades')],
+          discardPile: [c('6', 'hearts'), c('6', 'diamonds'), c('6', 'clubs')],
+          otherPlayerCards: true,
+        });
+
+        const result = GameEngine.playFaceDownBlind(state, 'p1', 0);
+
+        expect(result.success).toBe(true);
+        if (result.success) {
+          expect(result.data.playable).toBe(true);
+          expect(result.data.card).toEqual(c('6', 'spades'));
+          // Pile should be burned (empty)
+          expect(result.data.state.discardPile).toEqual([]);
+          // Same player goes again
+          expect(result.data.state.currentPlayerIndex).toBe(0);
+        }
+      });
+
+      it('blind 10 is last face-down card, burn + eliminated -> game continues if 2+ players remain', () => {
+        const state = createEndgameState({
+          faceDown: [c('10')],
+          discardPile: [c('5')],
+          otherPlayerCards: true,
+          playerCount: 3,
+        });
+
+        const result = GameEngine.playFaceDownBlind(state, 'p1', 0);
+
+        expect(result.success).toBe(true);
+        if (result.success) {
+          expect(result.data.playable).toBe(true);
+          expect(result.data.card).toEqual(c('10'));
+          // Pile should be burned (empty)
+          expect(result.data.state.discardPile).toEqual([]);
+          // Player eliminated (total cards = 0)
+          const totalCards = result.data.state.players[0].hand.length +
+                           result.data.state.players[0].faceUp.length +
+                           result.data.state.players[0].faceDown.length;
+          expect(totalCards).toBe(0);
+          // Game continues (2+ players remain)
+          expect(result.data.state.phase).toBe('playing');
+        }
+      });
+
+      it('blind 10 is last face-down card, burn + eliminated -> game finished if only 1 player has cards', () => {
+        const state = createEndgameState({
+          faceDown: [c('10')],
+          discardPile: [c('5')],
+          otherPlayerCards: true,
+          playerCount: 2,
+        });
+
+        const result = GameEngine.playFaceDownBlind(state, 'p1', 0);
+
+        expect(result.success).toBe(true);
+        if (result.success) {
+          expect(result.data.playable).toBe(true);
+          expect(result.data.card).toEqual(c('10'));
+          // Pile should be burned (empty)
+          expect(result.data.state.discardPile).toEqual([]);
+          // Game ends (only 1 player remains with cards)
+          expect(result.data.state.phase).toBe('finished');
+        }
+      });
+
+      it('non-burn playable card still advances turn normally (regression check)', () => {
+        const state = createEndgameState({
+          faceDown: [c('K')],
+          discardPile: [c('5')],
+          otherPlayerCards: true,
+        });
+
+        const result = GameEngine.playFaceDownBlind(state, 'p1', 0);
+
+        expect(result.success).toBe(true);
+        if (result.success) {
+          expect(result.data.playable).toBe(true);
+          expect(result.data.card).toEqual(c('K'));
+          // Pile should NOT be burned (has 2 cards: 5 + K)
+          expect(result.data.state.discardPile).toHaveLength(2);
+          // Turn should advance normally
+          expect(result.data.state.currentPlayerIndex).toBe(1);
+        }
+      });
+    });
   });
 });
