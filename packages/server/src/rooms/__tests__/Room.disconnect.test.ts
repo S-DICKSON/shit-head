@@ -68,8 +68,8 @@ describe('Room disconnect/reconnect lifecycle', () => {
     return { room, playerIds, callbacks };
   }
 
-  describe('Lobby disconnect (immediate removal)', () => {
-    test('removes player immediately when disconnected in lobby (no game)', () => {
+  describe('Lobby disconnect (grace period)', () => {
+    test('starts grace period when player disconnects in lobby (no game)', () => {
       const room = new Room('player-1', 'Alice');
       room.addPlayer('player-2', 'Bob');
 
@@ -83,16 +83,20 @@ describe('Room disconnect/reconnect lifecycle', () => {
       // Disconnect player-2 (non-host) while in lobby
       room.handlePlayerDisconnect('player-2');
 
-      // Should immediately remove player
-      expect(onRemoved).toHaveBeenCalledWith('player-2', 'Bob', 'timeout');
+      // Should NOT immediately remove player
+      expect(onRemoved).not.toHaveBeenCalled();
+      expect(room.isPlayerDisconnected('player-2')).toBe(true);
 
-      // Player should be removed from room
-      const state = room.getState();
-      expect(state.players).toHaveLength(1);
-      expect(state.players[0].id).toBe('player-1');
+      // Player should still be in room
+      expect(room.getState().players).toHaveLength(2);
+
+      // After 15s grace period, player should be removed
+      vi.advanceTimersByTime(15000);
+      expect(onRemoved).toHaveBeenCalledWith('player-2', 'Bob', 'timeout');
+      expect(room.getState().players).toHaveLength(1);
     });
 
-    test('removes player immediately when disconnected after game finished', () => {
+    test('starts grace period when disconnected after game finished', () => {
       const { room, callbacks } = createRoomWithGame(2);
 
       // Start game and manually set to finished phase
@@ -105,8 +109,88 @@ describe('Room disconnect/reconnect lifecycle', () => {
       // Disconnect player
       room.handlePlayerDisconnect('player-2');
 
-      // Should immediately remove player
+      // Should NOT immediately remove player
+      expect(callbacks.onRemoved).not.toHaveBeenCalled();
+      expect(room.isPlayerDisconnected('player-2')).toBe(true);
+
+      // After 15s grace period, player should be removed
+      vi.advanceTimersByTime(15000);
       expect(callbacks.onRemoved).toHaveBeenCalledWith('player-2', 'Player2', 'timeout');
+    });
+  });
+
+  describe('Lobby reconnection within grace period', () => {
+    test('reconnects lobby player within grace period', () => {
+      const room = new Room('player-1', 'Alice');
+      room.addPlayer('player-2', 'Bob');
+
+      const onDisconnected = vi.fn();
+      const onReconnected = vi.fn();
+      const onRemoved = vi.fn();
+      room.setDisconnectCallbacks({
+        onDisconnected,
+        onReconnected,
+        onRemoved,
+      });
+
+      // Disconnect player-2 in lobby
+      room.handlePlayerDisconnect('player-2');
+      expect(room.isPlayerDisconnected('player-2')).toBe(true);
+      expect(onDisconnected).toHaveBeenCalledWith('player-2', 'Bob');
+
+      // Reconnect within 15s grace period
+      vi.advanceTimersByTime(5000); // 5 seconds in
+      room.handlePlayerReconnect('player-2');
+
+      expect(onReconnected).toHaveBeenCalledWith('player-2', 'Bob');
+      expect(room.isPlayerDisconnected('player-2')).toBe(false);
+
+      // Advance past grace period - should NOT remove
+      vi.advanceTimersByTime(15000);
+      expect(onRemoved).not.toHaveBeenCalled();
+
+      // Player still in room
+      expect(room.getState().players).toHaveLength(2);
+    });
+
+    test('lobby host disconnect triggers host-left after grace period', () => {
+      const room = new Room('player-1', 'Alice');
+      room.addPlayer('player-2', 'Bob');
+
+      const onRemoved = vi.fn();
+      room.setDisconnectCallbacks({
+        onDisconnected: vi.fn(),
+        onReconnected: vi.fn(),
+        onRemoved,
+      });
+
+      room.handlePlayerDisconnect('player-1');
+      expect(onRemoved).not.toHaveBeenCalled();
+
+      vi.advanceTimersByTime(15000);
+      expect(onRemoved).toHaveBeenCalledWith('player-1', 'Alice', 'host-left');
+    });
+
+    test('lobby grace period (15s) is shorter than in-game grace period (90s)', () => {
+      const room = new Room('player-1', 'Alice');
+      room.addPlayer('player-2', 'Bob');
+
+      const onRemoved = vi.fn();
+      room.setDisconnectCallbacks({
+        onDisconnected: vi.fn(),
+        onReconnected: vi.fn(),
+        onRemoved,
+      });
+
+      room.handlePlayerDisconnect('player-2');
+
+      // Should NOT be removed at 14 seconds
+      vi.advanceTimersByTime(14000);
+      expect(onRemoved).not.toHaveBeenCalled();
+
+      // Should be removed at 15 seconds
+      vi.advanceTimersByTime(1000);
+      expect(onRemoved).toHaveBeenCalledWith('player-2', 'Bob', 'timeout');
     });
   });
 

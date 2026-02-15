@@ -1,5 +1,5 @@
 // WebSocket handler tests
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { handleMessage, handleClose } from '../websocket/handlers';
 import { RoomManager } from '../rooms/RoomManager';
 import type { WebSocketData } from '../websocket/handlers';
@@ -20,7 +20,12 @@ describe('WebSocket Handlers', () => {
   let roomManager: RoomManager;
 
   beforeEach(() => {
+    vi.useFakeTimers();
     roomManager = new RoomManager();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   describe('handleMessage', () => {
@@ -255,7 +260,11 @@ describe('WebSocket Handlers', () => {
       // Should unsubscribe from room
       expect(ws.unsubscribe).toHaveBeenCalledWith(roomCode);
 
-      // Room should be destroyed (host left)
+      // Room should NOT be destroyed immediately (15s grace period)
+      expect(roomManager.getRoom(roomCode)).toBeDefined();
+
+      // After 15s grace period, room should be destroyed (host left)
+      vi.advanceTimersByTime(15000);
       expect(roomManager.getRoom(roomCode)).toBeUndefined();
     });
 
