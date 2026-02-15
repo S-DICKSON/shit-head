@@ -1,7 +1,7 @@
 import type { Card, GameState, PlayerGameView, PlayerGameState, OpponentView, PlaySource, ErrorCode } from '@shit-head/shared';
 import { createDeck } from '@shit-head/shared';
 import { shuffleDeck } from './Deck';
-import { RANK_ORDER } from './CardComparison';
+import { RANK_ORDER, sortHand } from './CardComparison';
 import { canPlayOnPile, detectBurn } from './CardRules';
 
 type OperationResult<T = void> = T extends void
@@ -59,7 +59,7 @@ export class GameEngine {
 
     // Deal hand cards (3 per player)
     for (let i = 0; i < players.length; i++) {
-      playerStates[i].hand = shuffled.slice(cardIndex, cardIndex + 3);
+      playerStates[i].hand = sortHand(shuffled.slice(cardIndex, cardIndex + 3));
       cardIndex += 3;
     }
 
@@ -222,7 +222,7 @@ export class GameEngine {
     // Create updated player state
     const updatedPlayer: PlayerGameState = {
       ...player,
-      hand: updatedHand,
+      hand: sortHand(updatedHand),
       faceUp: updatedFaceUp,
     };
 
@@ -384,7 +384,7 @@ export class GameEngine {
     // Update player state
     const updatedPlayer: PlayerGameState = {
       ...player,
-      hand: updatedHand,
+      hand: sortHand(updatedHand),
     };
 
     // Create new game state
@@ -458,7 +458,7 @@ export class GameEngine {
     const player = state.players[playerIndex];
 
     // Add all discard pile cards to player's hand
-    const updatedHand = [...player.hand, ...state.discardPile];
+    const updatedHand = sortHand([...player.hand, ...state.discardPile]);
 
     // Update player state
     const updatedPlayer: PlayerGameState = {
@@ -911,7 +911,7 @@ export class GameEngine {
     } else {
       // PATH B: Card is NOT playable
       // Player picks up entire discard pile + flipped card
-      updatedHand = [...state.discardPile, flippedCard];
+      updatedHand = sortHand([...state.discardPile, flippedCard]);
       updatedDiscardPile = [];
 
       // Update player state
