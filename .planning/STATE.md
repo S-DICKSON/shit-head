@@ -450,7 +450,7 @@ Recent decisions affecting current work:
 | 011 | Mobile action buttons cover cards fix | 2026-02-15 | 2c4d1ec | [011-mobile-action-buttons-cover-cards](./quick/011-mobile-action-buttons-cover-cards/) |
 | 012 | Add client Vitest coverage for composables | 2026-02-15 | f5168db | [012-add-client-vitest-coverage-composables](./quick/012-add-client-vitest-coverage-composables/) |
 | 013 | Play Again returns to lobby after game | 2026-02-15 | 2ef6cb3 | [013-play-again-returns-to-lobby-after-game](./quick/013-play-again-returns-to-lobby-after-game/) |
-| 014 | Fix game stuck when player eliminated | 2026-02-15 | fb0c59d | [014-fix-game-stuck-when-player-eliminated-in](./quick/014-fix-game-stuck-when-player-eliminated-in/) |
+| 014 | Fix game stuck when player eliminated in 3+ player game | 2026-02-15 | e2aa233 | [014-fix-game-stuck-when-player-eliminated-in](./quick/014-fix-game-stuck-when-player-eliminated-in/) |
 
 ### Blockers/Concerns
 
@@ -464,6 +464,6 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-15
-Stopped at: Completed quick task 013 (Play Again returns to lobby after game)
+Stopped at: Completed quick task 014 (Fix game stuck when player eliminated in 3+ player game)
 Resume file: None
 
