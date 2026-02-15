@@ -33,6 +33,7 @@ export class Room {
     gracePeriodTimer: ReturnType<typeof setTimeout> | null;
   }> = new Map();
   private readonly DISCONNECT_GRACE_PERIOD = 90000; // 90 seconds
+  private readonly LOBBY_DISCONNECT_GRACE_PERIOD = 15000; // 15 seconds
   private onSwapTimerTick?: (timeRemaining: number) => void;
   private onPlayerReady?: (playerId: string, readyPlayers: string[]) => void;
   private onSwapPhaseComplete?: (reason: 'timer-expired' | 'all-ready') => void;
@@ -107,6 +108,42 @@ export class Room {
     }
 
     return false;
+  }
+
+  renamePlayer(playerId: string, newNickname: string): OperationResult {
+    // Validate nickname
+    const trimmedNickname = newNickname.trim();
+    if (trimmedNickname.length === 0 || trimmedNickname.length > 20) {
+      return {
+        success: false,
+        error: 'Nickname must be between 1 and 20 characters',
+        code: 'INVALID_NICKNAME',
+      };
+    }
+
+    // Only allow rename in lobby
+    if (this.status !== 'waiting') {
+      return {
+        success: false,
+        error: 'Can only rename in the lobby',
+        code: 'INVALID_ACTION',
+      };
+    }
+
+    // Check player exists
+    const player = this.players.get(playerId);
+    if (!player) {
+      return {
+        success: false,
+        error: 'Player not found',
+        code: 'PLAYER_NOT_FOUND',
+      };
+    }
+
+    // Update nickname
+    player.nickname = trimmedNickname;
+
+    return { success: true };
   }
 
   canStart(): boolean {
@@ -495,11 +532,18 @@ export class Room {
     const player = this.players.get(playerId);
     if (!player) return;
 
-    // If no active game (lobby or finished), remove immediately
+    // If no active game (lobby or finished), use shorter grace period for reconnection on refresh
     if (!this.gameState || this.gameState.phase === 'finished') {
-      const isHost = playerId === this.hostId;
-      this.removePlayer(playerId);
-      this.onPlayerRemoved?.(playerId, player.nickname, isHost ? 'host-left' : 'timeout');
+      const gracePeriodTimer = setTimeout(() => {
+        this.removePlayerAfterTimeout(playerId);
+      }, this.LOBBY_DISCONNECT_GRACE_PERIOD);
+
+      this.disconnectedPlayers.set(playerId, {
+        disconnectTime: Date.now(),
+        gracePeriodTimer,
+      });
+
+      this.onPlayerDisconnected?.(playerId, player.nickname);
       return;
     }
 
@@ -634,9 +678,9 @@ export class Room {
     const disconnectData = this.disconnectedPlayers.get(playerId);
     if (!disconnectData) return 0;
 
-    return Math.max(
-      0,
-      this.DISCONNECT_GRACE_PERIOD - (Date.now() - disconnectData.disconnectTime)
-    );
+    const gracePeriod = (this.gameState && this.gameState.phase !== 'finished')
+      ? this.DISCONNECT_GRACE_PERIOD
+      : this.LOBBY_DISCONNECT_GRACE_PERIOD;
+    return Math.max(0, gracePeriod - (Date.now() - disconnectData.disconnectTime));
   }
 }
