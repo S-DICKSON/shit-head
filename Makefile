@@ -1,4 +1,4 @@
-.PHONY: help dev test test-server test-client clean lint lint-fix type-check type-check-server type-check-shared tunnel
+.PHONY: help dev test test-server test-client clean lint lint-fix type-check type-check-server type-check-shared tunnel prod-local prod-local-down
 
 .DEFAULT_GOAL := help
 
@@ -43,6 +43,13 @@ type-check-server: ## Run server type checking
 clean: ## Clean up containers, volumes, and images
 	docker compose down -v --rmi local --remove-orphans
 	docker compose -f docker-compose.tunnel.yml down -v --remove-orphans
+	docker compose -f docker-compose.prod.yml down -v --remove-orphans
 
 tunnel: ## Start cloudflared tunnel for mobile testing (one command)
 	docker compose -f docker-compose.tunnel.yml up --build
+
+prod-local: ## Start production-like environment with Caddy reverse proxy
+	docker compose -f docker-compose.prod.yml up --build
+
+prod-local-down: ## Stop production-like environment
+	docker compose -f docker-compose.prod.yml down -v --remove-orphans
