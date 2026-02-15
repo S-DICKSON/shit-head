@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 Phase: 12 of 15 (Deployment - Production Polish)
 Plan: 3 of 3 (Phase complete)
 Status: Phase complete
-Last activity: 2026-02-15 — Completed quick task 017: CI/CD path filters for packages/ code
+Last activity: 2026-02-15 — Completed quick task 018: Update README - Windows dev prerequisites and Claude Code/GSD workflow
 
 Progress: [█████████░] 95% (58 plans complete)
 
@@ -454,6 +454,7 @@ Recent decisions affecting current work:
 | 015 | Leave game button with confirmation modal | 2026-02-15 | a6df066 | [015-need-a-return-to-lobby-button-as-sometim](./quick/015-need-a-return-to-lobby-button-as-sometim/) |
 | 016 | Cleanup fly.toml and update README | 2026-02-15 | 71f18d0 | [016-cleanup-fly-toml-and-update-readme](./quick/016-cleanup-fly-toml-and-update-readme/) |
 | 017 | CI/CD path filters for packages/ code | 2026-02-15 | 7d477af | [017-ci-cd-path-filters-for-packages-code](./quick/017-ci-cd-path-filters-for-packages-code/) |
+| 018 | Update README - Windows dev prerequisites and Claude Code/GSD workflow | 2026-02-15 | 466c49f | [018-update-readme-windows-dev-prerequisites](./quick/018-update-readme-windows-dev-prerequisites/) |
 
 ### Blockers/Concerns
 
@@ -467,6 +468,6 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-15
-Stopped at: Completed quick task 017 (CI/CD path filters for packages/ code)
+Stopped at: Completed quick task 018 (Update README - Windows dev prerequisites and Claude Code/GSD workflow)
 Resume file: None
 
