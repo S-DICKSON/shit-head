@@ -440,6 +440,7 @@ Recent decisions affecting current work:
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
 | 001 | Visual 8-card offset on discard pile | 2026-02-10 | 2de53d3 | [001-visual-8-card-offset-on-discard-pile](./quick/001-visual-8-card-offset-on-discard-pile/) |
+| 004 | Fix eliminated player forced to pick up | 2026-02-15 | f2e662e | [004-fix-eliminated-player-forced-to-pick-up-](./quick/004-fix-eliminated-player-forced-to-pick-up-/) |
 
 ### Blockers/Concerns
 
@@ -452,7 +453,7 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-02-14
-Stopped at: Completed 12-03-PLAN.md (Oracle Cloud CI/CD workflows) - Phase 12 complete
+Last session: 2026-02-15
+Stopped at: Completed quick task 004 (Fix eliminated player forced to pick up)
 Resume file: None
 
