@@ -799,30 +799,90 @@ export function handleClose(ws: ServerWebSocket<WebSocketData>, manager: RoomMan
     room.handlePlayerDisconnect(ws.data.playerId);
     ws.unsubscribe(roomCode);
   } else {
-    // Lobby or finished game: use existing immediate removal logic
-    const isHost = room.getState().hostId === ws.data.playerId;
-
-    if (isHost) {
-      // Notify others before destroying room
-      ws.publish(roomCode, JSON.stringify({
-        type: 'error',
-        message: 'Host disconnected — room closed',
-        code: 'ROOM_NOT_FOUND',
-      }));
+    // Lobby or finished game: delegate to Room's grace period logic
+    // Set up disconnect callbacks if not already set (lobby has no game-start to wire them)
+    if (!room.hasDisconnectCallbacks()) {
+      room.setDisconnectCallbacks({
+        onDisconnected: (disconnectedPlayerId, nickname) => {
+          // Lobby disconnect: notify other players
+          const playerIds = room.getPlayerIds();
+          for (const pid of playerIds) {
+            if (pid === disconnectedPlayerId) continue;
+            const pWs = playerSockets.get(pid);
+            if (pWs) {
+              sendMessage(pWs, {
+                type: 'player-disconnected',
+                playerId: disconnectedPlayerId,
+                nickname,
+                graceTimeRemaining: room.getDisconnectGraceRemaining(disconnectedPlayerId),
+              });
+            }
+          }
+        },
+        onReconnected: (reconnectedPlayerId, nickname) => {
+          const playerIds = room.getPlayerIds();
+          for (const pid of playerIds) {
+            if (pid === reconnectedPlayerId) continue;
+            const pWs = playerSockets.get(pid);
+            if (pWs) {
+              sendMessage(pWs, {
+                type: 'player-reconnected',
+                playerId: reconnectedPlayerId,
+                nickname,
+              });
+            }
+          }
+        },
+        onRemoved: (removedPlayerId, nickname, reason) => {
+          if (reason === 'host-left') {
+            const playerIds = room.getPlayerIds();
+            for (const pid of playerIds) {
+              if (pid === removedPlayerId) continue;
+              const pWs = playerSockets.get(pid);
+              if (pWs) {
+                sendMessage(pWs, {
+                  type: 'player-removed',
+                  playerId: removedPlayerId,
+                  nickname,
+                  reason: 'host-left',
+                });
+              }
+            }
+            manager.destroyRoom(room.code);
+          } else {
+            const playerIds = room.getPlayerIds();
+            for (const pid of playerIds) {
+              if (pid === removedPlayerId) continue;
+              const pWs = playerSockets.get(pid);
+              if (pWs) {
+                sendMessage(pWs, {
+                  type: 'player-removed',
+                  playerId: removedPlayerId,
+                  nickname,
+                  reason: 'timeout',
+                });
+              }
+            }
+            manager.removePlayerIndex(removedPlayerId);
+            // Send room-updated to remaining players
+            const updatedRoom = manager.getRoom(room.code);
+            if (updatedRoom) {
+              for (const pid of updatedRoom.getPlayerIds()) {
+                const pWs = playerSockets.get(pid);
+                if (pWs) {
+                  sendMessage(pWs, {
+                    type: 'room-updated',
+                    room: updatedRoom.getState(),
+                  });
+                }
+              }
+            }
+          }
+        },
+      });
     }
 
-    manager.leaveRoom(ws.data.playerId);
+    room.handlePlayerDisconnect(ws.data.playerId);
     ws.unsubscribe(roomCode);
-
-    // Non-host disconnect — room still exists, notify remaining players
-    if (!isHost) {
-      const updatedRoom = manager.getRoom(roomCode);
-      if (updatedRoom) {
-        ws.publish(roomCode, JSON.stringify({
-          type: 'room-updated',
-          room: updatedRoom.getState(),
-        }));
-      }
-    }
   }
 }
