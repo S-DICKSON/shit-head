@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 Phase: 12 of 15 (Deployment - Production Polish)
 Plan: 3 of 3 (Phase complete)
 Status: Phase complete
-Last activity: 2026-02-15 — Completed quick task 005: Fix guest returning to home page on lobby refresh
+Last activity: 2026-02-15 — Completed quick task 009: Auto-sort hand cards
 
 Progress: [█████████░] 95% (58 plans complete)
 
@@ -446,6 +446,7 @@ Recent decisions affecting current work:
 | 006 | Nickname rename and share link | 2026-02-15 | 4966a68 | [006-nickname-choice-rename-and-share-link](./quick/006-nickname-choice-rename-and-share-link/) |
 | 007 | Your turn banner obstructs player cards | 2026-02-15 | 874b1da | [007-your-turn-banner-obstructs-player-cards](./quick/007-your-turn-banner-obstructs-player-cards/) |
 | 008 | Cleanup stale Docker and infra files | 2026-02-15 | d7ab01d | [008-cleanup-stale-docker-and-infra-files](./quick/008-cleanup-stale-docker-and-infra-files/) |
+| 009 | Auto-sort hand cards (normal then special) | 2026-02-15 | 2330749 | [009-auto-sort-hand-cards-normal-then-special](./quick/009-auto-sort-hand-cards-normal-then-special/) |
 
 ### Blockers/Concerns
 
@@ -459,6 +460,6 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-15
-Stopped at: Completed quick task 008 (Cleanup stale Docker and infra files)
+Stopped at: Completed quick task 009 (Auto-sort hand cards normal then special)
 Resume file: None
 
