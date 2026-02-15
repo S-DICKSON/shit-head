@@ -372,33 +372,53 @@ export class GameEngine {
     let finalDiscardPile = updatedDiscardPile;
     let nextPlayerIndex: number;
 
-    if (burnResult.isBurn) {
-      // Clear pile and same player goes again
-      finalDiscardPile = [];
-      nextPlayerIndex = playerIndex; // Same player (no advancement)
-    } else {
-      // Normal turn advancement
-      nextPlayerIndex = (state.currentPlayerIndex + 1) % state.players.length;
-    }
-
     // Update player state
     const updatedPlayer: PlayerGameState = {
       ...player,
       hand: sortHand(updatedHand),
     };
 
-    // Create new game state
+    // Check if player eliminated after play
+    const isEliminated = this.checkPlayerElimination(updatedPlayer);
+
+    // Create intermediate state for turn advancement
     const updatedPlayers = state.players.map((p, i) =>
       i === playerIndex ? updatedPlayer : p
     );
 
-    const newState: GameState = {
+    const intermediateState: GameState = {
       ...state,
       players: updatedPlayers,
-      discardPile: finalDiscardPile,
+      discardPile: updatedDiscardPile,
       drawPile: updatedDrawPile,
+    };
+
+    if (burnResult.isBurn) {
+      // Clear pile and same player goes again (even if eliminated)
+      finalDiscardPile = [];
+      nextPlayerIndex = playerIndex; // Same player (no advancement)
+    } else if (isEliminated) {
+      // Player eliminated, skip to next active player
+      nextPlayerIndex = this.nextActivePlayerIndex(intermediateState, playerIndex);
+    } else {
+      // Normal turn advancement
+      nextPlayerIndex = this.nextActivePlayerIndex(intermediateState, playerIndex);
+    }
+
+    // Create new game state
+    let newState: GameState = {
+      ...intermediateState,
+      discardPile: finalDiscardPile,
       currentPlayerIndex: nextPlayerIndex,
     };
+
+    // Check for game end after burn (if player was eliminated by the burn)
+    if (isEliminated) {
+      const shitheadId = this.findShithead(newState);
+      if (shitheadId) {
+        newState = { ...newState, phase: 'finished' };
+      }
+    }
 
     return {
       success: true,
