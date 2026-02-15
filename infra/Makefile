@@ -1,4 +1,4 @@
-.PHONY: help up down login shell init plan apply apply-retry destroy output
+.PHONY: help up down login shell init plan apply apply-retry destroy output ssh
 
 .DEFAULT_GOAL := help
 
@@ -43,3 +43,6 @@ destroy: up ## Tear down all infrastructure (secrets via Infisical)
 
 output: up ## Show infrastructure outputs
 	$(INFRA_EXEC) "tofu output"
+
+ssh: up ## SSH into the VPS (key via Infisical)
+	docker compose exec infra bash -c "infisical run --env=prod -- sh -c 'echo \"\$$VPS_SSH_PRIVATE_KEY\" > /tmp/vps_key && chmod 600 /tmp/vps_key && ssh -o StrictHostKeyChecking=no -i /tmp/vps_key root@46.225.52.135; rm -f /tmp/vps_key'"
