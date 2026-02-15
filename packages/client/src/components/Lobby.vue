@@ -9,6 +9,8 @@ const { send, onMessage, roomState, playerId, gameView } = useGameSocket();
 
 // Component state
 const countdown = ref<number | null>(null);
+const isRenaming = ref(false);
+const newNickname = ref('');
 
 // Computed states
 const isHost = computed(() => {
@@ -35,6 +37,30 @@ const startGame = () => {
 const leaveRoom = () => {
   send({ type: 'leave-room' });
   router.push('/');
+};
+
+// Rename actions
+const startRenaming = () => {
+  const currentPlayer = roomState.value?.players.find(p => p.id === playerId.value);
+  if (currentPlayer) {
+    newNickname.value = currentPlayer.nickname;
+    isRenaming.value = true;
+  }
+};
+
+const cancelRenaming = () => {
+  isRenaming.value = false;
+  newNickname.value = '';
+};
+
+const confirmRename = () => {
+  const trimmed = newNickname.value.trim();
+  if (trimmed.length === 0 || trimmed.length > 20) {
+    return;
+  }
+  send({ type: 'rename-player', nickname: trimmed });
+  isRenaming.value = false;
+  newNickname.value = '';
 };
 
 // Check if player has joined a room on mount
@@ -131,16 +157,58 @@ onUnmounted(() => {
             >★</span>
 
             <!-- Player Nickname -->
-            <span
-              :class="{ 'font-bold': player.isHost }"
-              class="flex-1 text-gray-800"
+            <div
+              class="flex-1 flex items-center gap-2"
             >
-              {{ player.nickname }}
+              <!-- Default state: show nickname -->
               <span
-                v-if="player.id === playerId"
-                class="text-gray-500 text-sm"
-              >(You)</span>
-            </span>
+                v-if="player.id !== playerId || !isRenaming"
+                :class="{ 'font-bold': player.isHost }"
+                class="text-gray-800"
+              >
+                {{ player.nickname }}
+                <span
+                  v-if="player.id === playerId"
+                  class="text-gray-500 text-sm"
+                >(You)</span>
+              </span>
+
+              <!-- Edit button for current player -->
+              <button
+                v-if="player.id === playerId && !isRenaming"
+                class="text-xs text-gray-500 hover:text-gray-700 hover:underline"
+                @click="startRenaming"
+              >
+                edit
+              </button>
+
+              <!-- Editing state: show input -->
+              <div
+                v-if="player.id === playerId && isRenaming"
+                class="flex items-center gap-2 flex-1"
+              >
+                <input
+                  v-model="newNickname"
+                  type="text"
+                  maxlength="20"
+                  class="flex-1 px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  @keyup.enter="confirmRename"
+                  @keyup.escape="cancelRenaming"
+                >
+                <button
+                  class="text-xs text-green-600 hover:text-green-700 font-semibold"
+                  @click="confirmRename"
+                >
+                  ✓
+                </button>
+                <button
+                  class="text-xs text-red-600 hover:text-red-700 font-semibold"
+                  @click="cancelRenaming"
+                >
+                  ✗
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>

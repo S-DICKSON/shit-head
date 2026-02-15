@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, computed, watch, onMounted } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import { useGameSocket } from '../composables/useGameSocket';
 
 const router = useRouter();
+const route = useRoute();
 const { send, onMessage, status, roomState, gameView, error: socketError } = useGameSocket();
 
 // Form state
@@ -11,6 +12,14 @@ const nickname = ref('');
 const roomCode = ref('');
 const errorMessage = ref('');
 const isLoading = ref(false);
+
+// Pre-fill room code from query param (share link)
+onMounted(() => {
+  const joinCode = route.query.joinCode;
+  if (typeof joinCode === 'string' && joinCode.length === 6) {
+    roomCode.value = joinCode.toUpperCase();
+  }
+});
 
 // Computed states
 const isConnecting = computed(() => status.value === 'CONNECTING');

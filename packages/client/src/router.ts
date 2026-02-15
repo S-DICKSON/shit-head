@@ -54,6 +54,11 @@ router.beforeEach(async (to, _from) => {
     }
   }
 
+  // Share link redirect: if navigating to lobby without room state, redirect to landing with join code
+  if (to.name === 'lobby' && !roomState.value) {
+    return { name: 'landing', query: { joinCode: to.params.code as string } };
+  }
+
   // Continue to requested route
   return true;
 });
