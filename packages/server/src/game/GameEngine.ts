@@ -844,13 +844,18 @@ export class GameEngine {
       // Add flipped card to discard pile
       updatedDiscardPile = [...state.discardPile, flippedCard];
 
+      // Check for burn after card is added to pile
+      const burnResult = detectBurn(updatedDiscardPile);
+
+      let finalDiscardPile = updatedDiscardPile;
+
       // Update player state
       const updatedPlayer: PlayerGameState = {
         ...player,
         faceDown: updatedFaceDown,
       };
 
-      // Check if player eliminated
+      // Check if player eliminated after play
       const isEliminated = this.checkPlayerElimination(updatedPlayer);
 
       // Create intermediate state for turn advancement
@@ -864,12 +869,13 @@ export class GameEngine {
         discardPile: updatedDiscardPile,
       };
 
-      // Advance turn
-      if (isEliminated) {
-        // Player eliminated, skip to next active player
+      if (burnResult.isBurn) {
+        // Burn: clear pile, same player goes again (even if eliminated)
+        finalDiscardPile = [];
+        nextPlayerIndex = playerIndex;
+      } else if (isEliminated) {
+        // No burn, but player eliminated - advance to next active player
         nextPlayerIndex = this.nextActivePlayerIndex(intermediateState, playerIndex);
-
-        // Check for game end
         const shitheadId = this.findShithead(intermediateState);
         if (shitheadId) {
           updatedPhase = 'finished';
@@ -879,8 +885,17 @@ export class GameEngine {
         nextPlayerIndex = this.nextActivePlayerIndex(intermediateState, playerIndex);
       }
 
+      // Check for game end after burn (if player was eliminated by the burn)
+      if (burnResult.isBurn && isEliminated) {
+        const shitheadId = this.findShithead(intermediateState);
+        if (shitheadId) {
+          updatedPhase = 'finished';
+        }
+      }
+
       const finalState: GameState = {
         ...intermediateState,
+        discardPile: finalDiscardPile,
         currentPlayerIndex: nextPlayerIndex,
         phase: updatedPhase,
       };
