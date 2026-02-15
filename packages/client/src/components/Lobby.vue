@@ -6,7 +6,7 @@ import RoomCode from './RoomCode.vue';
 
 const router = useRouter();
 const route = useRoute();
-const { send, onMessage, roomState, playerId, gameView, status, reconnecting } = useGameSocket();
+const { send, onMessage, roomState, playerId, gameView, status } = useGameSocket();
 
 // Component state
 const countdown = ref<number | null>(null);
