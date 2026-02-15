@@ -467,7 +467,7 @@ export class GameEngine {
     };
 
     // Advance turn
-    const nextPlayerIndex = (state.currentPlayerIndex + 1) % state.players.length;
+    const nextPlayerIndex = this.nextActivePlayerIndex(state, state.currentPlayerIndex);
 
     // Create new game state
     const updatedPlayers = state.players.map((p, i) =>
