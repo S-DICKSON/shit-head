@@ -102,7 +102,7 @@ onMessage((msg) => {
       <!-- Header -->
       <div class="text-center mb-8">
         <h1 class="text-4xl font-bold text-gray-800 mb-2">
-          Shithead Online
+          Karma
         </h1>
         <p class="text-gray-500 text-sm">
           Play the classic card game with friends
