@@ -1,6 +1,6 @@
 import { describe, test, expect } from 'vitest';
 import type { Card } from '@shit-head/shared';
-import { getRankValue, canPlayOn, RANK_ORDER } from '../game/CardComparison';
+import { getRankValue, canPlayOn, sortHand, RANK_ORDER } from '../game/CardComparison';
 
 describe('CardComparison', () => {
   describe('getRankValue', () => {
@@ -98,6 +98,137 @@ describe('CardComparison', () => {
 
     test('has 13 ranks', () => {
       expect(RANK_ORDER).toHaveLength(13);
+    });
+  });
+
+  describe('sortHand', () => {
+    test('sorts normal cards in ascending order (3,4,5,6,9,J,Q,K,A)', () => {
+      const hand: Card[] = [
+        { kind: 'standard', suit: 'hearts', rank: 'K' },
+        { kind: 'standard', suit: 'diamonds', rank: '3' },
+        { kind: 'standard', suit: 'clubs', rank: '9' },
+        { kind: 'standard', suit: 'spades', rank: '5' },
+        { kind: 'standard', suit: 'hearts', rank: 'A' },
+      ];
+
+      const sorted = sortHand(hand);
+
+      expect(sorted.map(c => c.kind === 'standard' ? c.rank : 'joker')).toEqual([
+        '3', '5', '9', 'K', 'A'
+      ]);
+    });
+
+    test('places special cards (2,7,8,10) after normal cards', () => {
+      const hand: Card[] = [
+        { kind: 'standard', suit: 'hearts', rank: '10' },
+        { kind: 'standard', suit: 'diamonds', rank: '3' },
+        { kind: 'standard', suit: 'clubs', rank: '2' },
+        { kind: 'standard', suit: 'spades', rank: '7' },
+        { kind: 'standard', suit: 'hearts', rank: 'K' },
+      ];
+
+      const sorted = sortHand(hand);
+
+      expect(sorted.map(c => c.kind === 'standard' ? c.rank : 'joker')).toEqual([
+        '3', 'K', '2', '7', '10'
+      ]);
+    });
+
+    test('places jokers between normal and special cards', () => {
+      const hand: Card[] = [
+        { kind: 'standard', suit: 'hearts', rank: '10' },
+        { kind: 'joker', id: 1 },
+        { kind: 'standard', suit: 'diamonds', rank: '3' },
+        { kind: 'standard', suit: 'clubs', rank: '2' },
+        { kind: 'standard', suit: 'hearts', rank: 'K' },
+      ];
+
+      const sorted = sortHand(hand);
+
+      expect(sorted.map(c => c.kind === 'joker' ? 'joker' : c.rank)).toEqual([
+        '3', 'K', 'joker', '2', '10'
+      ]);
+    });
+
+    test('sorts mixed hand correctly', () => {
+      const hand: Card[] = [
+        { kind: 'standard', suit: 'hearts', rank: '10' },
+        { kind: 'standard', suit: 'spades', rank: '3' },
+        { kind: 'standard', suit: 'clubs', rank: '2' },
+        { kind: 'standard', suit: 'diamonds', rank: '7' },
+        { kind: 'standard', suit: 'hearts', rank: 'K' },
+        { kind: 'joker', id: 1 },
+      ];
+
+      const sorted = sortHand(hand);
+
+      expect(sorted.map(c => c.kind === 'joker' ? 'joker' : c.rank)).toEqual([
+        '3', 'K', 'joker', '2', '7', '10'
+      ]);
+    });
+
+    test('returns empty array for empty hand', () => {
+      const hand: Card[] = [];
+      const sorted = sortHand(hand);
+      expect(sorted).toEqual([]);
+    });
+
+    test('sorts hand with only special cards correctly (2,7,8,10)', () => {
+      const hand: Card[] = [
+        { kind: 'standard', suit: 'hearts', rank: '10' },
+        { kind: 'standard', suit: 'diamonds', rank: '7' },
+        { kind: 'standard', suit: 'clubs', rank: '2' },
+        { kind: 'standard', suit: 'spades', rank: '8' },
+      ];
+
+      const sorted = sortHand(hand);
+
+      expect(sorted.map(c => c.kind === 'standard' ? c.rank : 'joker')).toEqual([
+        '2', '7', '8', '10'
+      ]);
+    });
+
+    test('uses suit as secondary sort for same rank (hearts < diamonds < clubs < spades)', () => {
+      const hand: Card[] = [
+        { kind: 'standard', suit: 'spades', rank: '5' },
+        { kind: 'standard', suit: 'hearts', rank: '5' },
+        { kind: 'standard', suit: 'clubs', rank: '5' },
+        { kind: 'standard', suit: 'diamonds', rank: '5' },
+      ];
+
+      const sorted = sortHand(hand);
+
+      expect(sorted.map(c => c.kind === 'standard' ? c.suit : 'joker')).toEqual([
+        'hearts', 'diamonds', 'clubs', 'spades'
+      ]);
+    });
+
+    test('sorts jokers by id (1 before 2)', () => {
+      const hand: Card[] = [
+        { kind: 'joker', id: 2 },
+        { kind: 'joker', id: 1 },
+        { kind: 'standard', suit: 'hearts', rank: '3' },
+      ];
+
+      const sorted = sortHand(hand);
+
+      expect(sorted).toEqual([
+        { kind: 'standard', suit: 'hearts', rank: '3' },
+        { kind: 'joker', id: 1 },
+        { kind: 'joker', id: 2 },
+      ]);
+    });
+
+    test('does not mutate input array', () => {
+      const hand: Card[] = [
+        { kind: 'standard', suit: 'hearts', rank: 'K' },
+        { kind: 'standard', suit: 'diamonds', rank: '3' },
+      ];
+
+      const originalHand = [...hand];
+      sortHand(hand);
+
+      expect(hand).toEqual(originalHand);
     });
   });
 });

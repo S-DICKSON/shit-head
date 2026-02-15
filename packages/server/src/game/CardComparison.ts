@@ -41,3 +41,72 @@ export function getRankValue(card: Card): number {
 export function canPlayOn(playedCard: Card, topCard: Card): boolean {
   return getRankValue(playedCard) >= getRankValue(topCard);
 }
+
+// Hand sorting order (different from gameplay RANK_ORDER)
+// Normal cards ascending: 3,4,5,6,9,J,Q,K,A (positions 0-8)
+// Jokers: position 9
+// Special cards grouped: 2,7,8,10 (positions 10-13)
+const HAND_SORT_ORDER = new Map<string, number>([
+  ['3', 0],
+  ['4', 1],
+  ['5', 2],
+  ['6', 3],
+  ['9', 4],
+  ['J', 5],
+  ['Q', 6],
+  ['K', 7],
+  ['A', 8],
+  // joker handled separately -> 9
+  ['2', 10],
+  ['7', 11],
+  ['8', 12],
+  ['10', 13],
+]);
+
+const SUIT_ORDER = new Map<string, number>([
+  ['hearts', 0],
+  ['diamonds', 1],
+  ['clubs', 2],
+  ['spades', 3],
+]);
+
+/**
+ * Sorts a hand of cards for display purposes.
+ * Returns a new sorted array (does not mutate input).
+ *
+ * Sort order:
+ * - Normal cards ascending: 3,4,5,6,9,J,Q,K,A
+ * - Jokers
+ * - Special cards grouped: 2,7,8,10
+ *
+ * Within same rank, cards are sorted by suit (hearts < diamonds < clubs < spades).
+ * Jokers are sorted by id (1 before 2).
+ *
+ * @param hand - Array of cards to sort
+ * @returns New array with cards sorted by display order
+ */
+export function sortHand(hand: Card[]): Card[] {
+  return [...hand].sort((a, b) => {
+    // Get sort keys
+    const aKey = a.kind === 'joker' ? 9 : HAND_SORT_ORDER.get(a.rank) ?? 999;
+    const bKey = b.kind === 'joker' ? 9 : HAND_SORT_ORDER.get(b.rank) ?? 999;
+
+    // Primary sort by rank position
+    if (aKey !== bKey) {
+      return aKey - bKey;
+    }
+
+    // Secondary sort for same rank
+    if (a.kind === 'joker' && b.kind === 'joker') {
+      return a.id - b.id;
+    }
+
+    if (a.kind === 'standard' && b.kind === 'standard') {
+      const aSuit = SUIT_ORDER.get(a.suit) ?? 0;
+      const bSuit = SUIT_ORDER.get(b.suit) ?? 0;
+      return aSuit - bSuit;
+    }
+
+    return 0;
+  });
+}
