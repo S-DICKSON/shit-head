@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 Phase: 12 of 15 (Deployment - Production Polish)
 Plan: 3 of 3 (Phase complete)
 Status: Phase complete
-Last activity: 2026-02-15 — Completed quick task 019: Add Caddy to Docker Compose to match production
+Last activity: 2026-02-15 — Completed quick task 020: Force first player to play lowest card(s)
 
 Progress: [█████████░] 95% (58 plans complete)
 
@@ -456,6 +456,7 @@ Recent decisions affecting current work:
 | 017 | CI/CD path filters for packages/ code | 2026-02-15 | 7d477af | [017-ci-cd-path-filters-for-packages-code](./quick/017-ci-cd-path-filters-for-packages-code/) |
 | 018 | Update README - Windows dev prerequisites and Claude Code/GSD workflow | 2026-02-15 | 466c49f | [018-update-readme-windows-dev-prerequisites](./quick/018-update-readme-windows-dev-prerequisites/) |
 | 019 | Add Caddy to Docker Compose to match production | 2026-02-15 | cbc02cd | [019-add-caddy-to-docker-compose-to-match-pro](./quick/019-add-caddy-to-docker-compose-to-match-pro/) |
+| 020 | Force first player to play lowest card(s) | 2026-02-15 | bfc03f9 | [020-force-first-player-to-play-lowest-card](./quick/020-force-first-player-to-play-lowest-card/) |
 
 ### Blockers/Concerns
 
