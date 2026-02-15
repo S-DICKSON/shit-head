@@ -48,7 +48,7 @@
           class="fire-particle"
           :style="{
             animationDelay: `${(p - 1) * 0.1}s`,
-            left: `calc((100% - 2.5em) * ${(p - 1) / 11})`,
+            left: `calc((100% - 3.5em) * ${(p - 1) / 11})`,
           }"
         />
       </div>
@@ -146,7 +146,7 @@ function getCardTransform(card: Card, index: number): string {
 
     const eightIndex = index - (visibleCards.value.length - trailing8Count);
     const offsetX = baseX + 20 + (eightIndex * 4);
-    const offsetY = baseY - 10 + (eightIndex * 2);
+    const offsetY = baseY + 0 + (eightIndex * 2);
 
     return `translate(${offsetX}px, ${offsetY}px)`;
   }
@@ -170,10 +170,10 @@ function cardKey(card: Card): string {
 <style scoped>
 .burn-fire {
   position: absolute;
-  top: -40%;
-  left: -30%;
-  width: 160%;
-  height: 180%;
+  top: -60%;
+  left: -50%;
+  width: 200%;
+  height: 220%;
   z-index: 50;
   pointer-events: none;
   filter: blur(1px);
@@ -187,8 +187,8 @@ function cardKey(card: Card): string {
   opacity: 0;
   position: absolute;
   bottom: 0;
-  width: 2.5em;
-  height: 2.5em;
+  width: 3.5em;
+  height: 3.5em;
 }
 
 @keyframes rise {
@@ -201,7 +201,7 @@ function cardKey(card: Card): string {
   }
   100% {
     opacity: 0;
-    transform: translateY(-5em) scale(0);
+    transform: translateY(-7em) scale(0);
   }
 }
 </style>

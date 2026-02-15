@@ -57,7 +57,7 @@ jobs:
           DEPLOY_DOMAIN: splatmonkey.com
           DEPLOY_ORIGINS: https://splatmonkey.com
         run: |
-          ssh -o StrictHostKeyChecking=no root@${{ secrets.VPS_PUBLIC_IP }} << ENDSSH
+          ssh -o StrictHostKeyChecking=no root@46.225.52.135 << ENDSSH
             # Login to GHCR (variables interpolated by runner before SSH)
             echo "${GHCR_TOKEN}" | docker login ghcr.io -u ${GHCR_ACTOR} --password-stdin
 

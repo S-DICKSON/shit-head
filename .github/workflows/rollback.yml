@@ -37,7 +37,7 @@ jobs:
           DEPLOY_IMAGE: ${{ env.IMAGE }}
           TARGET_SHA: ${{ inputs.target_sha }}
         run: |
-          ssh -o StrictHostKeyChecking=no root@${{ secrets.VPS_PUBLIC_IP }} << ENDSSH
+          ssh -o StrictHostKeyChecking=no root@46.225.52.135 << ENDSSH
             # Pull specific version
             docker pull ${DEPLOY_IMAGE}:${TARGET_SHA}
 
