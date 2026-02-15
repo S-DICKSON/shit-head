@@ -66,6 +66,9 @@ function createGameSocket() {
   // Burn animation state
   const burnTriggered = ref<boolean>(false);
 
+  // Game-over state
+  const shitheadNickname = ref<string | null>(null);
+
   // Notification state
   interface GameNotification {
     id: number;
@@ -276,6 +279,7 @@ function createGameSocket() {
           }
           break;
         case 'game-over':
+          shitheadNickname.value = message.shitheadNickname;
           if (gameView.value) {
             gameView.value = {
               ...gameView.value,
@@ -376,6 +380,8 @@ function createGameSocket() {
     notifications,
     addNotification,
     dismissNotification,
+    // Game-over state
+    shitheadNickname,
   };
 }
 
