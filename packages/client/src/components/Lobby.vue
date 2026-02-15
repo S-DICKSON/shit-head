@@ -79,6 +79,9 @@ const joinAsGuest = (code: string) => {
 
 // Check if player has joined a room on mount
 onMounted(() => {
+  // Reset countdown in case returning from game
+  countdown.value = null;
+
   if (!roomState.value || !playerId.value) {
     // If reconnecting, wait for reconnect to complete instead of joining as guest
     const storedPlayerId = localStorage.getItem('shithead-player-id');

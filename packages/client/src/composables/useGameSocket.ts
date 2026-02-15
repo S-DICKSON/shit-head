@@ -287,6 +287,19 @@ function createGameSocket() {
             };
           }
           break;
+        case 'return-to-lobby':
+          // Reset game state — we're back in lobby
+          gameView.value = null;
+          shitheadNickname.value = null;
+          swapPhaseComplete.value = false;
+          swapPhaseReason.value = null;
+          readyPlayers.value = [];
+          burnTriggered.value = false;
+          turnTimeRemaining.value = 45;
+          turnTimerPlayerIndex.value = -1;
+          // Update room state with the reset room
+          roomState.value = message.room;
+          break;
         case 'player-disconnected':
           addNotification(`${message.nickname} disconnected`, 'warning');
           break;
