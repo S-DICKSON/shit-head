@@ -1,11 +1,14 @@
-.PHONY: help dev test test-server test-client clean lint lint-fix type-check type-check-server type-check-shared tunnel prod-local prod-local-down
+.PHONY: help install dev test test-server test-client clean lint lint-fix type-check type-check-server type-check-shared tunnel prod-local prod-local-down
 
 .DEFAULT_GOAL := help
 
 help: ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}'
 
-dev: ## Start development environment with hot reload
+install: ## Install dependencies locally (for IDE support)
+	bun install
+
+dev: install ## Start development environment with hot reload
 	docker compose up --build
 
 test: ## Run all tests
