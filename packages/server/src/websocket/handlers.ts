@@ -284,6 +284,30 @@ export function handleMessage(
                   });
                 }
               }
+
+              // Set play-again callbacks after game-over
+              room.setPlayAgainCallbacks({
+                onReturnToLobby: (removedPlayerIds) => {
+                  const roomState = room.getState();
+                  const remainingPlayerIds = room.getPlayerIds();
+
+                  // Clean up removed players' indices
+                  for (const pid of removedPlayerIds) {
+                    manager.removePlayerIndex(pid);
+                  }
+
+                  // Send return-to-lobby to remaining players
+                  for (const pid of remainingPlayerIds) {
+                    const pWs = playerSockets.get(pid);
+                    if (pWs) {
+                      sendMessage(pWs, {
+                        type: 'return-to-lobby',
+                        room: roomState,
+                      });
+                    }
+                  }
+                },
+              });
             },
           });
 
@@ -776,6 +800,43 @@ export function handleMessage(
         type: 'room-updated',
         room: updatedRoom,
       });
+
+      break;
+    }
+
+    case 'play-again': {
+      const roomCode = ws.data.roomCode;
+
+      if (!roomCode) {
+        sendMessage(ws, {
+          type: 'error',
+          message: 'Not in a room',
+          code: 'ROOM_NOT_FOUND',
+        });
+        return;
+      }
+
+      const room = manager.getRoom(roomCode);
+
+      if (!room) {
+        sendMessage(ws, {
+          type: 'error',
+          message: 'Room not found',
+          code: 'ROOM_NOT_FOUND',
+        });
+        return;
+      }
+
+      const result = room.markPlayAgain(ws.data.playerId);
+
+      if (!result.success) {
+        sendMessage(ws, {
+          type: 'error',
+          message: result.error,
+          code: result.code,
+        });
+        return;
+      }
 
       break;
     }

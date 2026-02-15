@@ -102,6 +102,10 @@ export const renamePlayerSchema = z.object({
   nickname: z.string().min(1).max(20).trim(),
 });
 
+export const playAgainSchema = z.object({
+  type: z.literal('play-again'),
+});
+
 export const clientMessageSchema = z.discriminatedUnion('type', [
   createRoomSchema,
   joinRoomSchema,
@@ -114,6 +118,7 @@ export const clientMessageSchema = z.discriminatedUnion('type', [
   playFaceDownSchema,
   reconnectSchema,
   renamePlayerSchema,
+  playAgainSchema,
 ]);
 
 // Server-to-client message schemas
@@ -262,6 +267,11 @@ export const playerRemovedSchema = z.object({
   reason: z.enum(['timeout', 'host-left']),
 });
 
+export const returnToLobbySchema = z.object({
+  type: z.literal('return-to-lobby'),
+  room: roomStateSchema,
+});
+
 export const errorSchema = z.object({
   type: z.literal('error'),
   message: z.string(),
@@ -302,5 +312,6 @@ export const serverMessageSchema = z.discriminatedUnion('type', [
   faceDownResultSchema,
   playerEliminatedSchema,
   gameOverSchema,
+  returnToLobbySchema,
   errorSchema,
 ]);

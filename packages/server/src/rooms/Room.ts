@@ -45,6 +45,9 @@ export class Room {
   private onPlayerDisconnected?: (playerId: string, nickname: string) => void;
   private onPlayerReconnected?: (playerId: string, nickname: string) => void;
   private onPlayerRemoved?: (playerId: string, nickname: string, reason: 'timeout' | 'host-left') => void;
+  private playAgainPlayers: Set<string> = new Set();
+  private playAgainTimeout: ReturnType<typeof setTimeout> | null = null;
+  private onReturnToLobby?: (removedPlayerIds: string[]) => void;
 
   constructor(hostId: string, hostNickname: string) {
     this.code = generateRoomCode();
@@ -246,8 +249,106 @@ export class Room {
     this.onPlayerRemoved = callbacks.onRemoved;
   }
 
+  setPlayAgainCallbacks(callbacks: {
+    onReturnToLobby: (removedPlayerIds: string[]) => void;
+  }): void {
+    this.onReturnToLobby = callbacks.onReturnToLobby;
+  }
+
   hasDisconnectCallbacks(): boolean {
     return this.onPlayerRemoved !== undefined;
+  }
+
+  markPlayAgain(playerId: string): OperationResult {
+    // Validate game is in 'finished' phase
+    if (!this.gameState || this.gameState.phase !== 'finished') {
+      return {
+        success: false,
+        error: 'Can only play again from finished phase',
+        code: 'INVALID_ACTION',
+      };
+    }
+
+    // Validate player exists in room
+    if (!this.players.has(playerId)) {
+      return {
+        success: false,
+        error: 'Player not found',
+        code: 'PLAYER_NOT_FOUND',
+      };
+    }
+
+    // Add to play-again set
+    this.playAgainPlayers.add(playerId);
+
+    // Start timeout if this is the first play-again
+    if (this.playAgainPlayers.size === 1) {
+      this.playAgainTimeout = setTimeout(() => {
+        this.resetToLobby();
+      }, 30000); // 30 seconds
+    }
+
+    // Count connected players (not disconnected)
+    const connectedPlayers = Array.from(this.players.keys()).filter(
+      pid => !this.isPlayerDisconnected(pid)
+    );
+
+    // If all connected players have responded, reset immediately
+    if (this.playAgainPlayers.size === connectedPlayers.length) {
+      this.resetToLobby();
+    }
+
+    return { success: true };
+  }
+
+  resetToLobby(): void {
+    // Clear timeout
+    if (this.playAgainTimeout) {
+      clearTimeout(this.playAgainTimeout);
+      this.playAgainTimeout = null;
+    }
+
+    // Identify players to remove (those who didn't click play-again)
+    const removedPlayerIds: string[] = [];
+    for (const [playerId] of this.players) {
+      if (!this.playAgainPlayers.has(playerId)) {
+        removedPlayerIds.push(playerId);
+      }
+    }
+
+    // Remove players who didn't play-again
+    for (const playerId of removedPlayerIds) {
+      this.players.delete(playerId);
+    }
+
+    // Check if host was removed
+    if (removedPlayerIds.includes(this.hostId)) {
+      // Pick new host from remaining players
+      const remainingPlayerIds = Array.from(this.playAgainPlayers);
+      if (remainingPlayerIds.length > 0) {
+        this.hostId = remainingPlayerIds[0];
+        // Update host flag
+        for (const [pid, player] of this.players) {
+          player.isHost = pid === this.hostId;
+        }
+      }
+    }
+
+    // Clear game state
+    this.gameState = null;
+    this.status = 'waiting';
+    this.readyPlayers.clear();
+    this.playAgainPlayers.clear();
+
+    // Clear timers
+    if (this.swapTimer) {
+      clearInterval(this.swapTimer);
+      this.swapTimer = null;
+    }
+    this.clearTurnTimer();
+
+    // Notify callback with removed player IDs
+    this.onReturnToLobby?.(removedPlayerIds);
   }
 
   swapCards(playerId: string, handIndex: number, faceUpIndex: number): OperationResult {
@@ -557,6 +658,18 @@ export class Room {
       });
 
       this.onPlayerDisconnected?.(playerId, player.nickname);
+
+      // If in finished phase and player disconnects before clicking play-again,
+      // they implicitly are not playing again. Check if all remaining connected players responded.
+      if (this.gameState && this.gameState.phase === 'finished' && this.playAgainPlayers.size > 0) {
+        const connectedPlayers = Array.from(this.players.keys()).filter(
+          pid => !this.isPlayerDisconnected(pid)
+        );
+        if (this.playAgainPlayers.size === connectedPlayers.length) {
+          this.resetToLobby();
+        }
+      }
+
       return;
     }
 
