@@ -12,7 +12,13 @@ jobs:
       contents: read
       packages: write
 
+    env:
+      IMAGE: ghcr.io/${{ github.repository_owner }}/shithead-server
+
     steps:
+      - name: Lowercase image name
+        run: echo "IMAGE=${IMAGE,,}" >> $GITHUB_ENV
+
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -32,7 +38,7 @@ jobs:
           context: .
           file: packages/server/Dockerfile
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/shithead-server:latest,ghcr.io/${{ github.repository_owner }}/shithead-server:${{ github.sha }}
+          tags: ${{ env.IMAGE }}:latest,${{ env.IMAGE }}:${{ github.sha }}
           platforms: linux/arm64
           target: production
           cache-from: type=gha
@@ -47,7 +53,7 @@ jobs:
         env:
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GHCR_ACTOR: ${{ github.actor }}
-          REPO_OWNER: ${{ github.repository_owner }}
+          DEPLOY_IMAGE: ${{ env.IMAGE }}
           DEPLOY_DOMAIN: splatmonkey.com
           DEPLOY_ORIGINS: https://splatmonkey.com
         run: |
@@ -56,7 +62,7 @@ jobs:
             echo "${GHCR_TOKEN}" | docker login ghcr.io -u ${GHCR_ACTOR} --password-stdin
 
             # Pull latest image
-            docker pull ghcr.io/${REPO_OWNER}/shithead-server:latest
+            docker pull ${DEPLOY_IMAGE}:latest
 
             # Write .env file for the container
             cat > /opt/shithead/.env << ENVEOF
@@ -65,8 +71,8 @@ jobs:
           ALLOWED_ORIGINS=${DEPLOY_ORIGINS}
           ENVEOF
 
-            # Update systemd service with correct image owner
-            sed -i "s|ghcr.io/OWNER/|ghcr.io/${REPO_OWNER}/|g" /etc/systemd/system/shithead-game.service
+            # Update systemd service with correct image
+            sed -i "s|ghcr.io/OWNER/shithead-server|${DEPLOY_IMAGE}|g" /etc/systemd/system/shithead-game.service
             systemctl daemon-reload
 
             # Configure Caddy with domain

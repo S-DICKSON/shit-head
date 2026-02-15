@@ -15,7 +15,13 @@ jobs:
       contents: read
       packages: read
 
+    env:
+      IMAGE: ghcr.io/${{ github.repository_owner }}/shithead-server
+
     steps:
+      - name: Lowercase image name
+        run: echo "IMAGE=${IMAGE,,}" >> $GITHUB_ENV
+
       - name: Checkout code
         uses: actions/checkout@v4
         with:
@@ -28,16 +34,16 @@ jobs:
 
       - name: Rollback on VPS
         env:
-          REPO_OWNER: ${{ github.repository_owner }}
+          DEPLOY_IMAGE: ${{ env.IMAGE }}
           TARGET_SHA: ${{ inputs.target_sha }}
         run: |
           ssh -o StrictHostKeyChecking=no root@${{ secrets.VPS_PUBLIC_IP }} << ENDSSH
             # Pull specific version
-            docker pull ghcr.io/${REPO_OWNER}/shithead-server:${TARGET_SHA}
+            docker pull ${DEPLOY_IMAGE}:${TARGET_SHA}
 
             # Tag it as latest locally for systemd service
-            docker tag ghcr.io/${REPO_OWNER}/shithead-server:${TARGET_SHA} \
-              ghcr.io/${REPO_OWNER}/shithead-server:latest
+            docker tag ${DEPLOY_IMAGE}:${TARGET_SHA} \
+              ${DEPLOY_IMAGE}:latest
 
             # Restart service (picks up new :latest)
             systemctl restart shithead-game
