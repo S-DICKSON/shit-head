@@ -444,6 +444,7 @@ Recent decisions affecting current work:
 | 004 | Fix eliminated player forced to pick up | 2026-02-15 | f2e662e | [004-fix-eliminated-player-forced-to-pick-up-](./quick/004-fix-eliminated-player-forced-to-pick-up-/) |
 | 005 | Fix guest returning to home page on lobby refresh | 2026-02-15 | 86fb299 | [005-fix-guest-returning-to-home-page-on-lobb](./quick/005-fix-guest-returning-to-home-page-on-lobb/) |
 | 006 | Nickname rename and share link | 2026-02-15 | 4966a68 | [006-nickname-choice-rename-and-share-link](./quick/006-nickname-choice-rename-and-share-link/) |
+| 007 | Your turn banner obstructs player cards | 2026-02-15 | 874b1da | [007-your-turn-banner-obstructs-player-cards](./quick/007-your-turn-banner-obstructs-player-cards/) |
 
 ### Blockers/Concerns
 
@@ -457,6 +458,6 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-15
-Stopped at: Completed quick task 006 (Nickname rename and share link)
+Stopped at: Completed quick task 007 (Your turn banner obstructs player cards)
 Resume file: None
 
