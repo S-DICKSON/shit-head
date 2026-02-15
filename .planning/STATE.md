@@ -443,6 +443,7 @@ Recent decisions affecting current work:
 | 003 | Fix burn mechanic for face-down 10 plays | 2026-02-15 | c689a60 | [003-bug-when-playing-10-when-its-face-down-t](./quick/003-bug-when-playing-10-when-its-face-down-t/) |
 | 004 | Fix eliminated player forced to pick up | 2026-02-15 | f2e662e | [004-fix-eliminated-player-forced-to-pick-up-](./quick/004-fix-eliminated-player-forced-to-pick-up-/) |
 | 005 | Fix guest returning to home page on lobby refresh | 2026-02-15 | 86fb299 | [005-fix-guest-returning-to-home-page-on-lobb](./quick/005-fix-guest-returning-to-home-page-on-lobb/) |
+| 006 | Nickname rename and share link | 2026-02-15 | 4966a68 | [006-nickname-choice-rename-and-share-link](./quick/006-nickname-choice-rename-and-share-link/) |
 
 ### Blockers/Concerns
 
@@ -456,6 +457,6 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-15
-Stopped at: Completed quick task 005 (Fix guest returning to home page on lobby refresh)
+Stopped at: Completed quick task 006 (Nickname rename and share link)
 Resume file: None
 
