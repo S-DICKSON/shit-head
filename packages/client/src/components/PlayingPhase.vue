@@ -20,6 +20,8 @@ const {
   selectedHandIndices,
   selectedFaceUpIndex,
   isMyTurn,
+  isFirstTurn,
+  forcedCardIndices,
   activeSource,
   hasSelection,
   toggleHandCard,
@@ -87,6 +89,14 @@ watch(
       <!-- Turn Banner (inline within center area) -->
       <TurnBanner :visible="isMyTurn" />
 
+      <!-- First Turn Banner -->
+      <p
+        v-if="isFirstTurn && isMyTurn"
+        class="text-yellow-300 text-sm text-center mb-1 animate-pulse"
+      >
+        You must play your lowest card(s)!
+      </p>
+
       <!-- Draw Pile + Discard Pile -->
       <div class="flex items-center justify-center gap-6 sm:gap-8 mb-2">
         <DrawPile :count="gameView?.drawPileCount ?? 0" />
@@ -105,6 +115,7 @@ watch(
         :face-down-count="gameView?.faceDownCount ?? 0"
         :selected-hand-indices="selectedHandIndices"
         :selected-face-up-index="selectedFaceUpIndex"
+        :forced-indices="forcedCardIndices"
         :is-my-turn="isMyTurn"
         :active-source="activeSource"
         :has-selection="hasSelection"

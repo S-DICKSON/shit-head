@@ -22,6 +22,32 @@ export function usePlayingPhase() {
     return myPlayerIndex === gameView.value.currentPlayerIndex;
   });
 
+  // Computed: check if it's the first turn
+  const isFirstTurn = computed<boolean>(() => {
+    return gameView.value?.firstTurn === true;
+  });
+
+  // Computed: which cards must be played on first turn
+  const forcedCardIndices = computed<Set<number>>(() => {
+    if (!isFirstTurn.value || !isMyTurn.value || !gameView.value) return new Set();
+    const hand = gameView.value.hand;
+    // Find lowest rank (skip 2s, same logic as server)
+    const rankOrder = ['3','4','5','6','7','8','9','10','J','Q','K','A','2'];
+    let lowestRank: string | null = null;
+    for (const rank of rankOrder) {
+      if (hand.some(c => c.kind === 'standard' && c.rank === rank)) {
+        lowestRank = rank;
+        break;
+      }
+    }
+    if (!lowestRank) return new Set();
+    const indices = new Set<number>();
+    hand.forEach((c, i) => {
+      if (c.kind === 'standard' && c.rank === lowestRank) indices.add(i);
+    });
+    return indices;
+  });
+
   // Computed: determine active source based on card availability
   const activeSource = computed<'hand' | 'face-up' | 'face-down'>(() => {
     if (!gameView.value) return 'hand';
@@ -52,6 +78,16 @@ export function usePlayingPhase() {
   const toggleHandCard = (index: number) => {
     if (!canClickHand.value) return;
     if (!gameView.value) return;
+
+    // On first turn, only allow toggling forced cards (prevent deselection)
+    if (isFirstTurn.value && forcedCardIndices.value.has(index)) {
+      // Cannot deselect forced cards on first turn
+      return;
+    }
+    if (isFirstTurn.value && !forcedCardIndices.value.has(index)) {
+      // Can only play forced cards on first turn
+      return;
+    }
 
     // If already selected, deselect
     if (selectedHandIndices.value.has(index)) {
@@ -138,6 +174,13 @@ export function usePlayingPhase() {
     clearSelection();
   }, { deep: true });
 
+  // Auto-select forced cards on first turn
+  watch([isFirstTurn, isMyTurn], ([firstTurn, myTurn]) => {
+    if (firstTurn && myTurn && forcedCardIndices.value.size > 0) {
+      selectedHandIndices.value = new Set(forcedCardIndices.value);
+    }
+  }, { immediate: true });
+
   return {
     // State from socket
     gameView,
@@ -151,6 +194,8 @@ export function usePlayingPhase() {
     selectedFaceDownIndex,
     // Computed
     isMyTurn,
+    isFirstTurn,
+    forcedCardIndices,
     activeSource,
     canClickHand,
     canClickFaceUp,
