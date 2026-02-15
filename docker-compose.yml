@@ -12,6 +12,7 @@ services:
       - ./packages/shared:/app/packages/shared
       - /app/node_modules
       - /app/packages/client/node_modules
+      - /app/packages/shared/node_modules
     environment:
       - NODE_ENV=development
     depends_on:
@@ -29,6 +30,7 @@ services:
       - ./packages/shared:/app/packages/shared
       - /app/node_modules
       - /app/packages/server/node_modules
+      - /app/packages/shared/node_modules
     environment:
       - NODE_ENV=development
       - PORT=3000
