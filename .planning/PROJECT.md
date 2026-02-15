@@ -2,7 +2,7 @@
 
 ## What This Is
 
-An online multiplayer Shithead card game — a browser-based web app where 2-4 players create or join rooms via share codes and play the full game with proper rules, special cards, burn mechanics, and endgame progression. Works on mobile and desktop. No accounts needed; players pick a nickname and jump in. Deployed to Oracle Cloud with auto-HTTPS.
+An online multiplayer Shithead card game — a browser-based web app where 2-4 players create or join rooms via share codes and play the full game with proper rules, special cards, burn mechanics, and endgame progression. Works on mobile and desktop. No accounts needed; players pick a nickname and jump in. Deployed to Hetzner with auto-HTTPS. Also available as a Discord Activity.
 
 ## Core Value
 
@@ -41,21 +41,37 @@ Friends can play a complete, rule-accurate game of Shithead together online with
 
 ### Active
 
-(None yet — define in next milestone with `/gsd:new-milestone`)
+- [ ] Mobile UI redesign: normal/power card categories when hand > 5 cards
+- [ ] Card playability highlights showing which cards are valid to play
+- [ ] Mute game sounds option
+- [ ] Host settings for configurable round time
+- [ ] Discord Activity integration (embedded app SDK, OAuth2, proxy networking)
+- [ ] Standalone web and Discord Activity coexist side by side
 
 ### Out of Scope
 
-- User accounts / authentication — just nicknames, no persistence
+- User accounts / authentication — just nicknames for web, Discord identity for Activity
 - Public matchmaking — room codes only, play with friends
 - Chat system — focus on gameplay
 - Spectator mode — players only
 - Native mobile apps — browser-based only
 - Leaderboards / stats tracking — no accounts to track against
 
+## Current Milestone: v2.0 UI + Discord
+
+**Goal:** Improve mobile UX with card category navigation and playability highlights, add host settings, and integrate as a Discord Activity for seamless play in voice channels.
+
+**Target features:**
+- Mobile card UI with normal/power card categories (>5 cards threshold)
+- Card playability highlights
+- Sound mute toggle
+- Host-configurable round time
+- Discord Activity with OAuth2, proxy networking, activity-session rooms
+
 ## Context
 
 Shipped v1.0 MVP with 14,378 LOC TypeScript/Vue across 309 files.
-Tech stack: Bun monorepo, Vue 3 + Vite + Tailwind CSS v4 client, Bun WebSocket server, Docker, Oracle Cloud VPS.
+Tech stack: Bun monorepo, Vue 3 + Vite + Tailwind CSS v4 client, Bun WebSocket server, Docker, Hetzner VPS.
 Live playtesting with friends drove 20 quick-task bug fixes and UX improvements.
 Known issues: 2 pre-existing vue-test-utils failures (Bun WeakMap), ngrok WS blocked on iOS mobile.
 
@@ -63,7 +79,7 @@ Known issues: 2 pre-existing vue-test-utils failures (Bun WeakMap), ngrok WS blo
 
 - **Platform**: Web app (browser-based) — must work on mobile and desktop browsers
 - **Multiplayer**: Real-time multiplayer via WebSockets
-- **No backend auth**: No user accounts, no persistent data beyond active game sessions
+- **No backend auth**: No user accounts for web; Discord OAuth2 for Activity mode only
 - **Card deck**: Standard 52-card deck + 2 Jokers (54 cards total)
 - **Players**: 2-4 per room
 
@@ -83,11 +99,13 @@ All phases that write code **must** pass linting before completion:
 | Timed turns (30-60s) | Prevents stalling in online play | Good |
 | Bun as runtime | Native TypeScript, fast WebSocket, single tool for monorepo | Good |
 | Server-authoritative state | Prevents cheating, single source of truth | Good |
-| Oracle Cloud Always Free | 4 OCPU, 24GB RAM for zero cost hosting | Good |
+| Hetzner VPS | Cost-effective hosting with good performance | Good |
 | Caddy for reverse proxy | Auto-HTTPS with zero config | Good |
 | Infisical for secrets | Secure credential management across CI/CD and local dev | Good |
 | TDD methodology | High test coverage, reliable game engine | Good |
 | Docker Compose dev env | Consistent dev environment, Makefile interface | Good |
 
+| Dual-mode (web + Discord) | Keep standalone web working alongside Discord Activity | -- Pending |
+
 ---
-*Last updated: 2026-02-15 after v1.0 milestone*
+*Last updated: 2026-02-15 after v2.0 milestone start*

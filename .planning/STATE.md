@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-15)
 
 **Core value:** Friends can play a complete, rule-accurate game of Shithead together online with zero friction
-**Current focus:** Planning next milestone
+**Current focus:** v2.0 UI + Discord — defining requirements
 
 ## Current Position
 
-Phase: v1.0 complete (15 phases, 51 plans)
-Plan: Not started
-Status: Ready to plan next milestone
-Last activity: 2026-02-15 — v1.0 milestone complete
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-02-15 — Milestone v2.0 started
 
-Progress: [##########] 100% (v1.0 shipped)
+Progress: [░░░░░░░░░░] 0% (v2.0 in progress)
 
 ## Performance Metrics
 
@@ -38,10 +38,10 @@ All v1.0 decisions marked with outcomes.
 
 ### Blockers/Concerns
 
-None — v1.0 shipped successfully.
+None.
 
 ## Session Continuity
 
 Last session: 2026-02-15
-Stopped at: v1.0 milestone completion
+Stopped at: v2.0 milestone initialization
 Resume file: None
