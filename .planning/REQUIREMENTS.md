@@ -84,35 +84,35 @@ Deferred to later milestones.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| MOBUI-01 | — | Pending |
-| MOBUI-02 | — | Pending |
-| MOBUI-03 | — | Pending |
-| MOBUI-04 | — | Pending |
-| MOBUI-05 | — | Pending |
-| SETS-01 | — | Pending |
-| SETS-02 | — | Pending |
-| SETS-03 | — | Pending |
-| DISC-01 | — | Pending |
-| DISC-02 | — | Pending |
-| DISC-03 | — | Pending |
-| DISC-04 | — | Pending |
-| DISC-05 | — | Pending |
-| DISC-06 | — | Pending |
-| DISC-07 | — | Pending |
-| DISC-08 | — | Pending |
-| DISC-09 | — | Pending |
-| DISC-10 | — | Pending |
-| DISC-11 | — | Pending |
-| DISC-12 | — | Pending |
-| DISC-13 | — | Pending |
-| DISC-14 | — | Pending |
-| DISC-15 | — | Pending |
+| MOBUI-01 | Phase 21 | Pending |
+| MOBUI-02 | Phase 22 | Pending |
+| MOBUI-03 | Phase 22 | Pending |
+| MOBUI-04 | Phase 22 | Pending |
+| MOBUI-05 | Phase 22 | Pending |
+| SETS-01 | Phase 20 | Pending |
+| SETS-02 | Phase 20 | Pending |
+| SETS-03 | Phase 20 | Pending |
+| DISC-01 | Phase 17 | Pending |
+| DISC-02 | Phase 17 | Pending |
+| DISC-03 | Phase 17 | Pending |
+| DISC-04 | Phase 18 | Pending |
+| DISC-05 | Phase 18 | Pending |
+| DISC-06 | Phase 18 | Pending |
+| DISC-07 | Phase 16 | Pending |
+| DISC-08 | Phase 16 | Pending |
+| DISC-09 | Phase 16 | Pending |
+| DISC-10 | Phase 19 | Pending |
+| DISC-11 | Phase 19 | Pending |
+| DISC-12 | Phase 19 | Pending |
+| DISC-13 | Phase 19 | Pending |
+| DISC-14 | Phase 19 | Pending |
+| DISC-15 | Phase 19 | Pending |
 
 **Coverage:**
 - v2.0 requirements: 23 total
-- Mapped to phases: 0
-- Unmapped: 23 (awaiting roadmap)
+- Mapped to phases: 23
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-15*
-*Last updated: 2026-02-15 after initial definition*
+*Last updated: 2026-02-15 after roadmap creation*
