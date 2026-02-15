@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import { useGameSocket } from '../composables/useGameSocket';
 import RoomCode from './RoomCode.vue';
 
 const router = useRouter();
-const { send, onMessage, roomState, playerId, gameView } = useGameSocket();
+const route = useRoute();
+const { send, onMessage, roomState, playerId, gameView, status } = useGameSocket();
 
 // Component state
 const countdown = ref<number | null>(null);
@@ -63,10 +64,41 @@ const confirmRename = () => {
   newNickname.value = '';
 };
 
+// Share link auto-join state
+const isJoining = ref(false);
+const joinError = ref('');
+
+// Auto-join as Guest when arriving via share link
+const joinAsGuest = (code: string) => {
+  if (isJoining.value) return;
+  isJoining.value = true;
+  joinError.value = '';
+  const guestName = `Guest ${Math.floor(Math.random() * 900) + 100}`;
+  send({ type: 'join-room', code, nickname: guestName });
+};
+
 // Check if player has joined a room on mount
 onMounted(() => {
   if (!roomState.value || !playerId.value) {
-    // No room state, redirect to landing
+    // Share link: auto-join if route has a room code
+    const code = route.params.code as string | undefined;
+    if (code) {
+      if (status.value === 'OPEN') {
+        joinAsGuest(code);
+      } else {
+        // Wait for WebSocket to connect, then join
+        const unwatch = watch(status, (val) => {
+          if (val === 'OPEN') {
+            unwatch();
+            joinAsGuest(code);
+          }
+        });
+        // Timeout after 5s
+        setTimeout(() => { unwatch(); if (!roomState.value) { router.push('/'); } }, 5000);
+      }
+      return;
+    }
+    // No room code and no state — redirect to landing
     router.push('/');
     return;
   }
@@ -79,7 +111,8 @@ onMounted(() => {
 
 // Register message handlers
 const unregister = onMessage((msg) => {
-  if (msg.type === 'error' && msg.code === 'ROOM_NOT_FOUND') {
+  if (msg.type === 'error' && (msg.code === 'ROOM_NOT_FOUND' || msg.code === 'ROOM_FULL')) {
+    isJoining.value = false;
     roomState.value = null;
     router.push('/');
     return;
@@ -112,6 +145,16 @@ onUnmounted(() => {
 <template>
   <div class="min-h-screen flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl shadow-xl p-8 w-full max-w-2xl">
+      <!-- Joining state (share link) -->
+      <div
+        v-if="isJoining && !roomState"
+        class="text-center py-8"
+      >
+        <p class="text-gray-600 text-lg animate-pulse">
+          Joining room...
+        </p>
+      </div>
+
       <!-- Room Code Section -->
       <RoomCode
         v-if="roomState"
