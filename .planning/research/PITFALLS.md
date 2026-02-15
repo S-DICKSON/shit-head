@@ -1,280 +1,547 @@
-# Domain Pitfalls: Online Multiplayer Card Games
+# Domain Pitfalls: Discord Activity Integration + Mobile UI Refactoring
 
-**Domain:** Browser-based multiplayer card game (Shithead)
-**Researched:** 2026-02-07
-**Confidence:** MEDIUM (based on domain knowledge, not verified with current sources)
+**Domain:** Adding Discord Activity support and mobile UI improvements to existing multiplayer web game
+**Researched:** 2026-02-15
+**Confidence:** HIGH (verified with official Discord docs, community patterns, project's own proxy lessons)
+
+## Executive Summary
+
+Adding Discord Activity support to an existing multiplayer game introduces critical pitfalls across networking (CSP/proxy), authentication (dual-mode user identity), mobile compatibility (safe areas, touch events), and state management (reconnection, session recovery). **The most dangerous mistakes stem from assuming the Discord iframe environment behaves like standalone web** — it doesn't. CSP restrictions block standard networking patterns, cookies require special partitioning, and mobile Discord apps have unique constraints that desktop doesn't.
+
+**This project has already experienced WebSocket proxy issues** (ngrok failed on iOS mobile due to interstitial page blocking WS upgrade, Docker internal DNS failed WS proxy through Vite). These lessons inform prevention strategies below.
+
+Additionally, **mobile UI refactoring carries its own risks** — breaking existing responsive layouts, introducing "breakpoint hell", and diverging code paths between mobile and desktop. The combination of Discord Activity + mobile UI improvements creates compounding complexity that must be managed carefully through proper phase ordering.
+
+---
 
 ## Critical Pitfalls
 
-Mistakes that cause rewrites, security vulnerabilities, or fundamentally broken gameplay.
+Mistakes that cause rewrites, failed deployments, or fundamental architecture changes.
 
-### Pitfall 1: Client-Authoritative Game State
-**What goes wrong:** Client tells server what moves are valid, server trusts client input without validation.
-**Why it happens:** Easier to prototype — client already has game logic for UI, so "just send the move" seems simpler than duplicating validation server-side.
+### Pitfall 1: CSP Networking Assumptions — "Just Use Fetch/WebSocket"
+
+**What goes wrong:**
+Developers port existing game code with standard `fetch()` and `WebSocket()` calls, then discover all network requests fail with `blocked:csp` errors when running in Discord Activity iframe. Relative URLs like `/api/token` are blocked. External URLs like `https://api.example.com` are blocked. WebSocket connections to `ws://localhost:3000` fail. Nothing works.
+
+**Why it happens:**
+Discord Activities run in a sandboxed iframe where **all network traffic is routed through Discord's proxy** for security. The proxy enforces strict Content Security Policy rules that block direct external requests. Developers assume iframe = normal browser context, but Discord's CSP treats it like a hostile environment.
+
+**This project already learned:** Bun's `node:http/node:net` upgrade events don't fire properly. Custom WebSocket proxy plugins fail. The standard approach (Vite proxy with `ws: true`, `changeOrigin: true`, HTTP target) is the only reliable pattern.
+
 **Consequences:**
-- Trivial cheating via browser DevTools or modified clients
-- Invalid game states that crash server or other clients
-- Players can see hidden information (face-down cards, opponent hands)
-- Cannot trust any game outcome for rankings/stats
+- Existing WebSocket multiplayer code completely broken
+- API calls fail silently or with cryptic CSP errors
+- Days spent debugging "why doesn't fetch work?"
+- Late discovery forces architectural changes after UI work is done
+- May require rewriting network layer entirely
 
 **Prevention:**
-- **Server is source of truth:** Server maintains canonical game state, validates ALL moves
-- **Client is view layer:** Client only renders state from server, optimistically updates for UX
-- **Never send hidden information:** Server only sends cards visible to that specific player
-- **Validate moves server-side:** Check card legality, turn order, game phase before accepting any action
+1. **Test networking FIRST** — Prototype Discord Activity with WebSocket connection before any UI work
+2. **Use `/.proxy` prefix** for relative URLs: `fetch('/.proxy/api/token')` instead of `fetch('/api/token')`
+3. **Configure URL Mappings** in Discord Developer Portal for external resources (CDNs, APIs)
+4. **Apply patching utilities** like `@robojs/patch` or SDK's `patchUrlMappings()` to intercept and transform network calls automatically
+5. **Never bypass with workarounds** — Use Discord's proxy architecture or it will break in production
+6. **Avoid ngrok for WS testing on mobile** — Project already experienced ngrok free tier interstitial blocking WebSocket upgrade on iOS
 
-**Detection:**
-- Can you open DevTools and change game state variables?
-- Does server accept any move JSON you send without validation?
-- Can you see variables for opponent hands or face-down cards in network inspector?
+**Detection warning signs:**
+- Console errors: `blocked:csp` or `Content Security Policy directive violated`
+- Network tab shows requests with status `(blocked:csp)`
+- WebSocket upgrade requests fail with CSP errors
+- Fetch returns opaque responses or fails with CORS-like errors
+- WebSocket connections work on desktop but fail on mobile Discord
 
-**Phase mapping:** Address in Phase 1 (Core Architecture). This is foundational — retrofitting is painful.
+**Which phase addresses this:**
+Phase 1 (Networking Foundation) — Must establish proxy-compatible networking before building dual-mode infrastructure. If left to later phases, requires rework.
+
+**Severity:** CRITICAL
+
+**Sources:**
+- [Discord Networking Docs](https://docs.discord.com/developers/activities/development-guides/networking)
+- [Patch Your Discord Activity's Network Requests for Smooth CSP Compliance](https://blog.waveplay.com/discord-proxy-csp-patch/)
+- [Robo.js Discord Proxy Guide](https://robojs.dev/discord-activities/proxy)
+- [Activity can't connect websocket in some mobile phone versions](https://github.com/discord/discord-api-docs/issues/7054)
 
 ---
 
-### Pitfall 2: Inconsistent Burn Logic with Invisible Cards
-**What goes wrong:** Burn detection fails when 8s (invisible cards) are interspersed in 4-of-a-kind sequences.
-**Why it happens:** Burn logic checks for "4 consecutive cards of same rank" but invisible 8s break the sequence (2,2,2,8,8,2 should burn but naive check sees 2,2,2 then 8,8,2).
-**Consequences:**
-- Game-breaking rule violations
-- Players lose trust when correct plays don't work
-- Edge cases surface in production, not testing
+### Pitfall 2: Cookie Authentication Hell — Partitioned, SameSite, and Domain Requirements
 
-**Shithead-specific complexity:**
-- 8s are "invisible" — they affect what next player must beat BUT don't break burn counting
-- Example: `[2,2,2,8,8,2]` = burn (6 cards total, 4 are 2s)
-- Example: `[2,2,2,8,8,3]` = NOT burn (only 3 of rank 2)
-- 8s also affect "what must be beaten": If pile ends with 8, next player must beat the last non-8 card
+**What goes wrong:**
+Existing game uses standard HTTP-only cookies for session management. After adding Discord Activity support, authentication breaks in the iframe. Cookies aren't sent with requests. Session state is lost between page loads. Login loops occur. Mobile Discord shows different behavior than desktop.
+
+**Why it happens:**
+Discord Activities run at `{clientId}.discordsays.com` in a third-party iframe context. Browsers now block third-party cookies by default. Discord requires cookies to specify:
+- `Domain={clientId}.discordsays.com` (not your original domain)
+- `SameSite=None; Partitioned` (not `SameSite=Lax`)
+- `Secure` flag (HTTPS only)
+
+Without these attributes, browsers reject cookies entirely. Additionally, partitioned cookies are isolated per top-level site — Discord Activity cookies don't leak to other activities, but also don't work outside the iframe.
+
+**Consequences:**
+- Authentication completely broken in Discord Activity mode
+- Session state lost on every request
+- Users forced to re-authenticate repeatedly
+- Mobile Safari/iOS WebKit may behave differently than Chrome
+- Debugging across browsers becomes nightmare
+- Late discovery means rewriting auth system under pressure
 
 **Prevention:**
-- **Filter invisibles for burn counting:** `pile.filter(c => c.rank !== 8).slice(-4)` to check last 4 visible cards
-- **Separate "pile top for beating" logic:** Function that skips 8s to find "what must be beaten"
-- **Comprehensive test cases:** Test all combinations: 4-of-kind with 0, 1, 2, 3 interspersed 8s
-- **Extract to pure function:** `shouldBurn(pile): boolean` that can be unit tested extensively
+1. **Design dual-mode auth from day one** — Separate cookie domains for standalone vs Discord Activity
+2. **Detect iframe context** and set cookie attributes accordingly:
+   ```typescript
+   const isDiscordActivity = window.parent !== window
+   const cookieAttrs = isDiscordActivity
+     ? `Domain=${clientId}.discordsays.com; SameSite=None; Partitioned; Secure`
+     : `Domain=${yourDomain}; SameSite=Lax; Secure`
+   ```
+3. **Use Discord OAuth2 for Activity mode** — Don't try to force existing session system into iframe
+4. **Test in actual Discord client early** — Localhost testing won't catch partitioned cookie issues
+5. **Never rely on SDK data alone** — Always validate with server-to-server Discord API calls
 
-**Detection:**
-- Play 2,2,2,8,2 in local testing — does it burn?
-- Add automated test: "4-of-a-kind with invisible cards in sequence"
+**Detection warning signs:**
+- Cookies visible in dev tools but not sent with requests
+- Authentication works in standalone web but fails in Discord
+- Login succeeds but session immediately lost
+- Different behavior between Discord desktop and mobile apps
+- Browser console warnings about `SameSite` or third-party cookies
 
-**Phase mapping:** Address in Phase 2 (Game Rules Engine). Core logic must handle this before UI work.
+**Which phase addresses this:**
+Phase 2 (Authentication Layer) — After networking established, before building rooms/state management. Requires coordination with Phase 1's proxy setup.
+
+**Severity:** CRITICAL
+
+**Sources:**
+- [Discord Networking Docs - Cookie Requirements](https://docs.discord.com/developers/activities/development-guides/networking)
+- [Cookie Partitioning & CHIPS](https://privacysandbox.google.com/cookies/chips)
+- [Transition from unpartitioned to partitioned cookies](https://privacysandbox.google.com/cookies/chips-transition)
+- [Discord OAuth2 common problems](https://github.com/requarks/wiki/discussions/5415)
 
 ---
 
-### Pitfall 3: Race Conditions in Turn Timing
-**What goes wrong:** Auto-pickup triggers while player is selecting cards, or multiple players' actions arrive simultaneously.
-**Why it happens:** Asynchronous timing — server timer fires, client action arrives, both try to mutate game state.
-**Consequences:**
-- Player's valid move rejected because timer expired server-side
-- Cards picked up after player already selected a valid play
-- Player gets penalized for lag, not actual slowness
+### Pitfall 3: URL Mapping Configuration Gotchas — Production Deploy Failures
 
-**Specific scenarios:**
-1. **Player clicks "Play" at 00:01 remaining, server timer fires at 00:00** → Race: Does move arrive before auto-pickup?
-2. **Reconnecting player's queued action arrives during another player's turn** → Stale turn sequence number
-3. **Two players disconnect simultaneously in 2-player game** → Who gets auto-pickup first?
+**What goes wrong:**
+Local development with cloudflared tunnel works perfectly. Push to production. Discord Activity loads but all assets 404. WebSocket connections fail. External APIs unreachable. The game is broken in production despite working locally.
+
+**Why it happens:**
+Discord's URL Mapping system has subtle configuration requirements that differ between local and production:
+- **Root URLs add extra `/`** — Mapping `/` to `cdn.example.com` causes `/file.png` to become `cdn.example.com//file.png` (double slash)
+- **Protocol must be omitted** — Targets like `https://api.example.com` are rejected; use `api.example.com`
+- **Targets must point to directories not files** — Can't map to `cdn.com/assets/bundle.js`, must map to `cdn.com/assets/`
+- **Shortest prefixes must be listed last** — If you have `/api` and `/api/v2`, order matters for routing
+- **Custom ports not supported** — Can't map to `example.com:8080`
+- **patchUrlMappings doesn't support parameter matched ports** — URL Mappings with port numbers in targets cause errors
+
+Additionally, production deployments often use different domain names than local tunnels, requiring different URL mappings. Developers forget to update mappings when deploying.
+
+**Consequences:**
+- Production deployment appears successful but Activity is broken
+- Hours debugging "why does local work but production fail?"
+- Can't test production-like environment without deploying
+- Emergency hotfixes to URL mappings require Discord approval delays
+- May need to restructure asset hosting to fit mapping constraints
 
 **Prevention:**
-- **Action sequence numbers:** Each action includes expected `turnSequenceNumber`, reject if stale
-- **Server-side locking:** Acquire lock before processing action, ensure only one state mutation at a time
-- **Grace period:** Give 200-500ms grace period after timer hits zero before auto-pickup
-- **Timestamp validation:** Compare client action timestamp with server timer, allow if sent before expiry
-- **Idempotent actions:** Same action arriving twice produces same result, no double-pickup
+1. **Use separate Discord applications for dev/staging/prod** — Different URL mappings per environment
+2. **Document URL mapping rules** in deployment checklist:
+   - No `https://` prefix in targets
+   - No trailing slashes on prefixes (unless intentional)
+   - No file paths in targets, only directories
+   - Order matters: longer prefixes before shorter
+   - No port numbers in URL targets
+3. **Test with production-like domain early** — Don't rely on cloudflared until late in dev
+4. **Use CDN for assets** — Discord docs explicitly warn "GitHub is not a CDN"
+5. **Validate mappings in Discord Developer Portal** before deploying code changes
+6. **Monitor mapping errors** — Add logging for `blocked:csp` in production
 
-**Detection:**
-- Load test with 100ms network delay — do valid moves get rejected?
-- Add artificial delay to action processing, then spam actions — do any duplicate?
+**Detection warning signs:**
+- Local cloudflared tunnel works, production domain doesn't
+- Asset URLs have double slashes (`//`)
+- Requests to external APIs returning 404 or CSP errors
+- WebSocket connections failing with different error in production
+- Discord Developer Portal shows "Invalid target" warnings
 
-**Phase mapping:** Address in Phase 3 (Turn System & Timing). Cannot defer — ruins gameplay.
+**Which phase addresses this:**
+Phase 3 (Deployment & URL Mapping) — After local dev working, before production rollout. Requires coordination with infra team for CDN setup.
+
+**Severity:** CRITICAL
+
+**Sources:**
+- [Discord Local Development Docs](https://docs.discord.com/developers/activities/development-guides/local-development)
+- [Root URL Mappings add an additional / - GitHub Issue](https://github.com/discord/discord-api-docs/issues/7223)
+- [Discord URL Mapping Patch Guide](https://github.com/discord/embedded-app-sdk/blob/main/patch-url-mappings.md)
+- [patchUrlMappings parameter matched ports issue](https://github.com/discord/embedded-app-sdk/issues/302)
 
 ---
 
-### Pitfall 4: WebSocket Reconnection State Loss
-**What goes wrong:** Player disconnects, reconnects, but server lost their session or can't rejoin game.
-**Why it happens:** WebSocket libraries often don't persist "who is this connection" across reconnects, or game state garbage-collected during disconnect.
-**Consequences:**
-- Temporary network blip forces player out of game
-- Mobile players (switching WiFi/cellular) can't rejoin
-- Game abandoned because one player couldn't reconnect
+### Pitfall 4: Dual-Mode Architecture Debt — Bolting Discord onto Standalone Web
 
-**Specific scenarios:**
-1. **Browser tab backgrounded on mobile** → WebSocket closed, needs reconnect with existing session
-2. **Player switches networks mid-game** → New IP, new socket, needs to map back to game player slot
-3. **Server restarts** → All sockets dropped, need to restore from persisted state
+**What goes wrong:**
+Developers add Discord Activity support by sprinkling `if (isDiscordActivity)` checks throughout existing codebase. Separate code paths for authentication, networking, room joining, session management. Tech debt accumulates. Bugs in one mode don't appear in other. Maintenance becomes nightmare. Features drift between modes.
+
+**Why it happens:**
+Easiest path is to add Discord support to existing codebase with conditional logic. Avoids big refactor. But Discord Activity has fundamentally different lifecycle:
+- **Initialization**: Standalone = page load, Discord = SDK ready + OAuth dance
+- **User identity**: Standalone = nickname form, Discord = OAuth2 user object
+- **Room joining**: Standalone = share code, Discord = activity session ID
+- **Networking**: Standalone = direct WebSocket, Discord = proxy + URL mappings
+- **Session persistence**: Standalone = localStorage, Discord = partitioned cookies
+
+These differences permeate entire system. Conditional logic spreads like cancer.
+
+**Research finding (2026):** "Evolutionary Architecture Fallacy" — the misconception that architecture will naturally emerge from code without upfront design. Teams treat architecture as unchangeable while developers make architectural changes without feeding those changes back. This creates implementation-architecture disconnect that compounds over time.
+
+**Consequences:**
+- Codebase becomes unmaintainable spaghetti of if/else branches
+- Bugs introduced in one mode don't get caught by testing other mode
+- Features added to one mode forgotten in other mode
+- New developers can't understand dual-mode flow
+- Refactoring becomes impossible without breaking something
+- Eventually forced into full rewrite to untangle mess
 
 **Prevention:**
-- **Session tokens separate from WebSocket:** Use JWT or session ID that survives socket reconnect
-- **Reconnect handshake:** Client sends `{type: "reconnect", sessionToken, gameId}` on new socket
-- **Game state persistence:** Write game state to Redis/DB periodically, can restore after server restart
-- **Player slot reservation:** Keep player slot "reserved" for 2-5 minutes after disconnect
-- **Reconnect UI:** Show "Reconnecting..." not "Connection lost, refresh page"
+1. **Design abstraction layer from day one**:
+   ```typescript
+   interface GamePlatform {
+     init(): Promise<void>
+     getUser(): Promise<User>
+     joinRoom(code: string): Promise<RoomSession>
+     sendMessage(msg: GameMessage): void
+   }
 
-**Detection:**
-- Close DevTools WebSocket tab during game — can you rejoin?
-- Kill server mid-game, restart, can players reconnect to same game?
+   class StandalonePlatform implements GamePlatform { ... }
+   class DiscordPlatform implements GamePlatform { ... }
+   ```
+2. **Use dependency injection** — Pass platform instance to game engine, not global checks
+3. **Share game logic** — Core game engine must be platform-agnostic
+4. **Separate entry points** — Different main.ts files for standalone vs Discord, same game engine
+5. **Test both modes equally** — CI runs full test suite for both configurations
+6. **Document platform differences** — Maintain architecture doc explaining abstraction
+7. **Establish feedback loop** between implementation and architecture — update docs when code changes architectural assumptions
 
-**Phase mapping:** Address in Phase 4 (Connection Management). Must work before multiplayer testing.
+**Detection warning signs:**
+- `if (window.discordSdk)` checks scattered across many files
+- Duplicate code with slight variations between modes
+- Features that work in one mode but not other
+- PRs touching both standalone and Discord paths for single feature
+- Difficulty explaining to new developer how dual-mode works
+
+**Which phase addresses this:**
+Phase 0 (Architecture Foundation) — Before any Discord code written. Must design abstraction before implementation, or suffer permanent tech debt.
+
+**Severity:** CRITICAL
+
+**Sources:**
+- [Discord's Embedded App SDK - Architecture Patterns](https://colyseus.io/blog/discord-embedded-sdk/)
+- [Multiplayer Experience Guide](https://docs.discord.com/developers/activities/development-guides/multiplayer-experience)
+- [5 embedded software architecture pitfalls](https://www.embedded.com/5-embedded-software-architecture-pitfalls/)
+- [7 Tech Stack Pitfalls to Avoid in 2026](https://www.informationweek.com/software-services/7-tech-stack-pitfalls-to-avoid-in-2026)
 
 ---
 
-### Pitfall 5: Leaking Hidden Information via Network Traffic
-**What goes wrong:** Client receives data about hidden cards (face-down cards, opponent hands) even if UI doesn't show them.
-**Why it happens:** Server sends complete game state to all clients for simplicity, relies on UI not rendering hidden info.
-**Consequences:**
-- Players inspect network traffic to see opponent cards
-- Face-down cards revealed before played
-- Ruins competitive integrity, impossible to fix without breaking protocol
+### Pitfall 5: Mobile Responsive Refactoring — Breaking Existing Layouts
 
-**Shithead-specific:**
-- Face-down cards: Players have 3 face-down cards they can't see until played
-- Opponent hands: Can't see what cards opponents hold
-- Draw pile: Shouldn't see what's coming next (less critical but still immersion-breaking)
+**What goes wrong:**
+Team adds mobile card categorization UI (normal/power card categories). Changes Tailwind classes, modifies component structure, adjusts breakpoints. Deploys. Desktop layout is broken. Tablet view has weird gaps. Landscape mobile is unusable. The "improvement" broke existing responsive behavior that was already working.
+
+**Why it happens:**
+Responsive design refactoring is high-risk because changes to breakpoints, flexbox/grid structure, or component hierarchy have cascading effects. What fixes mobile can break desktop. "Breakpoint Hell" — drowning in complex CSS just to make a button look right across five different devices.
+
+**Research finding (2026):** Templates work for MVP but "break at scale." Growth-stage apps need custom UX systems. When refactoring responsive layouts, developers face technical complexity that creates significant risk of breaking existing features.
+
+**Consequences:**
+- Existing desktop/mobile responsive layout broken
+- Weird layout bugs only appear on specific viewport sizes
+- Hours debugging "why does this work on iPhone but not iPad?"
+- Emergency hotfixes to restore working layout
+- User complaints about "new UI is worse"
+- Rollback required, wasting sprint time
 
 **Prevention:**
-- **Server sends player-specific views:** Each player gets different JSON based on what they can see
-- **Redact hidden cards:** Send `{cardId: "xyz", rank: null, suit: null, faceDown: true}` for unrevealed cards
-- **Reveal only on play:** When face-down card played, then send `{cardId: "xyz", rank: 3, suit: "hearts"}`
-- **Never send draw pile order:** Shuffle server-side, only send drawn card when actually drawn
+1. **Test all breakpoints before and after** — Desktop (1920px, 1440px, 1280px), Tablet (1024px, 768px), Mobile (414px, 375px, 360px)
+2. **Use container queries instead of media queries** — Make components respond to their own size, not viewport size. Reduces likelihood of breaking existing layouts.
+3. **Design for content needs, not devices** — Breakpoints should be where content naturally requires adjustment, not arbitrary device sizes
+4. **Additive changes over replacements** — Add mobile-specific components alongside existing ones, don't replace shared components
+5. **Visual regression testing** — Screenshot tests at all breakpoints to catch layout breaks
+6. **Test both orientations** — Portrait and landscape mobile have different constraints
+7. **Real device testing** — Emulators miss real-world issues (notches, safe areas, browser chrome)
 
-**Detection:**
-- Open Network tab, inspect WebSocket messages — do you see opponent hand ranks?
-- Can you see face-down card values before they're played?
+**Detection warning signs:**
+- Changes to shared layout components (App.vue, Game.vue)
+- Modifications to Tailwind breakpoint utilities (sm:, md:, lg:)
+- Adjustments to flexbox/grid that affect parent containers
+- CSS that uses viewport units (vw, vh) instead of relative units
+- Pull requests that touch > 10 component files for "mobile fix"
 
-**Phase mapping:** Address in Phase 1 (Core Architecture). Protocol design — very hard to fix later.
+**Which phase addresses this:**
+Phase 4 (Mobile UI Redesign) — When implementing card category UI. Requires careful component isolation and comprehensive breakpoint testing before merge.
 
----
+**Severity:** CRITICAL
 
-### Pitfall 6: Endgame State Transition Bugs
-**What goes wrong:** Player moves from hand → face-up → face-down phases incorrectly, or game doesn't end when last player finished.
-**Why it happens:** Complex state machine with multiple exit conditions, easy to miss edge cases.
-**Consequences:**
-- Player "wins" but game doesn't end
-- Player forced to play from wrong card set
-- UI shows empty hand but game still expects hand plays
-
-**Shithead-specific state machine:**
-```
-1. Hand phase: Play from hand cards (can always pick up if can't play)
-2. Face-up phase: Hand empty → must play face-up cards (can't pick up, must play valid or pickup pile)
-3. Face-down phase: Face-up empty → blind play face-down (revealed on play, pickup pile if invalid)
-4. Finished: All cards gone → player removed from turn order
-5. Game over: Only one player left → they are Shithead
-```
-
-**Edge cases:**
-- Player has empty hand but forgets they have face-up cards (should transition)
-- Player plays last face-up and it burns → go straight to face-down (skip "pickup" check)
-- Last two players: One finishes → game immediately ends (don't wait for loser's turn)
-- Player picks up pile while in face-down phase → transitions back to hand phase
-
-**Prevention:**
-- **Explicit state transitions:** `transitionPlayerPhase(player): Phase` function with all logic
-- **Check after every action:** After play/pickup, call `checkPlayerPhaseTransition(player)`
-- **Test all edge cases:** Unit tests for each transition and combination
-- **State assertions:** `assertValidGameState()` after each mutation, crash if invalid
-
-**Detection:**
-- Play until hand empty — does player auto-transition to face-up?
-- Play last face-up and burn — does player skip to face-down?
-- Have all but one player finish — does game end immediately?
-
-**Phase mapping:** Address in Phase 2 (Game Rules Engine). Core state machine logic.
+**Sources:**
+- [Responsive Design in 2026: What's New and What's Next](https://medium.com/@netizens_technologies/responsive-design-in-2026-whats-new-and-what-s-next-137285d4f0c6)
+- [Why Responsive Design Still Fails In 2025](https://blog.imagine.bo/responsive-design-still-fails/)
+- [Responsive Web Design: Why Most Mobile-Friendly Sites Fail](https://inkbotdesign.com/responsive-web-design/)
+- [Top 10 Mistakes to Avoid in Responsive Web Design Projects in 2024](https://medium.com/@uidesign0005/top-10-mistakes-to-avoid-in-responsive-web-design-projects-in-2024-0578d5304a58)
 
 ---
 
 ## Moderate Pitfalls
 
-Mistakes that cause poor UX, technical debt, or hard-to-debug issues.
+Mistakes that cause delays, bugs, or technical debt but are recoverable.
 
-### Pitfall 7: Animation Blocking Game State Updates
-**What goes wrong:** Card animations take 500ms, but next game state arrives after 200ms, causing animation conflicts or janky UI.
-**Why it happens:** Animations tied to DOM, game state updates tied to WebSocket — timing mismatch.
+### Pitfall 6: Mobile Discord Safe Area Ignorance — UI Cut Off by Notches
+
+**What goes wrong:**
+Discord Activity looks perfect on desktop. Deploy to mobile Discord app. UI elements are cut off by iPhone notch, Android navigation bar, or camera punch-holes. Bottom buttons unreachable. Top status cut off. Players can't interact with game.
+
+**Why it happens:**
+Mobile devices have "unsafe" screen areas where OS UI or hardware obscures content. Discord provides CSS variables (`--discord-safe-area-inset-top/bottom/left/right`) that define safe boundaries, but developers forget to apply them. Desktop doesn't have safe areas, so problem invisible until mobile testing.
+
+Additionally, **Discord SDK now strictly enforces mobile compatibility** — Activities that don't handle safe areas correctly may fail app review/validation.
+
 **Consequences:**
-- Cards jump to wrong positions mid-animation
-- Animations queue up, creating lag perception
-- Fast players frustrated by slow UI
+- UI unusable on mobile devices
+- Failed Discord app review/validation
+- Emergency redesign needed post-launch
+- Players complain game "doesn't work on phone"
+- Reputation damage from broken mobile experience
 
 **Prevention:**
-- **Animation queue:** Queue state updates during animation, apply after animation completes
-- **Optimistic animations:** Start animation immediately on user action, rollback if server rejects
-- **Interruptible animations:** Use CSS transitions that can be interrupted by new state
-- **Skip animations option:** Let players disable animations for faster gameplay
+1. **Test on real mobile devices early** — Not just Chrome DevTools mobile emulation
+2. **Apply safe area padding** to root container:
+   ```css
+   .game-container {
+     padding-top: var(--discord-safe-area-inset-top, 0);
+     padding-bottom: var(--discord-safe-area-inset-bottom, 0);
+     padding-left: var(--discord-safe-area-inset-left, 0);
+     padding-right: var(--discord-safe-area-inset-right, 0);
+   }
+   ```
+3. **Design mobile-first** — Assume safe areas exist, add them to standalone web too (doesn't hurt)
+4. **Test landscape and portrait** — Safe areas differ by orientation
+5. **Use Discord's thermal state API** — Reduce animations when device overheating
 
-**Detection:**
-- Spam valid plays quickly — do animations glitch?
-- Add artificial 200ms server delay — does UI update correctly?
+**Detection warning signs:**
+- UI elements positioned at exact screen edges
+- Fixed position elements without safe area offsets
+- DevTools mobile emulation looks fine, real device doesn't
+- Different layout between iOS and Android
+- Players report "can't see timer" or "button cut off"
 
-**Phase mapping:** Address in Phase 5 (UI/UX). Performance optimization phase.
+**Which phase addresses this:**
+Phase 4 (Mobile UI Redesign) — When implementing card category UI, must simultaneously add safe area handling. Don't defer to later phase.
+
+**Severity:** MODERATE
+
+**Sources:**
+- [Discord Mobile Development Guide](https://docs.discord.com/developers/activities/development-guides/mobile)
+- [Discord Development 2025 Year-in-Review](https://discord-media.com/en/news/development-2025-the-complete-year-in-review-api-migration-guide.html)
 
 ---
 
-### Pitfall 8: Mobile Touch Target Sizing for Card Selection
-**What goes wrong:** Cards too small to tap accurately, especially when overlapped in hand.
-**Why it happens:** Desktop-first design with 40px card spacing, doesn't work on mobile touchscreens.
-**Consequences:**
-- Players tap wrong card, waste turn
-- Frustrating multi-select experience
-- Mobile users abandon game
+### Pitfall 7: WebSocket Reconnection State Loss — Players Ejected on Network Hiccup
 
-**Card game-specific:**
-- Hand of 10+ cards needs to fit on 375px mobile screen
-- Cards overlap → touch targets overlap → ambiguous taps
-- Need to select multiple cards (3 of a kind) accurately
+**What goes wrong:**
+Mobile player's network briefly drops (switching WiFi to cellular, going through tunnel, etc). WebSocket disconnects. Player is ejected from game. Other players see them as disconnected. Game state is lost. Player can't rejoin ongoing game. Terrible UX.
+
+**Why it happens:**
+Existing game may handle disconnects with simple "remove player after timeout" logic. But mobile networks are flaky. Brief disconnects are normal. Discord Activity adds another layer — Discord SDK connection can drop independent of game WebSocket. Without proper reconnection + state recovery, normal mobile usage becomes unplayable.
+
+**Research finding (2026):** Discord gateway can enter "infinite reconnection loop" with WebSocket close code 1005, with no circuit breaker or exponential backoff. Server implementations must handle reconnection gracefully with proper timeout and retry logic.
+
+**Consequences:**
+- Mobile players constantly ejected from games
+- Games ruined by single network hiccup
+- Players frustrated, stop using Activity
+- Support requests flood in: "why do I get kicked?"
+- Reputation damage: "game is broken on mobile"
 
 **Prevention:**
-- **44px minimum touch target:** Even if cards smaller, expand tap hitbox
-- **Fan-out on touch:** Tap hand area → cards fan out for selection
-- **Highlight selected cards:** Clear visual feedback before commit
-- **Undo last select:** Allow unselecting card before "Play" button
+1. **Implement reconnection grace period** — 30-60 seconds before ejecting player
+2. **Store player state on server** — Don't delete game state immediately on disconnect
+3. **Provide reconnection token** — Let player rejoin same game session
+4. **Show "reconnecting..." UI** — Don't just freeze and timeout
+5. **Test with network throttling** — Chrome DevTools can simulate flaky connections
+6. **Handle Discord SDK reconnection** — SDK may disconnect independently of game WebSocket
+7. **Log reconnection patterns** — Monitor how often players disconnect to tune grace period
+8. **Implement exponential backoff** — Avoid infinite reconnection loops with increasing retry delays
+9. **Add circuit breaker** — Stop retry attempts after reasonable limit
 
-**Detection:**
-- Test on real iPhone/Android device (not just browser devtools)
-- Can you accurately select specific card from 10-card hand?
+**Detection warning signs:**
+- Players reporting frequent disconnects
+- Higher disconnect rate on mobile than desktop
+- No reconnection logic in codebase
+- Game state deleted immediately on disconnect
+- No distinction between "voluntary leave" and "network hiccup"
+- Infinite reconnection attempts without backoff
 
-**Phase mapping:** Address in Phase 5 (UI/UX). Must test on real devices.
+**Which phase addresses this:**
+Phase 5 (Reconnection & State Recovery) — After basic multiplayer working, before mobile polish. Essential for mobile Discord experience.
+
+**Severity:** MODERATE
+
+**Sources:**
+- [Discord Gateway Reconnection Docs](https://discord.com/developers/docs/events/gateway)
+- [How to Handle WebSocket Reconnection Logic](https://oneuptime.com/blog/post/2026-01-24-websocket-reconnection-logic/view)
+- [WebSockets: The Complete Guide for 2026](https://devtoolbox.dedyn.io/blog/websocket-complete-guide)
+- [Discord gateway infinite reconnection loop issue](https://github.com/openclaw/openclaw/issues/11836)
 
 ---
 
-### Pitfall 9: Insufficient Game State Logging for Bug Reports
-**What goes wrong:** Player reports "game broke", but no logs to reproduce issue.
-**Why it happens:** Console logs only on client, not sent to server, lost on page refresh.
+### Pitfall 8: Local Development Environment Drift — Works in Cloudflared, Breaks in Production
+
+**What goes wrong:**
+Developer uses cloudflared for local testing against Discord proxy. Everything works. Deploys to production. Different networking behavior. Assets load differently. WebSocket connection fails. URL mappings configured wrong. Production is broken despite passing local tests.
+
+**Why it happens:**
+Cloudflared tunnel creates a unique temporary subdomain (e.g., `random-slug-123.trycloudflare.com`) that doesn't match production domain. URL mappings configured for cloudflared domain don't work with production domain. Additionally:
+- **Free-tier tunneling is insecure** — Discord docs warn: "someone else could claim that domain and host a malicious site"
+- **Tunnel domains change** — Cloudflared generates new subdomain each run unless paid tier
+- **Local server vs production CDN** — Different asset loading patterns
+- **Environment variables differ** — OAuth2 redirect URLs, client IDs, secrets
+
+Developer gets lulled into false confidence by local testing, then production fails.
+
+**Project history:** This project already dealt with proxy issues (ngrok WS blocked on iOS, Docker DNS failed WS). Local testing doesn't catch all production networking scenarios.
+
 **Consequences:**
-- Cannot debug intermittent issues
-- Players repeat "it just broke" without actionable info
-- Bugs linger because non-reproducible
+- "Works on my machine" syndrome
+- Production deployments require emergency fixes
+- Can't catch production issues until after deploy
+- Delays shipping due to prod-only bugs
+- May need separate staging environment with prod-like setup
 
 **Prevention:**
-- **Server-side game event log:** Log every action with timestamp, playerId, gameState snapshot
-- **Client-side error reporting:** Catch exceptions, send to server with game context
-- **Replay system:** Store action sequence, can replay game from start to reproduce
-- **Session recording:** Store last 50 actions in circular buffer, send on error
+1. **Use separate Discord applications** for dev, staging, prod — Different OAuth2 credentials, different URL mappings
+2. **Document URL mapping rules** per environment in deployment checklist
+3. **Create staging environment** with prod-like domain before final production deploy
+4. **Test production URL mappings** before code changes go live
+5. **Use paid cloudflared tier** (or alternative) for stable tunnel domain in dev
+6. **Maintain parity checklist** — Document differences between local, staging, prod
+7. **Reset URL mappings** after finishing with temporary tunnel domains (security warning from Discord)
+8. **Learn from past proxy issues** — ngrok, Docker DNS failures are warnings about proxy complexity
 
-**Detection:**
-- Can you reconstruct exact game state from 10 actions ago?
-- If player reports bug, do you have their action history?
+**Detection warning signs:**
+- Different behavior between local cloudflared and production
+- OAuth2 redirect errors only in production
+- Asset 404s only in production
+- WebSocket connection fails only in production
+- Having to manually update URL mappings after every deploy
 
-**Phase mapping:** Address in Phase 2 (Game Rules Engine). Build logging from start.
+**Which phase addresses this:**
+Phase 3 (Deployment & URL Mapping) — Establish staging environment and deployment process. Don't skip staging.
+
+**Severity:** MODERATE
+
+**Sources:**
+- [Discord Local Development Guide](https://docs.discord.com/developers/activities/development-guides/local-development)
+- [Discord Proxy Documentation](https://robojs.dev/discord-activities/proxy)
 
 ---
 
-### Pitfall 10: No Backpressure on Action Spam
-**What goes wrong:** Malicious or buggy client sends 1000 actions/second, server processes all, DoS attack.
-**Why it happens:** No rate limiting on WebSocket messages.
+### Pitfall 9: Third-Party Library CSP Incompatibility — NPM Packages Break in Discord
+
+**What goes wrong:**
+Game uses third-party libraries (game engines, UI frameworks, analytics, error tracking). Works fine in standalone web. Add Discord Activity support. Libraries fail with CSP errors because they make hardcoded external requests.
+
+Example failures:
+- Analytics SDK sends data to `https://analytics.example.com`
+- Game engine loads assets from `https://cdn.gameengine.com`
+- Error tracking pings `https://sentry.io/api/...`
+- WebSocket library connects to `wss://realtime.example.com`
+
+All blocked by Discord's CSP.
+
+**Why it happens:**
+Third-party libraries don't know they're running in Discord Activity iframe. They use hardcoded external URLs that aren't in Discord URL mappings. Discord proxy blocks them.
+
 **Consequences:**
-- Server CPU spikes, game lags for all players
-- Malicious player can grief games
-- Accidental double-submit crashes game
+- Features silently broken (analytics not tracking, errors not reported)
+- Game engine assets fail to load, game crashes
+- Hours debugging why library works standalone but not Discord
+- May need to fork library to patch URLs
+- May need to switch to different library entirely
 
 **Prevention:**
-- **Rate limit actions:** Max 10 actions/second per player, drop excess
-- **Cooldown after action:** 50ms cooldown before accepting next action from same player
-- **Disconnect spammers:** If rate limit exceeded 3 times, disconnect client
-- **Idempotent action IDs:** Client includes unique action ID, server dedupes
+1. **Audit dependencies early** — Check what external requests each library makes
+2. **Use SDK's `patchUrlMappings()`** to intercept library requests:
+   ```typescript
+   await discordSdk.patchUrlMappings([
+     { prefix: '/analytics', target: 'analytics.example.com' },
+     { prefix: '/sentry', target: 'sentry.io' }
+   ])
+   ```
+3. **Fork and patch problematic libraries** using `patch-package`
+4. **Choose Discord-compatible libraries** — Prioritize libraries that support custom base URLs
+5. **Self-host critical assets** — Don't rely on third-party CDNs for essential resources
+6. **Test in Discord early** — Don't wait until integration phase to discover library issues
 
-**Detection:**
-- Write script to send 100 actions instantly — does server handle gracefully?
-- Does server reject duplicate action IDs?
+**Detection warning signs:**
+- Console errors from third-party libraries: `blocked:csp`
+- Analytics dashboard shows zero events from Discord Activity
+- Error tracking shows no errors despite bugs existing
+- Game assets fail to load from third-party CDN
+- Library configuration doesn't support custom base URLs
 
-**Phase mapping:** Address in Phase 4 (Connection Management). Security concern.
+**Which phase addresses this:**
+Phase 1 (Networking Foundation) — Audit and patch libraries before building on top of them. Library incompatibility discovered late causes cascading rework.
+
+**Severity:** MODERATE
+
+**Sources:**
+- [Patch Your Discord Activity's Network Requests](https://blog.waveplay.com/discord-proxy-csp-patch/)
+- [Discord URL Mapping Patch Guide](https://github.com/discord/embedded-app-sdk/blob/main/patch-url-mappings.md)
+- [Scalability and CSP in Discord Activities](https://github.com/colyseus/colyseus/issues/707)
+
+---
+
+### Pitfall 10: OAuth2 Implementation Mistakes — Invalid Scopes and Token Lifecycle
+
+**What goes wrong:**
+Developer implements Discord OAuth2 flow. Uses wrong scopes like `guilds.channels.read` or `guilds.members.read`. Gets `invalid_scope` error. Or uses public key instead of application secret — secret should be alphanumeric ~30 characters, not 65-character hash. Or accidentally includes whitespace when copying secret. Authentication fails mysteriously.
+
+Additionally, Discord OAuth2 access tokens expire after 7 days. Game doesn't implement refresh token flow. Players who opened Activity more than 7 days ago suddenly can't authenticate.
+
+**Why it happens:**
+OAuth2 has subtle configuration requirements. Developers copy-paste credentials incorrectly, use invalid scopes from outdated docs, or implement initial auth without refresh token mechanism. Works fine in short testing sessions, breaks after a week or with wrong credentials.
+
+**Consequences:**
+- Authentication completely broken at launch
+- "Invalid client" errors (HTTP 401)
+- Redirect failures during OAuth flow
+- Players kicked after 7 days when tokens expire
+- Hours debugging credential configuration
+
+**Prevention:**
+1. **Use correct credential types**:
+   - Application secret: alphanumeric, ~30 characters
+   - NOT the public key (65-character hash)
+2. **Trim whitespace** when copying credentials
+3. **Use valid scopes**: `identify`, `guilds`, `email` (NOT `guilds.channels.read` or `guilds.members.read`)
+4. **Implement full OAuth2 flow** including refresh token mechanism
+5. **Store refresh token securely** server-side
+6. **Implement automatic refresh** before token expiry
+7. **Test with artificially short token expiry** in dev (set to 5 minutes)
+8. **Use PKCE extension** for user-facing applications (browser extensions, mobile apps) to authenticate securely without sharing client secret
+9. **Implement state parameter** for CSRF protection
+
+**Detection warning signs:**
+- `invalid_scope` error when redirecting to callback
+- `invalid_client` error (HTTP 401) during token exchange
+- Redirect failures with authentication error
+- Players reporting "logged out" after several days
+- No refresh token logic in codebase
+
+**Which phase addresses this:**
+Phase 2 (Authentication Layer) — Implement full OAuth2 flow including refresh, not just initial exchange. Test token expiry before shipping.
+
+**Severity:** MODERATE
+
+**Sources:**
+- [Discord OAuth2 Documentation](https://docs.discord.com/developers/topics/oauth2)
+- [Discord OAuth fails to complete](https://github.com/requarks/wiki/discussions/5415)
+- [Discord OAuth not working - nextauth discussion](https://github.com/nextauthjs/next-auth/discussions/948)
+- [Problem with oauth2 scope](https://github.com/discord/discord-api-docs/issues/7169)
 
 ---
 
@@ -282,77 +549,218 @@ Mistakes that cause poor UX, technical debt, or hard-to-debug issues.
 
 Mistakes that cause annoyance but are easily fixable.
 
-### Pitfall 11: Confusing Error Messages
-**What goes wrong:** Player gets "Invalid move" without explanation of why.
-**Why it happens:** Server validation returns generic error, UI doesn't translate.
-**Consequences:** Players confused about rules, think game is broken.
+### Pitfall 11: HMR (Hot Module Replacement) Breaking in Discord Proxy
+
+**What goes wrong:**
+Vite's HMR works perfectly in standalone web dev. Add Discord proxy patching with `@robojs/patch`. HMR stops working. Code changes don't hot reload. Must full page refresh every change. Dev experience becomes painful.
+
+**Why it happens:**
+HMR uses WebSocket connection to Vite dev server. If proxy patching runs after HMR initializes, it doesn't catch the HMR WebSocket. HMR continues trying to connect to unmapped URL, fails CSP check, dies silently.
 
 **Prevention:**
-- Server returns specific error codes: `CARD_TOO_LOW`, `NOT_YOUR_TURN`, `CARD_NOT_IN_HAND`
-- UI shows helpful message: "That card is too low. You must play 7 or higher."
+- Use Vite plugin method for `@robojs/patch` (runs before HMR)
+- Call `patchUrlMappings()` at very beginning of entry point
+- Add URL mapping for Vite's HMR WebSocket path (`/__vite_hmr` or `/__hmr`)
 
-**Phase mapping:** Address in Phase 5 (UI/UX). Polish phase.
+**Which phase addresses this:**
+Phase 1 (Networking Foundation) — Fix during initial proxy setup, don't let it linger.
+
+**Severity:** MINOR
+
+**Sources:**
+- [Patch Your Discord Activity's Network Requests](https://blog.waveplay.com/discord-proxy-csp-patch/)
 
 ---
 
-### Pitfall 12: No "Waiting for Other Players" Feedback
-**What goes wrong:** After player submits move, UI freezes with no indication server received it.
-**Why it happens:** Forgot to show loading state between action and server response.
-**Consequences:** Players click multiple times, think game is broken.
+### Pitfall 12: Thermal State Ignorance — Mobile Devices Overheat, Activity Crashes
+
+**What goes wrong:**
+Game runs smooth animations, particle effects, constant re-renders. Works great on desktop. On mobile Discord, devices overheat, activity becomes sluggish, eventually crashes or is killed by OS.
+
+**Why it happens:**
+Mobile devices have limited thermal capacity. Heavy JS/rendering causes overheating. Discord provides thermal state API (`NOMINAL`, `FAIR`, `SERIOUS`, `CRITICAL`) but developers ignore it.
+
+**Research finding (2026):** Mobile game UX trend: excessive animations transform apps into "sluggish spectacles." Overdone animations contribute to performance lags on mid-range devices where users expect instantaneous responses.
 
 **Prevention:**
-- Show "Playing..." spinner immediately on action
-- Disable action buttons until server responds
-- Show "Waiting for [Player Name]..." during opponent turn
+- Subscribe to thermal state changes via Discord SDK
+- Reduce animation frame rate when thermal state deteriorates
+- Disable particle effects in `SERIOUS`/`CRITICAL` states
+- Lower visual quality on mobile
+- Test on real mobile devices for extended sessions (20+ minutes)
+- Avoid excessive animations that don't serve user intent
 
-**Phase mapping:** Address in Phase 5 (UI/UX). Polish phase.
+**Which phase addresses this:**
+Phase 4 (Mobile UI Redesign) — Add thermal management when optimizing mobile experience.
+
+**Severity:** MINOR
+
+**Sources:**
+- [Discord Mobile Development Guide - Thermal State](https://docs.discord.com/developers/activities/development-guides/mobile)
+- [7 UI Pitfalls Mobile App Developers Should Avoid in 2026](https://www.webpronews.com/7-ui-pitfalls-mobile-app-developers-should-avoid-in-2026/)
+
+---
+
+### Pitfall 13: Activity Session ID vs Room Code Confusion — Wrong Multiplayer Paradigm
+
+**What goes wrong:**
+Existing game uses shareable room codes (e.g., "JOIN-1234"). Players manually share codes. Discord Activities use Discord's activity session IDs — everyone in same voice channel automatically joins same activity instance. Developers try to force room code paradigm into Discord Activity, creating friction.
+
+**Why it happens:**
+Discord's multiplayer model is "implicit join" (you're in voice channel = you're in activity). Standalone web is "explicit join" (enter room code). Trying to make Discord Activity users enter room codes fights the platform.
+
+**Prevention:**
+- Use activity session ID for Discord mode (implicit join from voice channel)
+- Use room codes for standalone mode (explicit join)
+- Abstraction layer handles both paradigms
+- Don't force Discord users through room code flow
+- Consider "invite to activity" for cross-channel play
+
+**Which phase addresses this:**
+Phase 4 (Dual-Mode Room Joining) — Design after architecture layer established, before UI polish.
+
+**Severity:** MINOR
+
+**Sources:**
+- [Multiplayer Experience Guide](https://docs.discord.com/developers/activities/development-guides/multiplayer-experience)
+
+---
+
+### Pitfall 14: Mobile UI Visual Hierarchy Loss — Categories Without Structure
+
+**What goes wrong:**
+Mobile card categorization UI shows "Normal Cards" and "Power Cards" buttons. No visual distinction. Same color, same size. Players can't quickly see which category they need. Adds friction instead of improving UX.
+
+**Why it happens:**
+Developers implement functional categorization without applying visual design principles. Categories should have clear visual hierarchy and distinction.
+
+**Research finding (2026):** "Poor visual hierarchy" is a top mobile UX mistake. On mobile, layouts often collapse but hierarchy shouldn't. When users lose visual cues, they lose interest. Preserve logical flow with headers, whitespace, and color contrast.
+
+**Prevention:**
+- **Distinct colors per category**: Power cards get gold/purple border, normal cards standard styling
+- **Visual hierarchy**: Size, scale, color contrast distinguish categories
+- **Dark background**: Makes cards and categories "pop"
+- **Iconography**: Use symbols for quick interpretation (lightning bolt for power cards)
+- **Large tap targets**: Mobile finger-friendly (minimum 44x44px)
+
+**Which phase addresses this:**
+Phase 4 (Mobile UI Redesign) — Apply visual design during card category implementation.
+
+**Severity:** MINOR
+
+**Sources:**
+- [11 UX Design Mistakes That Haunt Responsive Web Experiences](https://medium.com/@walkerbrooke301/build-once-fail-everywhere-top-responsive-design-flaws-2f1444142cb5)
+- [7 UI Pitfalls Mobile App Developers Should Avoid in 2026](https://www.webpronews.com/7-ui-pitfalls-mobile-app-developers-should-avoid-in-2026/)
 
 ---
 
 ## Phase-Specific Warnings
 
-| Phase Topic | Likely Pitfall | Mitigation |
-|-------------|----------------|------------|
-| Phase 1: Core Architecture | Client-authoritative state, leaking hidden info | Design server-authoritative protocol from start |
-| Phase 2: Game Rules Engine | Burn logic with invisibles, endgame transitions | Extensive unit tests for edge cases |
-| Phase 3: Turn System | Race conditions, auto-pickup timing | Action sequence numbers, server locking |
-| Phase 4: Connection Management | Reconnection state loss, action spam | Session tokens, rate limiting |
-| Phase 5: UI/UX | Animation jank, mobile touch targets | Test on real devices, animation queue |
-| Phase 6: Testing | Missing edge case coverage | Replay system for bug reproduction |
+| Phase Topic | Likely Pitfall | Mitigation | Severity |
+|-------------|---------------|------------|----------|
+| Phase 0: Architecture Foundation | Dual-mode architecture debt — spaghetti if/else code | Design abstraction layer BEFORE writing Discord code | CRITICAL |
+| Phase 1: Networking Foundation | CSP blocking all network requests, WebSocket upgrade failures | Prototype WebSocket connection through Discord proxy FIRST before any other work | CRITICAL |
+| Phase 2: Authentication Layer | Cookie partitioning breaks sessions, OAuth2 token lifecycle misunderstood | Design dual-mode auth with separate cookie domains, implement full OAuth2 flow including refresh | CRITICAL |
+| Phase 3: Deployment & URL Mapping | Production URL mappings differ from local cloudflared, root URL slash issues | Use separate Discord apps per environment, document URL mapping rules, establish staging env | CRITICAL |
+| Phase 4: Mobile UI Redesign | Breaking existing responsive layouts when adding card categories | Test all breakpoints before/after, use container queries, additive changes not replacements | CRITICAL |
+| Phase 4: Mobile UI Redesign | Safe areas cut off UI, thermal overheating causes crashes | Test on real mobile devices early, apply CSS safe area variables, implement thermal state handling | MODERATE |
+| Phase 5: Reconnection & State Recovery | Network hiccups eject mobile players permanently | Implement grace period + rejoin token, test with network throttling, exponential backoff | MODERATE |
 
 ---
 
-## Shithead-Specific Pitfall Summary
+## Lessons from Project History
 
-**Most critical for this game:**
+This project has already encountered WebSocket proxy issues that inform prevention strategies:
 
-1. **Invisible 8 logic (Pitfall 2):** The defining complexity of Shithead. Get this wrong and game is unplayable.
-   - Test: Play 2,2,2,8,2 → must burn
-   - Test: Pile is [7,8,8] → next player must beat 7, not 8
+1. **ngrok free tier fails on iOS mobile** — Interstitial page blocks WebSocket upgrade. Lesson: Use cloudflared or paid tier for mobile testing.
 
-2. **Endgame transitions (Pitfall 6):** Three phases per player × 4 players = many state combinations.
-   - Test: Empty hand mid-turn → transitions to face-up
-   - Test: Last face-up burns → goes to face-down without pickup
+2. **Docker internal DNS fails WS proxy** — Vite's http-proxy can't upgrade WebSocket through Docker service names. Lesson: Use `host.docker.internal` for Docker development.
 
-3. **Face-down card secrecy (Pitfall 5):** Core to Shithead gameplay — players can't see their face-down cards.
-   - Test: Network inspector shows `rank: null` for unrevealed face-down cards
+3. **Bun node:http/node:net upgrade events don't fire properly** — Custom WebSocket proxy plugins fail under Bun. Lesson: Use standard Vite proxy patterns, don't try to be clever.
 
-**Recommended testing approach:**
-- Write unit tests for rule engine FIRST before building UI
-- Create "game scenario" fixtures for testing (e.g., "player has 1 card in hand, 3 face-up, 3 face-down")
-- Build replay system early — invaluable for debugging reported issues
+**These experiences are RED FLAGS that Discord Activity proxy will be complex.** The project has already proven that WebSocket proxy patterns are fragile. Discord Activity's proxy layer is mandatory, not optional. **Testing networking must be Phase 1, not deferred.**
+
+---
+
+## Confidence Assessment
+
+| Area | Confidence | Rationale |
+|------|------------|-----------|
+| CSP/Proxy Networking | **HIGH** | Verified with official Discord docs, multiple community sources, project's own proxy history |
+| Cookie Partitioning | **MEDIUM-HIGH** | Discord docs + browser standards, some edge cases unclear (mobile Safari nuances) |
+| URL Mapping | **HIGH** | Official docs + GitHub issues document specific gotchas |
+| Mobile Safe Areas | **HIGH** | Official Discord mobile guide, SDK enforcement confirmed |
+| Reconnection Patterns | **HIGH** | WebSocket best practices + Discord-specific gateway docs, project history with WS issues |
+| Dual-Mode Architecture | **HIGH** | Engineering best practices + 2026 research on evolutionary architecture fallacy |
+| OAuth2 Lifecycle | **HIGH** | Standard OAuth2 + Discord-specific docs + community issues documenting common mistakes |
+| Third-Party Libraries | **MEDIUM-HIGH** | Common CSP pattern, specific library compatibility needs testing |
+| Mobile Responsive Refactoring | **HIGH** | 2026 research on responsive design failures, container query solutions |
+| Visual Hierarchy | **HIGH** | Established UX principles + 2026 mobile UI trends research |
+
+**Overall confidence: HIGH**
+
+Areas requiring validation during implementation:
+- Specific third-party library compatibility (test early in Phase 1)
+- Mobile Safari cookie partitioning edge cases (test in Phase 2)
+- Real-device thermal state behavior under load (test in Phase 4)
+- Reconnection behavior under various network conditions (test in Phase 5)
 
 ---
 
 ## Sources
 
-**Confidence: MEDIUM**
-- Based on common patterns in multiplayer game development
-- Shithead-specific pitfalls based on game rules analysis
-- Not verified against current 2026 sources due to WebSearch unavailability
-- Recommendations follow industry best practices as of training knowledge (Jan 2025)
+### Official Discord Documentation
+- [Discord Activities Overview](https://docs.discord.com/developers/activities/overview)
+- [Discord Activities Networking Guide](https://docs.discord.com/developers/activities/development-guides/networking)
+- [Discord Activities Mobile Development](https://docs.discord.com/developers/activities/development-guides/mobile)
+- [Discord Activities Local Development](https://docs.discord.com/developers/activities/development-guides/local-development)
+- [Discord OAuth2 Documentation](https://docs.discord.com/developers/topics/oauth2)
+- [Discord Embedded App SDK Reference](https://docs.discord.com/developers/developer-tools/embedded-app-sdk)
+- [Discord Multiplayer Experience Guide](https://docs.discord.com/developers/activities/development-guides/multiplayer-experience)
 
-**Recommended validation:**
-- Review WebSocket library docs (e.g., Socket.io, ws) for current reconnection patterns
-- Check game engine architectural patterns for card games
-- Survey multiplayer game post-mortems for real-world pitfall examples
+### Community Resources & Patterns
+- [Patch Your Discord Activity's Network Requests (Waveplay Blog)](https://blog.waveplay.com/discord-proxy-csp-patch/)
+- [Robo.js Discord Proxy Guide](https://robojs.dev/discord-activities/proxy)
+- [Robo.js Authentication Guide](https://robojs.dev/discord-activities/authentication)
+- [Robo.js Multiplayer Guide](https://robojs.dev/discord-activities/multiplayer)
+- [Colyseus + Discord Embedded SDK Integration](https://colyseus.io/blog/discord-embedded-sdk/)
+- [Discord URL Mapping Patch Documentation](https://github.com/discord/embedded-app-sdk/blob/main/patch-url-mappings.md)
+
+### Browser Standards & Security
+- [Cookies Having Independent Partitioned State (CHIPS)](https://privacysandbox.google.com/cookies/chips)
+- [Transition from unpartitioned to partitioned cookies](https://privacysandbox.google.com/cookies/chips-transition)
+
+### Technical Guides
+- [How to Handle WebSocket Reconnection Logic](https://oneuptime.com/blog/post/2026-01-24-websocket-reconnection-logic/view)
+- [WebSockets: The Complete Guide for 2026](https://devtoolbox.dedyn.io/blog/websocket-complete-guide)
+
+### Responsive Design & Mobile UI
+- [Responsive Design in 2026: What's New and What's Next](https://medium.com/@netizens_technologies/responsive-design-in-2026-whats-new-and-what-s-next-137285d4f0c6)
+- [Why Responsive Design Still Fails In 2025](https://blog.imagine.bo/responsive-design-still-fails/)
+- [Responsive Web Design: Why Most Mobile-Friendly Sites Fail](https://inkbotdesign.com/responsive-web-design/)
+- [11 UX Design Mistakes That Haunt Responsive Web Experiences](https://medium.com/@walkerbrooke301/build-once-fail-everywhere-top-responsive-design-flaws-2f1444142cb5)
+- [Top 10 Mistakes to Avoid in Responsive Web Design Projects in 2024](https://medium.com/@uidesign0005/top-10-mistakes-to-avoid-in-responsive-web-design-projects-in-2024-0578d5304a58)
+- [7 UI Pitfalls Mobile App Developers Should Avoid in 2026](https://www.webpronews.com/7-ui-pitfalls-mobile-app-developers-should-avoid-in-2026/)
+
+### Architecture & Tech Stack
+- [5 embedded software architecture pitfalls](https://www.embedded.com/5-embedded-software-architecture-pitfalls/)
+- [7 Tech Stack Pitfalls to Avoid in 2026](https://www.informationweek.com/software-services/7-tech-stack-pitfalls-to-avoid-in-2026)
+
+### Discord Community Issues
+- [Root URL Mappings add an additional / - GitHub Issue](https://github.com/discord/discord-api-docs/issues/7223)
+- [CSP Issues in Discord Activities - Colyseus Discussion](https://github.com/colyseus/colyseus/issues/707)
+- [Activity can't connect websocket in some mobile versions](https://github.com/discord/discord-api-docs/issues/7054)
+- [patchUrlMappings parameter matched ports issue](https://github.com/discord/embedded-app-sdk/issues/302)
+- [Discord OAuth fails to complete](https://github.com/requarks/wiki/discussions/5415)
+- [Discord OAuth not working - nextauth](https://github.com/nextauthjs/next-auth/discussions/948)
+- [Problem with oauth2 scope](https://github.com/discord/discord-api-docs/issues/7169)
+- [Discord gateway infinite reconnection loop](https://github.com/openclaw/openclaw/issues/11836)
+- [Help getting client to talk to backend with CSP](https://github.com/discord/embedded-app-sdk/issues/240)
+
+### Platform Updates
+- [Discord Development 2025: The Complete Year-in-Review](https://discord-media.com/en/news/development-2025-the-complete-year-in-review-api-migration-guide.html)
+- [Discord Patch Notes: February 4, 2026](https://discord.com/blog/discord-patch-notes-february-4-2026)
+
+---
+
+**Research complete. This document should inform phase ordering and risk mitigation during roadmap creation.**
