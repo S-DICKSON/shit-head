@@ -7,6 +7,30 @@ let socketInstance: ReturnType<typeof createGameSocket> | null = null;
 
 type MessageHandler = (msg: ServerMessage) => void;
 
+/**
+ * Resolve the WebSocket URL based on current context.
+ * Exported for testing.
+ */
+export function resolveWebSocketUrl(
+  hostname: string,
+  protocol: string,
+  host: string,
+  serverUrl?: string,
+): string {
+  if (serverUrl) {
+    return `${serverUrl}/game-ws`;
+  }
+  if (hostname.endsWith('.discordsays.com')) {
+    const wsProtocol = protocol === 'https:' ? 'wss:' : 'ws:';
+    return `${wsProtocol}//${host}/.proxy/ws`;
+  }
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    return `ws://${hostname}:3000/game-ws`;
+  }
+  const wsProtocol = protocol === 'https:' ? 'wss:' : 'ws:';
+  return `${wsProtocol}//${host}/game-ws`;
+}
+
 function createGameSocket() {
   // Detached scope so the WebSocket survives component unmounts
   const scope = effectScope(true);
@@ -21,23 +45,13 @@ function createGameSocket() {
   // 3. localhost: connect directly to server on port 3000 (bypasses Vite proxy)
   // 4. tunnel/non-localhost: use proxy path through current host (ngrok, etc.)
   const serverUrl = import.meta.env.VITE_SERVER_URL;
-  const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
-  let wsUrl: string;
-  if (serverUrl) {
-    // Split deployment: connect to separate server origin
-    // VITE_SERVER_URL should be like "wss://shit-head-server.fly.dev"
-    wsUrl = `${serverUrl}/game-ws`;
-  } else if (window.location.hostname.endsWith('.discordsays.com')) {
-    // Discord Activity: route through Discord's proxy
-    wsUrl = `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/.proxy/ws`;
-  } else if (isLocalhost) {
-    // Local dev: connect directly to server (bypasses Vite proxy)
-    wsUrl = `ws://${window.location.hostname}:3000/game-ws`;
-  } else {
-    // Tunnel/proxy: use current host with protocol detection
-    wsUrl = `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/game-ws`;
-  }
+  let wsUrl = resolveWebSocketUrl(
+    window.location.hostname,
+    window.location.protocol,
+    window.location.host,
+    serverUrl || undefined,
+  );
 
   // Include stored playerId for reconnection
   if (storedPlayerId) {
