@@ -127,10 +127,10 @@ function createGameSocket() {
   const { status, data, send: wsSend, close, open } = scope.run(() =>
     useWebSocket(wsUrl, {
       autoReconnect: {
-        retries: 10,
+        retries: 5,
         delay: (retryCount) => {
-          // Exponential backoff: 1s, 2s, 4s, 8s, 16s, capped at 30s
-          const baseDelay = Math.min(1000 * Math.pow(2, retryCount - 1), 30000);
+          // Exponential backoff: 1s, 2s, 4s, 8s, 16s (~31s total)
+          const baseDelay = Math.min(1000 * Math.pow(2, retryCount - 1), 16000);
           // Add +/- 10% jitter to prevent thundering herd
           const jitter = baseDelay * 0.1 * (Math.random() - 0.5);
           return Math.round(baseDelay + jitter);
@@ -141,7 +141,7 @@ function createGameSocket() {
             message: 'Unable to connect to server after multiple attempts',
             code: 'CONNECTION_FAILED',
             timestamp: Date.now(),
-            retryCount: 10,
+            retryCount: 5,
           };
         },
       },
