@@ -19,6 +19,20 @@ if (NODE_ENV !== 'production') {
   ALLOWED_ORIGINS.push('http://localhost:5173', 'http://localhost:4173');
 }
 
+// Helper: check if origin is allowed
+function isOriginAllowed(origin: string | null): boolean {
+  if (!origin) return false;
+  if (ALLOWED_ORIGINS.includes(origin)) return true;
+  // Allow Discord Activity proxy origins (*.discordsays.com)
+  try {
+    const url = new URL(origin);
+    if (url.hostname.endsWith('.discordsays.com')) return true;
+  } catch {
+    // Invalid origin URL
+  }
+  return false;
+}
+
 // Static file serving: check if client dist exists (tunnel/production single-origin mode)
 const clientDistPath = join(import.meta.dir, '../../client/dist');
 const indexHtml = Bun.file(join(clientDistPath, 'index.html'));
@@ -59,7 +73,7 @@ const server = Bun.serve<WebSocketData>({
 
       // Validate origin in production (skip when serving static files — same-origin tunnel mode)
       if (NODE_ENV === 'production' && !serveStaticFiles) {
-        if (!origin || !ALLOWED_ORIGINS.includes(origin)) {
+        if (!isOriginAllowed(origin)) {
           console.warn(`WebSocket upgrade rejected - invalid origin: ${origin}`);
           return new Response('Forbidden', { status: 403 });
         }
@@ -120,7 +134,7 @@ const server = Bun.serve<WebSocketData>({
 
 console.log(`Server listening on port ${server.port}`);
 console.log(`Environment: ${NODE_ENV}`);
-console.log(`Allowed origins: ${ALLOWED_ORIGINS.join(', ')}`);
+console.log(`Allowed origins: ${ALLOWED_ORIGINS.join(', ')}, *.discordsays.com`);
 
 // Graceful shutdown handler
 process.on('SIGTERM', async () => {

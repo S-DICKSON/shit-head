@@ -52,6 +52,18 @@ function createGameSocket() {
   const error = ref<string | null>(null);
   const messageHandlers: MessageHandler[] = [];
 
+  // Connection state for UI feedback
+  type ConnectionState = 'connected' | 'connecting' | 'reconnecting' | 'failed';
+  const connectionState = ref<ConnectionState>('connecting');
+
+  interface ConnectionError {
+    message: string;
+    code: string;
+    timestamp: number;
+    retryCount: number;
+  }
+  const connectionError = ref<ConnectionError | null>(null);
+
   // Reconnection state tracking
   const reconnecting = ref<boolean>(false);
   const reconnectTarget = ref<{ roomCode: string } | null>(null);
@@ -101,10 +113,22 @@ function createGameSocket() {
   const { status, data, send: wsSend, close, open } = scope.run(() =>
     useWebSocket(wsUrl, {
       autoReconnect: {
-        retries: 5,
-        delay: 1000,
+        retries: 10,
+        delay: (retryCount) => {
+          // Exponential backoff: 1s, 2s, 4s, 8s, 16s, capped at 30s
+          const baseDelay = Math.min(1000 * Math.pow(2, retryCount - 1), 30000);
+          // Add +/- 10% jitter to prevent thundering herd
+          const jitter = baseDelay * 0.1 * (Math.random() - 0.5);
+          return Math.round(baseDelay + jitter);
+        },
         onFailed() {
-          error.value = 'Failed to connect to server after multiple attempts';
+          connectionState.value = 'failed';
+          connectionError.value = {
+            message: 'Unable to connect to server after multiple attempts',
+            code: 'CONNECTION_FAILED',
+            timestamp: Date.now(),
+            retryCount: 10,
+          };
         },
       },
       heartbeat: {
@@ -132,12 +156,21 @@ function createGameSocket() {
 
   // Auto-reconnect to room when WebSocket reopens
   scope.run(() => watch(status, (newStatus) => {
-    if (newStatus === 'OPEN' && storedPlayerId && storedRoomCode) {
-      // Track reconnection state
-      reconnecting.value = true;
-      reconnectTarget.value = { roomCode: storedRoomCode };
-      // Send reconnect message to rejoin room
-      wsSend(JSON.stringify({ type: 'reconnect', roomCode: storedRoomCode }));
+    if (newStatus === 'OPEN') {
+      connectionState.value = 'connected';
+      connectionError.value = null;
+      if (storedPlayerId && storedRoomCode) {
+        // Track reconnection state
+        reconnecting.value = true;
+        reconnectTarget.value = { roomCode: storedRoomCode };
+        // Send reconnect message to rejoin room
+        wsSend(JSON.stringify({ type: 'reconnect', roomCode: storedRoomCode }));
+      }
+    } else if (newStatus === 'CLOSED') {
+      // Only set reconnecting if we were previously connected
+      if (connectionState.value === 'connected') {
+        connectionState.value = 'reconnecting';
+      }
     }
   }));
 
@@ -369,6 +402,15 @@ function createGameSocket() {
     };
   };
 
+  // Manual retry function
+  const retryConnection = () => {
+    connectionState.value = 'connecting';
+    connectionError.value = null;
+    close();
+    // Small delay to ensure clean close before reopening
+    setTimeout(() => open(), 100);
+  };
+
   return {
     status,
     lastMessage,
@@ -393,6 +435,10 @@ function createGameSocket() {
     // Reconnection state
     reconnecting,
     reconnectTarget,
+    // Connection state
+    connectionState,
+    connectionError,
+    retryConnection,
     // Notification state
     notifications,
     addNotification,
