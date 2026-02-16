@@ -1,0 +1,106 @@
+# EXPERIMENTAL: Cloudflared tunnel integration test
+# Tests WebSocket connectivity through a real cloudflared tunnel.
+# If this proves too flaky, delete this file (per project decision).
+
+name: Discord Tunnel Test (Experimental)
+
+on:
+  workflow_dispatch:  # Manual trigger only (experimental)
+  # Uncomment to run on push if stable:
+  # push:
+  #   branches: [main, milestone-2]
+  #   paths:
+  #     - 'packages/server/**'
+  #     - 'packages/client/**'
+  #     - 'docker-compose.tunnel.yml'
+  #     - 'Dockerfile.tunnel'
+
+jobs:
+  tunnel-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build tunnel image
+        run: docker compose -f docker-compose.tunnel.yml build
+
+      - name: Start tunnel services
+        run: docker compose -f docker-compose.tunnel.yml up -d
+
+      - name: Wait for tunnel URL
+        id: tunnel
+        timeout-minutes: 2
+        run: |
+          echo "Waiting for cloudflared tunnel URL..."
+          for i in $(seq 1 60); do
+            TUNNEL_URL=$(docker compose -f docker-compose.tunnel.yml logs tunnel 2>&1 | grep -oP 'https://[a-z0-9-]+\.trycloudflare\.com' | head -1 || true)
+            if [ -n "$TUNNEL_URL" ]; then
+              echo "Tunnel URL: $TUNNEL_URL"
+              echo "url=$TUNNEL_URL" >> $GITHUB_OUTPUT
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "::error::Tunnel URL not found in logs after 120 seconds"
+          docker compose -f docker-compose.tunnel.yml logs
+          exit 1
+
+      - name: Test health endpoint through tunnel
+        run: |
+          TUNNEL_URL="${{ steps.tunnel.outputs.url }}"
+          echo "Testing health endpoint at $TUNNEL_URL/health"
+          RESPONSE=$(curl -sf --max-time 10 "$TUNNEL_URL/health" 2>&1) || {
+            echo "::error::Health check failed"
+            echo "Response: $RESPONSE"
+            exit 1
+          }
+          echo "Health response: $RESPONSE"
+          echo "$RESPONSE" | grep -q '"status":"ok"' || {
+            echo "::error::Health check returned unexpected response"
+            exit 1
+          }
+
+      - name: Test WebSocket connection through tunnel
+        run: |
+          TUNNEL_URL="${{ steps.tunnel.outputs.url }}"
+          WS_URL=$(echo "$TUNNEL_URL" | sed 's|https://|wss://|')/game-ws
+          echo "Testing WebSocket at $WS_URL"
+
+          # Use websocat if available, otherwise install it
+          if ! command -v websocat &> /dev/null; then
+            echo "Installing websocat..."
+            curl -L https://github.com/vi/websocat/releases/download/v1.13.0/websocat.x86_64-unknown-linux-musl -o /usr/local/bin/websocat
+            chmod +x /usr/local/bin/websocat
+          fi
+
+          # Test: send ping, expect pong
+          RESULT=$(echo 'ping' | timeout 10 websocat --one-message "$WS_URL" 2>&1) || {
+            echo "::error::WebSocket connection failed"
+            echo "Result: $RESULT"
+            exit 1
+          }
+
+          if [ "$RESULT" = "pong" ]; then
+            echo "WebSocket ping/pong successful through tunnel!"
+          else
+            echo "::error::Expected 'pong', got: $RESULT"
+            exit 1
+          fi
+
+      - name: Capture diagnostic info on failure
+        if: failure()
+        run: |
+          echo "=== Docker Compose Logs ==="
+          docker compose -f docker-compose.tunnel.yml logs --tail=100
+          echo ""
+          echo "=== Container Status ==="
+          docker compose -f docker-compose.tunnel.yml ps
+          echo ""
+          echo "=== Network Info ==="
+          docker network ls
+
+      - name: Cleanup
+        if: always()
+        run: docker compose -f docker-compose.tunnel.yml down -v --remove-orphans
