@@ -28,7 +28,7 @@ Phases 1-15 delivered the complete multiplayer Shithead card game with all rules
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 16: Networking Foundation** - Validate Discord proxy with WebSocket connections
+- [x] **Phase 16: Networking Foundation** - Validate Discord proxy with WebSocket connections
 - [ ] **Phase 17: Platform Abstraction** - Dual-mode architecture without tech debt
 - [ ] **Phase 18: Discord Authentication** - OAuth2 flow with token exchange
 - [ ] **Phase 19: Discord Room Management** - Instance ID auto-join and production deployment
@@ -152,7 +152,7 @@ Phases execute in numeric order: 16 → 17 → 18 → 19 → 20 → 21 → 22
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 16. Networking Foundation | 0/5 | Planning complete | - |
+| 16. Networking Foundation | 5/5 | Complete | 2026-02-16 |
 | 17. Platform Abstraction | 0/2 | Planning complete | - |
 | 18. Discord Authentication | 0/TBD | Not started | - |
 | 19. Discord Room Management | 0/TBD | Not started | - |
@@ -162,4 +162,4 @@ Phases execute in numeric order: 16 → 17 → 18 → 19 → 20 → 21 → 22
 
 ---
 *Roadmap created: 2026-02-15*
-*Last updated: 2026-02-16*
+*Last updated: 2026-02-16 — Phase 16 complete*

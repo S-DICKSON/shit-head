@@ -35,9 +35,9 @@ Requirements for v2.0 milestone: UI improvements + Discord Activity integration.
 
 ### Discord Activity — Networking
 
-- [ ] **DISC-07**: WebSocket connections work through Discord's proxy (discordsays.com)
-- [ ] **DISC-08**: All API requests route through Discord proxy with proper URL mappings
-- [ ] **DISC-09**: Vite dev server proxy configured for local Discord Activity development
+- [x] **DISC-07**: WebSocket connections work through Discord's proxy (discordsays.com)
+- [x] **DISC-08**: All API requests route through Discord proxy with proper URL mappings
+- [x] **DISC-09**: Vite dev server proxy configured for local Discord Activity development
 
 ### Discord Activity — Room Management
 
@@ -98,9 +98,9 @@ Deferred to later milestones.
 | DISC-04 | Phase 18 | Pending |
 | DISC-05 | Phase 18 | Pending |
 | DISC-06 | Phase 18 | Pending |
-| DISC-07 | Phase 16 | Pending |
-| DISC-08 | Phase 16 | Pending |
-| DISC-09 | Phase 16 | Pending |
+| DISC-07 | Phase 16 | Complete |
+| DISC-08 | Phase 16 | Complete |
+| DISC-09 | Phase 16 | Complete |
 | DISC-10 | Phase 19 | Pending |
 | DISC-11 | Phase 19 | Pending |
 | DISC-12 | Phase 19 | Pending |
@@ -115,4 +115,4 @@ Deferred to later milestones.
 
 ---
 *Requirements defined: 2026-02-15*
-*Last updated: 2026-02-15 after roadmap creation*
+*Last updated: 2026-02-16 after Phase 16 completion*

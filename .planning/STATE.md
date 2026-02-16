@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-15)
 
 **Core value:** Friends can play a complete, rule-accurate game of Shithead together online with zero friction
-**Current focus:** v2.0 Phase 16 - Networking Foundation
+**Current focus:** v2.0 Phase 17 - Platform Abstraction
 
 ## Current Position
 
-Phase: 16 of 22 (Networking Foundation)
-Plan: 4 of 5 in current phase
-Status: In progress
-Last activity: 2026-02-16 — Completed 16-04-PLAN.md
+Phase: 17 of 22 (Platform Abstraction)
+Plan: —
+Status: Ready to plan
+Last activity: 2026-02-16 — Phase 16 complete (Networking Foundation verified)
 
-Progress: [██░░░░░░░░] 15/22 phases complete (68% overall, v2.0 in progress)
+Progress: [██████░░░░] 16/22 phases complete (73% overall)
 
 ## Performance Metrics
 
@@ -25,9 +25,9 @@ Progress: [██░░░░░░░░] 15/22 phases complete (68% overall, v
 - Quick tasks completed: 20
 
 **v2.0 Velocity:**
-- Total plans completed: 4
-- Average duration: 2.5 minutes
-- Total execution time: 0.17 hours
+- Total plans completed: 5
+- Average duration: 3.4 minutes
+- Total execution time: 0.28 hours
 
 ## Accumulated Context
 
@@ -38,6 +38,8 @@ Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting v2.0 work:
 - Dual-mode architecture: Keep standalone web working alongside Discord Activity (adapter pattern prevents tech debt)
 - Risk-first ordering: Validate Discord proxy in Phase 16 before building features (project history: ngrok, Docker DNS WS failures)
+- Retry timing: 5 retries with exponential backoff (~31s total) — 10 retries was too long for UX
+- retryConnection shows reconnecting spinner, not dismissed overlay
 
 ### Pending Todos
 
@@ -50,6 +52,7 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-16T21:12:17Z
-Stopped at: Completed 16-04-PLAN.md
+Last session: 2026-02-16
+Stopped at: Phase 16 complete, verified, requirements updated
 Resume file: None
+Next: `/gsd:plan-phase 17`
