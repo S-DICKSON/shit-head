@@ -17,8 +17,9 @@ function createGameSocket() {
 
   // Determine WebSocket URL:
   // 1. VITE_SERVER_URL (production split deployment — e.g., wss://shit-head-server.fly.dev)
-  // 2. localhost: connect directly to server on port 3000 (bypasses Vite proxy)
-  // 3. tunnel/non-localhost: use proxy path through current host (ngrok, etc.)
+  // 2. Discord Activity: route through Discord's proxy (*.discordsays.com)
+  // 3. localhost: connect directly to server on port 3000 (bypasses Vite proxy)
+  // 4. tunnel/non-localhost: use proxy path through current host (ngrok, etc.)
   const serverUrl = import.meta.env.VITE_SERVER_URL;
   const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
@@ -27,6 +28,9 @@ function createGameSocket() {
     // Split deployment: connect to separate server origin
     // VITE_SERVER_URL should be like "wss://shit-head-server.fly.dev"
     wsUrl = `${serverUrl}/game-ws`;
+  } else if (window.location.hostname.endsWith('.discordsays.com')) {
+    // Discord Activity: route through Discord's proxy
+    wsUrl = `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/.proxy/ws`;
   } else if (isLocalhost) {
     // Local dev: connect directly to server (bypasses Vite proxy)
     wsUrl = `ws://${window.location.hostname}:3000/game-ws`;
