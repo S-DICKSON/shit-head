@@ -418,7 +418,7 @@ function createGameSocket() {
 
   // Manual retry function
   const retryConnection = () => {
-    connectionState.value = 'connecting';
+    connectionState.value = 'reconnecting';
     connectionError.value = null;
     close();
     // Small delay to ensure clean close before reopening
