@@ -25,6 +25,17 @@ export default defineConfig({
         ws: true,
         changeOrigin: true,
       },
+      '/.proxy/api': {
+        target: 'http://host.docker.internal:3000',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/.proxy/, ''),
+      },
+      '/.proxy/ws': {
+        target: 'ws://host.docker.internal:3000',
+        ws: true,
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/.proxy\/ws/, '/game-ws'),
+      },
     }
   }
 })
