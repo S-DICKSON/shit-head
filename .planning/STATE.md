@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 ## Current Position
 
 Phase: 18 of 22 (Discord Authentication)
-Plan: 1 of N in phase
+Plan: 2 of N in phase
 Status: In progress
-Last activity: 2026-02-17 — Completed 18-01-PLAN.md (Discord token exchange endpoint + env docs)
+Last activity: 2026-02-17 — Completed 18-02-PLAN.md (Discord adapter implementations: DiscordAuthAdapter, DiscordConnectionAdapter, DiscordRoomAdapter)
 
 Progress: [███████░░░] 17/22 phases complete (77% overall)
 
@@ -25,9 +25,9 @@ Progress: [███████░░░] 17/22 phases complete (77% overall)
 - Quick tasks completed: 20
 
 **v2.0 Velocity:**
-- Total plans completed: 8
-- Average duration: 2.7 minutes
-- Total execution time: 0.37 hours
+- Total plans completed: 9
+- Average duration: 2.8 minutes
+- Total execution time: 0.41 hours
 
 ## Accumulated Context
 
@@ -46,6 +46,10 @@ Recent decisions affecting v2.0 work:
 - Adapters provided but not consumed — validates wiring without v1.0 risk (incremental migration)
 - Discord token exchange: application/x-www-form-urlencoded (not JSON) — Discord rejects JSON bodies
 - Forward Discord's error status code directly rather than normalizing to 500
+- Discord OAuth2 prompt: 'none' (not 'consent') for seamless UX — no consent dialog for identify scope
+- Discord access_token memory-only — never persisted to localStorage
+- Discord user name: global_name || username (display name preferred over username handle)
+- Discord connection/room adapters identical to web counterparts — proxy routing handled at URL level (Phase 16)
 
 ### Pending Todos
 
@@ -62,6 +66,6 @@ User setup required before Phase 18 plans can be tested end-to-end:
 ## Session Continuity
 
 Last session: 2026-02-17
-Stopped at: Completed 18-01-PLAN.md - /api/token endpoint live, .env.example files created
+Stopped at: Completed 18-02-PLAN.md - All three Discord adapters implemented, @discord/embedded-app-sdk@2.4.0 installed
 Resume file: None
-Next: Continue Phase 18 (plan 02 - DiscordAuthAdapter client implementation)
+Next: Continue Phase 18 (plan 03 - platform factory wiring)
