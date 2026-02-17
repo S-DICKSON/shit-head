@@ -11,6 +11,9 @@ import {
   WebAuthAdapter,
   WebConnectionAdapter,
   WebRoomAdapter,
+  DiscordAuthAdapter,
+  DiscordConnectionAdapter,
+  DiscordRoomAdapter,
 } from './platform'
 
 const app = createApp(App)
@@ -26,7 +29,10 @@ if (platform === 'web') {
   app.provide(ConnectionAdapterKey, new WebConnectionAdapter())
   app.provide(RoomAdapterKey, new WebRoomAdapter())
 } else if (platform === 'discord') {
-  throw new Error('Discord adapters not implemented yet (Phase 18)')
+  const discordAuth = new DiscordAuthAdapter(import.meta.env.VITE_DISCORD_CLIENT_ID)
+  app.provide(AuthAdapterKey, discordAuth)
+  app.provide(ConnectionAdapterKey, new DiscordConnectionAdapter())
+  app.provide(RoomAdapterKey, new DiscordRoomAdapter())
 }
 
 app.use(router)

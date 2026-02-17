@@ -24,3 +24,8 @@ export type { RoomAdapter } from './interfaces/RoomAdapter';
 export { WebAuthAdapter } from './adapters/web/WebAuthAdapter';
 export { WebConnectionAdapter } from './adapters/web/WebConnectionAdapter';
 export { WebRoomAdapter } from './adapters/web/WebRoomAdapter';
+
+// Discord adapter implementations
+export { DiscordAuthAdapter } from './adapters/discord/DiscordAuthAdapter';
+export { DiscordConnectionAdapter } from './adapters/discord/DiscordConnectionAdapter';
+export { DiscordRoomAdapter } from './adapters/discord/DiscordRoomAdapter';
