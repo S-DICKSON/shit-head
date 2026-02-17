@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 ## Current Position
 
 Phase: 18 of 22 (Discord Authentication)
-Plan: 2 of N in phase
+Plan: 3 of N in phase
 Status: In progress
-Last activity: 2026-02-17 — Completed 18-02-PLAN.md (Discord adapter implementations: DiscordAuthAdapter, DiscordConnectionAdapter, DiscordRoomAdapter)
+Last activity: 2026-02-17 — Completed 18-03-PLAN.md (Platform factory wiring: Discord adapters wired into main.ts, barrel export updated, build verified)
 
 Progress: [███████░░░] 17/22 phases complete (77% overall)
 
@@ -50,6 +50,8 @@ Recent decisions affecting v2.0 work:
 - Discord access_token memory-only — never persisted to localStorage
 - Discord user name: global_name || username (display name preferred over username handle)
 - Discord connection/room adapters identical to web counterparts — proxy routing handled at URL level (Phase 16)
+- authenticate() not called at app startup — triggered by component lifecycle in Phase 19
+- VITE_DISCORD_CLIENT_ID passed as constructor arg to DiscordAuthAdapter (undefined if unset — fails at SDK creation, expected behavior)
 
 ### Pending Todos
 
@@ -66,6 +68,6 @@ User setup required before Phase 18 plans can be tested end-to-end:
 ## Session Continuity
 
 Last session: 2026-02-17
-Stopped at: Completed 18-02-PLAN.md - All three Discord adapters implemented, @discord/embedded-app-sdk@2.4.0 installed
+Stopped at: Completed 18-03-PLAN.md - Discord adapters wired into main.ts, barrel export updated, Vite build verified (143 modules)
 Resume file: None
-Next: Continue Phase 18 (plan 03 - platform factory wiring)
+Next: Continue Phase 18 (plan 04 if applicable, or Phase 19 - Discord Activity UI)
