@@ -55,6 +55,66 @@ const server = Bun.serve<WebSocketData>({
       );
     }
 
+    // Discord OAuth2 token exchange endpoint
+    // Exchanges authorization code for access token using server-side client secret
+    if (url.pathname === '/api/token' && req.method === 'POST') {
+      try {
+        const body = await req.json() as { code?: string };
+
+        if (!body.code) {
+          return new Response(JSON.stringify({ error: 'Missing code' }), {
+            status: 400,
+            headers: { 'Content-Type': 'application/json' },
+          });
+        }
+
+        const discordClientId = process.env.DISCORD_CLIENT_ID;
+        const discordClientSecret = process.env.DISCORD_CLIENT_SECRET;
+
+        if (!discordClientId || !discordClientSecret) {
+          console.error('Missing DISCORD_CLIENT_ID or DISCORD_CLIENT_SECRET env vars');
+          return new Response(JSON.stringify({ error: 'Server configuration error' }), {
+            status: 500,
+            headers: { 'Content-Type': 'application/json' },
+          });
+        }
+
+        const tokenResponse = await fetch('https://discord.com/api/oauth2/token', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: new URLSearchParams({
+            client_id: discordClientId,
+            client_secret: discordClientSecret,
+            grant_type: 'authorization_code',
+            code: body.code,
+          }),
+        });
+
+        if (!tokenResponse.ok) {
+          const errorText = await tokenResponse.text();
+          console.error(`Discord token exchange failed: ${tokenResponse.status} ${errorText}`);
+          return new Response(JSON.stringify({ error: 'Token exchange failed' }), {
+            status: tokenResponse.status,
+            headers: { 'Content-Type': 'application/json' },
+          });
+        }
+
+        const { access_token } = await tokenResponse.json() as { access_token: string };
+
+        return new Response(JSON.stringify({ access_token }), {
+          headers: { 'Content-Type': 'application/json' },
+        });
+      } catch (err) {
+        console.error('Token exchange error:', err);
+        return new Response(JSON.stringify({ error: 'Internal server error' }), {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
     // WebSocket upgrade endpoint with Origin validation
     if (url.pathname === '/game-ws') {
       const origin = req.headers.get('Origin');
