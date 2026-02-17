@@ -1,7 +1,7 @@
 import type { Ref } from 'vue';
 import type { ClientMessage, ServerMessage } from '@shit-head/shared';
 import type { ConnectionAdapter } from '../../interfaces/ConnectionAdapter';
-import { useGameSocket } from '@/composables/useGameSocket';
+import { useGameSocket } from '../../../composables/useGameSocket';
 
 /**
  * Web-specific connection adapter wrapping useGameSocket.

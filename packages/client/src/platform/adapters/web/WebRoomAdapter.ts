@@ -1,5 +1,5 @@
 import type { RoomAdapter } from '../../interfaces/RoomAdapter';
-import { useGameSocket } from '@/composables/useGameSocket';
+import { useGameSocket } from '../../../composables/useGameSocket';
 
 /**
  * Web-specific room adapter wrapping useGameSocket.
