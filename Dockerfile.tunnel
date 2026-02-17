@@ -4,7 +4,7 @@
 # Stage 1: Build client
 FROM oven/bun:1 AS client-build
 WORKDIR /app
-COPY package.json bun.lockb* tsconfig.json ./
+COPY package.json bun.lock* tsconfig.json ./
 COPY packages/client/package.json ./packages/client/
 COPY packages/shared/package.json ./packages/shared/
 COPY packages/shared/tsconfig.json ./packages/shared/
@@ -20,7 +20,7 @@ RUN bunx vite build
 # Stage 2: Run server with built client
 FROM oven/bun:1
 WORKDIR /app
-COPY package.json bun.lockb* tsconfig.json ./
+COPY package.json bun.lock* tsconfig.json ./
 COPY packages/server/package.json ./packages/server/
 COPY packages/shared/package.json ./packages/shared/
 RUN bun install --frozen-lockfile --production

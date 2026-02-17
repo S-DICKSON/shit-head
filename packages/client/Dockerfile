@@ -1,12 +1,12 @@
 # Multi-stage Dockerfile for Vite client dev server
-# Build context: project root (need access to root package.json, bun.lockb, and shared package)
+# Build context: project root (need access to root package.json, bun.lock, and shared package)
 
 # Development stage
 FROM oven/bun:1 AS dev
 WORKDIR /app
 
 # Copy root dependencies and TypeScript config
-COPY package.json bun.lockb* tsconfig.json ./
+COPY package.json bun.lock* tsconfig.json ./
 
 # Copy package.json files for workspace resolution
 COPY packages/client/package.json ./packages/client/

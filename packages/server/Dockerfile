@@ -1,5 +1,5 @@
 # Multi-stage Dockerfile for Bun server
-# Build context: project root (need access to root package.json, bun.lockb, and shared package)
+# Build context: project root (need access to root package.json, bun.lock, and shared package)
 
 # Base stage with Bun runtime
 FROM oven/bun:1 AS base
@@ -8,7 +8,7 @@ WORKDIR /app
 # Development stage
 FROM base AS dev
 # Copy root dependencies and TypeScript config
-COPY package.json bun.lockb* tsconfig.json ./
+COPY package.json bun.lock* tsconfig.json ./
 COPY packages/server/package.json ./packages/server/
 COPY packages/shared/package.json ./packages/shared/
 # Install dependencies
@@ -25,7 +25,7 @@ CMD ["bun", "--watch", "packages/server/src/index.ts"]
 FROM base AS client-build
 WORKDIR /app
 # Copy root dependencies and TypeScript config
-COPY package.json bun.lockb* tsconfig.json ./
+COPY package.json bun.lock* tsconfig.json ./
 # Copy all package.json files for dependency resolution
 COPY packages/client/package.json ./packages/client/
 COPY packages/shared/package.json ./packages/shared/
@@ -49,7 +49,7 @@ RUN bunx vite build
 FROM base AS production
 WORKDIR /app
 # Copy package files for dependency resolution
-COPY package.json bun.lockb* tsconfig.json ./
+COPY package.json bun.lock* tsconfig.json ./
 COPY packages/server/package.json ./packages/server/
 COPY packages/shared/package.json ./packages/shared/
 # Install production dependencies only
