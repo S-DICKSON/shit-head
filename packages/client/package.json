@@ -14,6 +14,7 @@
     "lint:fix": "eslint . --fix"
   },
   "dependencies": {
+    "@discord/embedded-app-sdk": "^2.4.0",
     "@shit-head/shared": "workspace:*",
     "@vueuse/core": "^14.2.0",
     "vue": "^3.5.0",
