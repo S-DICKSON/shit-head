@@ -79,12 +79,13 @@ Plans:
   1. Discord SDK initializes and completes OAuth2 flow in Activity iframe
   2. Server exchanges OAuth code for access token (client secret never exposed to client)
   3. Discord user identity (username, avatar) stored and accessible via getCurrentUser() for consumption by game UI
-**Plans**: 3 plans
+**Plans**: 4 plans
 
 Plans:
 - [x] 18-01-PLAN.md — Server-side token exchange endpoint and env var documentation
 - [x] 18-02-PLAN.md — Discord adapters (auth OAuth2 flow, connection, room)
 - [x] 18-03-PLAN.md — Wire Discord adapters into app startup and full verification
+- [ ] 18-04-PLAN.md — UAT gap closure: lazy-load Discord adapters, fix Dockerfile lockfiles, guard token endpoint
 
 ### Phase 19: Discord Room Management
 **Goal**: Complete Discord Activity integration with instance ID auto-join and production deployment
@@ -150,13 +151,13 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 16 → 17 → 18 → 19 → 20 → 21 → 22
+Phases execute in numeric order: 16 -> 17 -> 18 -> 19 -> 20 -> 21 -> 22
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 16. Networking Foundation | 5/5 | Complete | 2026-02-16 |
 | 17. Platform Abstraction | 2/2 | Complete | 2026-02-17 |
-| 18. Discord Authentication | 3/3 | Complete | 2026-02-17 |
+| 18. Discord Authentication | 3/4 | UAT gap closure | - |
 | 19. Discord Room Management | 0/TBD | Not started | - |
 | 20. Sound & Settings | 0/TBD | Not started | - |
 | 21. Card Playability Highlights | 0/TBD | Not started | - |
@@ -164,4 +165,4 @@ Phases execute in numeric order: 16 → 17 → 18 → 19 → 20 → 21 → 22
 
 ---
 *Roadmap created: 2026-02-15*
-*Last updated: 2026-02-17 — Phase 18 complete (3/3 plans, verified)*
+*Last updated: 2026-02-17 -- Phase 18 UAT gap closure plan added (18-04)*
