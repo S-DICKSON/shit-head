@@ -30,7 +30,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 16: Networking Foundation** - Validate Discord proxy with WebSocket connections
 - [x] **Phase 17: Platform Abstraction** - Dual-mode architecture without tech debt
-- [x] **Phase 18: Discord Authentication** - OAuth2 flow with token exchange
+- [x] **Phase 18: Discord Authentication** - OAuth2 flow with token exchange (verified)
 - [ ] **Phase 19: Discord Room Management** - Instance ID auto-join and production deployment
 - [ ] **Phase 20: Sound & Settings** - Mute toggle and host-configurable round time
 - [ ] **Phase 21: Card Playability Highlights** - Visual indicators for valid plays
@@ -85,7 +85,7 @@ Plans:
 - [x] 18-01-PLAN.md — Server-side token exchange endpoint and env var documentation
 - [x] 18-02-PLAN.md — Discord adapters (auth OAuth2 flow, connection, room)
 - [x] 18-03-PLAN.md — Wire Discord adapters into app startup and full verification
-- [ ] 18-04-PLAN.md — UAT gap closure: lazy-load Discord adapters, fix Dockerfile lockfiles, guard token endpoint
+- [x] 18-04-PLAN.md — UAT gap closure: lazy-load Discord adapters, fix Dockerfile lockfiles, guard token endpoint
 
 ### Phase 19: Discord Room Management
 **Goal**: Complete Discord Activity integration with instance ID auto-join and production deployment
@@ -157,7 +157,7 @@ Phases execute in numeric order: 16 -> 17 -> 18 -> 19 -> 20 -> 21 -> 22
 |-------|----------------|--------|-----------|
 | 16. Networking Foundation | 5/5 | Complete | 2026-02-16 |
 | 17. Platform Abstraction | 2/2 | Complete | 2026-02-17 |
-| 18. Discord Authentication | 3/4 | UAT gap closure | - |
+| 18. Discord Authentication | 4/4 | Complete | 2026-02-17 |
 | 19. Discord Room Management | 0/TBD | Not started | - |
 | 20. Sound & Settings | 0/TBD | Not started | - |
 | 21. Card Playability Highlights | 0/TBD | Not started | - |
@@ -165,4 +165,4 @@ Phases execute in numeric order: 16 -> 17 -> 18 -> 19 -> 20 -> 21 -> 22
 
 ---
 *Roadmap created: 2026-02-15*
-*Last updated: 2026-02-17 -- Phase 18 UAT gap closure plan added (18-04)*
+*Last updated: 2026-02-17 -- Phase 18 complete (all gaps closed, verified)*
