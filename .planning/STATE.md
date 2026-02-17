@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 ## Current Position
 
 Phase: 18 of 22 (Discord Authentication)
-Plan: —
-Status: Ready to plan
-Last activity: 2026-02-17 — Phase 17 complete (Platform Abstraction verified)
+Plan: 1 of N in phase
+Status: In progress
+Last activity: 2026-02-17 — Completed 18-01-PLAN.md (Discord token exchange endpoint + env docs)
 
 Progress: [███████░░░] 17/22 phases complete (77% overall)
 
@@ -25,9 +25,9 @@ Progress: [███████░░░] 17/22 phases complete (77% overall)
 - Quick tasks completed: 20
 
 **v2.0 Velocity:**
-- Total plans completed: 7
-- Average duration: 2.8 minutes
-- Total execution time: 0.33 hours
+- Total plans completed: 8
+- Average duration: 2.7 minutes
+- Total execution time: 0.37 hours
 
 ## Accumulated Context
 
@@ -44,6 +44,8 @@ Recent decisions affecting v2.0 work:
 - Adapter interfaces use Vue Ref types for reactive status (consistency with useGameSocket)
 - Web adapters as thin wrappers: delegate to existing code, zero logic duplication
 - Adapters provided but not consumed — validates wiring without v1.0 risk (incremental migration)
+- Discord token exchange: application/x-www-form-urlencoded (not JSON) — Discord rejects JSON bodies
+- Forward Discord's error status code directly rather than normalizing to 500
 
 ### Pending Todos
 
@@ -52,11 +54,14 @@ Recent decisions affecting v2.0 work:
 
 ### Blockers/Concerns
 
-None.
+User setup required before Phase 18 plans can be tested end-to-end:
+- Discord Developer Portal credentials needed (DISCORD_CLIENT_ID, DISCORD_CLIENT_SECRET, VITE_DISCORD_CLIENT_ID)
+- Redirect URI https://127.0.0.1 must be added in Discord Developer Portal
+- See .planning/phases/18-discord-authentication/18-01-USER-SETUP.md
 
 ## Session Continuity
 
 Last session: 2026-02-17
-Stopped at: Phase 17 complete, verified, requirements updated
+Stopped at: Completed 18-01-PLAN.md - /api/token endpoint live, .env.example files created
 Resume file: None
-Next: `/gsd:plan-phase 18`
+Next: Continue Phase 18 (plan 02 - DiscordAuthAdapter client implementation)
