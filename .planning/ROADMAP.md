@@ -78,8 +78,7 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. Discord SDK initializes and completes OAuth2 flow in Activity iframe
   2. Server exchanges OAuth code for access token (client secret never exposed to client)
-  3. Discord user identity (username, avatar) displayed as player info in Discord mode
-  4. Cookies use `SameSite=None; Partitioned; Secure` for Discord's third-party iframe context
+  3. Discord user identity (username, avatar) stored and accessible via getCurrentUser() for consumption by game UI
 **Plans**: 3 plans
 
 Plans:
@@ -97,6 +96,7 @@ Plans:
   3. Full multiplayer game works in Discord Activity (tested on desktop and mobile Discord apps)
   4. Discord Activity deployed to production with HTTPS and URL mappings configured
   5. cloudflared tunnel setup documented for local Discord Activity testing
+  6. Cookies (if introduced) use `SameSite=None; Partitioned; Secure` for Discord's third-party iframe context
 **Plans**: TBD
 
 Plans:
