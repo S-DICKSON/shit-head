@@ -25,7 +25,6 @@ export { WebAuthAdapter } from './adapters/web/WebAuthAdapter';
 export { WebConnectionAdapter } from './adapters/web/WebConnectionAdapter';
 export { WebRoomAdapter } from './adapters/web/WebRoomAdapter';
 
-// Discord adapter implementations
-export { DiscordAuthAdapter } from './adapters/discord/DiscordAuthAdapter';
-export { DiscordConnectionAdapter } from './adapters/discord/DiscordConnectionAdapter';
-export { DiscordRoomAdapter } from './adapters/discord/DiscordRoomAdapter';
+// Discord adapters are loaded via dynamic import() in main.ts only when platform === 'discord'
+// Do NOT import them statically here — that would eagerly resolve @discord/embedded-app-sdk
+// even in web mode and break standalone deployment.

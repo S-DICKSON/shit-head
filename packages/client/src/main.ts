@@ -11,9 +11,6 @@ import {
   WebAuthAdapter,
   WebConnectionAdapter,
   WebRoomAdapter,
-  DiscordAuthAdapter,
-  DiscordConnectionAdapter,
-  DiscordRoomAdapter,
 } from './platform'
 
 const app = createApp(App)
@@ -29,6 +26,11 @@ if (platform === 'web') {
   app.provide(ConnectionAdapterKey, new WebConnectionAdapter())
   app.provide(RoomAdapterKey, new WebRoomAdapter())
 } else if (platform === 'discord') {
+  // Dynamic import ensures @discord/embedded-app-sdk is never resolved in web mode
+  const { DiscordAuthAdapter } = await import('./platform/adapters/discord/DiscordAuthAdapter')
+  const { DiscordConnectionAdapter } = await import('./platform/adapters/discord/DiscordConnectionAdapter')
+  const { DiscordRoomAdapter } = await import('./platform/adapters/discord/DiscordRoomAdapter')
+
   const discordAuth = new DiscordAuthAdapter(import.meta.env.VITE_DISCORD_CLIENT_ID)
   app.provide(AuthAdapterKey, discordAuth)
   app.provide(ConnectionAdapterKey, new DiscordConnectionAdapter())
