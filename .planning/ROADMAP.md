@@ -80,10 +80,12 @@ Plans:
   2. Server exchanges OAuth code for access token (client secret never exposed to client)
   3. Discord user identity (username, avatar) displayed as player info in Discord mode
   4. Cookies use `SameSite=None; Partitioned; Secure` for Discord's third-party iframe context
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 18-01: TBD during planning
+- [ ] 18-01-PLAN.md — Server-side token exchange endpoint and env var documentation
+- [ ] 18-02-PLAN.md — Discord adapters (auth OAuth2 flow, connection, room)
+- [ ] 18-03-PLAN.md — Wire Discord adapters into app startup and full verification
 
 ### Phase 19: Discord Room Management
 **Goal**: Complete Discord Activity integration with instance ID auto-join and production deployment
@@ -154,7 +156,7 @@ Phases execute in numeric order: 16 → 17 → 18 → 19 → 20 → 21 → 22
 |-------|----------------|--------|-----------|
 | 16. Networking Foundation | 5/5 | Complete | 2026-02-16 |
 | 17. Platform Abstraction | 2/2 | Complete | 2026-02-17 |
-| 18. Discord Authentication | 0/TBD | Not started | - |
+| 18. Discord Authentication | 0/3 | Not started | - |
 | 19. Discord Room Management | 0/TBD | Not started | - |
 | 20. Sound & Settings | 0/TBD | Not started | - |
 | 21. Card Playability Highlights | 0/TBD | Not started | - |
@@ -162,4 +164,4 @@ Phases execute in numeric order: 16 → 17 → 18 → 19 → 20 → 21 → 22
 
 ---
 *Roadmap created: 2026-02-15*
-*Last updated: 2026-02-17 — Phase 17 complete*
+*Last updated: 2026-02-17 — Phase 18 planned (3 plans in 2 waves)*
