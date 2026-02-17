@@ -29,7 +29,7 @@ Phases 1-15 delivered the complete multiplayer Shithead card game with all rules
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 16: Networking Foundation** - Validate Discord proxy with WebSocket connections
-- [ ] **Phase 17: Platform Abstraction** - Dual-mode architecture without tech debt
+- [x] **Phase 17: Platform Abstraction** - Dual-mode architecture without tech debt
 - [ ] **Phase 18: Discord Authentication** - OAuth2 flow with token exchange
 - [ ] **Phase 19: Discord Room Management** - Instance ID auto-join and production deployment
 - [ ] **Phase 20: Sound & Settings** - Mute toggle and host-configurable round time
@@ -68,8 +68,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 17-01-PLAN.md — Platform abstraction layer (detection, interfaces, injection keys, web adapters)
-- [ ] 17-02-PLAN.md — Wire adapters into app startup and validate standalone web unchanged
+- [x] 17-01-PLAN.md — Platform abstraction layer (detection, interfaces, injection keys, web adapters)
+- [x] 17-02-PLAN.md — Wire adapters into app startup and validate standalone web unchanged
 
 ### Phase 18: Discord Authentication
 **Goal**: Complete OAuth2 flow with Discord user identity
@@ -153,7 +153,7 @@ Phases execute in numeric order: 16 → 17 → 18 → 19 → 20 → 21 → 22
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 16. Networking Foundation | 5/5 | Complete | 2026-02-16 |
-| 17. Platform Abstraction | 0/2 | Planning complete | - |
+| 17. Platform Abstraction | 2/2 | Complete | 2026-02-17 |
 | 18. Discord Authentication | 0/TBD | Not started | - |
 | 19. Discord Room Management | 0/TBD | Not started | - |
 | 20. Sound & Settings | 0/TBD | Not started | - |
@@ -162,4 +162,4 @@ Phases execute in numeric order: 16 → 17 → 18 → 19 → 20 → 21 → 22
 
 ---
 *Roadmap created: 2026-02-15*
-*Last updated: 2026-02-16 — Phase 16 complete*
+*Last updated: 2026-02-17 — Phase 17 complete*

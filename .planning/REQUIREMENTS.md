@@ -23,9 +23,9 @@ Requirements for v2.0 milestone: UI improvements + Discord Activity integration.
 
 ### Discord Activity — Platform Infrastructure
 
-- [ ] **DISC-01**: Platform detection distinguishes Discord Activity from standalone web at startup
-- [ ] **DISC-02**: Platform abstraction layer (adapters) separates Discord vs web concerns from game logic
-- [ ] **DISC-03**: Standalone web app continues working unchanged after Discord integration
+- [x] **DISC-01**: Platform detection distinguishes Discord Activity from standalone web at startup
+- [x] **DISC-02**: Platform abstraction layer (adapters) separates Discord vs web concerns from game logic
+- [x] **DISC-03**: Standalone web app continues working unchanged after Discord integration
 
 ### Discord Activity — Authentication
 
@@ -92,9 +92,9 @@ Deferred to later milestones.
 | SETS-01 | Phase 20 | Pending |
 | SETS-02 | Phase 20 | Pending |
 | SETS-03 | Phase 20 | Pending |
-| DISC-01 | Phase 17 | Pending |
-| DISC-02 | Phase 17 | Pending |
-| DISC-03 | Phase 17 | Pending |
+| DISC-01 | Phase 17 | Complete |
+| DISC-02 | Phase 17 | Complete |
+| DISC-03 | Phase 17 | Complete |
 | DISC-04 | Phase 18 | Pending |
 | DISC-05 | Phase 18 | Pending |
 | DISC-06 | Phase 18 | Pending |
@@ -115,4 +115,4 @@ Deferred to later milestones.
 
 ---
 *Requirements defined: 2026-02-15*
-*Last updated: 2026-02-16 after Phase 16 completion*
+*Last updated: 2026-02-17 after Phase 17 completion*

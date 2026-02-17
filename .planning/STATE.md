@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-15)
 
 **Core value:** Friends can play a complete, rule-accurate game of Shithead together online with zero friction
-**Current focus:** v2.0 Phase 17 - Platform Abstraction
+**Current focus:** v2.0 Phase 18 - Discord Authentication
 
 ## Current Position
 
-Phase: 17 of 22 (Platform Abstraction)
-Plan: 2 of 3
-Status: In progress
-Last activity: 2026-02-16 — Completed 17-02-PLAN.md
+Phase: 18 of 22 (Discord Authentication)
+Plan: —
+Status: Ready to plan
+Last activity: 2026-02-17 — Phase 17 complete (Platform Abstraction verified)
 
-Progress: [██████░░░░] 16/22 phases complete (73% overall)
+Progress: [███████░░░] 17/22 phases complete (77% overall)
 
 ## Performance Metrics
 
@@ -26,8 +26,8 @@ Progress: [██████░░░░] 16/22 phases complete (73% overall)
 
 **v2.0 Velocity:**
 - Total plans completed: 7
-- Average duration: 2.9 minutes
-- Total execution time: 0.32 hours
+- Average duration: 2.8 minutes
+- Total execution time: 0.33 hours
 
 ## Accumulated Context
 
@@ -43,8 +43,7 @@ Recent decisions affecting v2.0 work:
 - Platform detection: Synchronous iframe + query params check (async SDK validation deferred to Phase 18)
 - Adapter interfaces use Vue Ref types for reactive status (consistency with useGameSocket)
 - Web adapters as thin wrappers: delegate to existing code, zero logic duplication
-- Platform detection happens at app startup before router mounting
-- Adapters provided but not consumed - validates wiring without v1.0 risk (incremental migration strategy)
+- Adapters provided but not consumed — validates wiring without v1.0 risk (incremental migration)
 
 ### Pending Todos
 
@@ -57,7 +56,7 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-16T23:54:44Z
-Stopped at: Completed 17-02-PLAN.md
+Last session: 2026-02-17
+Stopped at: Phase 17 complete, verified, requirements updated
 Resume file: None
-Next: Continue with Phase 17 Plan 03 (final plan in wave 2)
+Next: `/gsd:plan-phase 18`
