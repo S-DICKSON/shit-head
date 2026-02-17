@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 ## Current Position
 
 Phase: 18 of 22 (Discord Authentication)
-Plan: 3 of 3 in phase
-Status: Phase complete
-Last activity: 2026-02-17 — Phase 18 complete (Discord Authentication verified)
+Plan: 4 of 4 in phase (gap closure plan)
+Status: Phase complete — all UAT gaps closed
+Last activity: 2026-02-17 — Completed 18-04-PLAN.md (UAT gap closure: dynamic import, Dockerfile lockfile, /api/token 400)
 
 Progress: [████████░░] 18/22 phases complete (82% overall)
 
@@ -49,6 +49,9 @@ Recent decisions affecting v2.0 work:
 - Discord connection/room adapters identical to web counterparts — proxy routing handled at URL level (Phase 16)
 - authenticate() not called at app startup — triggered by component lifecycle in Phase 19
 - VITE_DISCORD_CLIENT_ID passed as constructor arg to DiscordAuthAdapter
+- Discord SDK: dynamic import() via top-level await in main.ts — never static import in barrel (18-04)
+- Dockerfile lockfile: bun.lock* glob (not bun.lockb*) — repo uses text format lockfile (18-04)
+- /api/token: inner SyntaxError catch returns 400; outer catch still handles unexpected 500 errors (18-04)
 
 ### Pending Todos
 
@@ -64,6 +67,6 @@ User setup required before Discord Activity testing:
 ## Session Continuity
 
 Last session: 2026-02-17
-Stopped at: Phase 18 complete, verified, requirements updated
+Stopped at: Completed 18-04-PLAN.md — Phase 18 UAT gaps fully closed
 Resume file: None
 Next: `/gsd:plan-phase 19`
