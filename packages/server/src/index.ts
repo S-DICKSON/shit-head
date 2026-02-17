@@ -59,7 +59,18 @@ const server = Bun.serve<WebSocketData>({
     // Exchanges authorization code for access token using server-side client secret
     if (url.pathname === '/api/token' && req.method === 'POST') {
       try {
-        const body = await req.json() as { code?: string };
+        let body: { code?: string };
+        try {
+          body = await req.json() as { code?: string };
+        } catch (e) {
+          if (e instanceof SyntaxError) {
+            return new Response(JSON.stringify({ error: 'Invalid JSON body' }), {
+              status: 400,
+              headers: { 'Content-Type': 'application/json' },
+            });
+          }
+          throw e;
+        }
 
         if (!body.code) {
           return new Response(JSON.stringify({ error: 'Missing code' }), {
