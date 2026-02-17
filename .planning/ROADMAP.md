@@ -30,7 +30,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 16: Networking Foundation** - Validate Discord proxy with WebSocket connections
 - [x] **Phase 17: Platform Abstraction** - Dual-mode architecture without tech debt
-- [ ] **Phase 18: Discord Authentication** - OAuth2 flow with token exchange
+- [x] **Phase 18: Discord Authentication** - OAuth2 flow with token exchange
 - [ ] **Phase 19: Discord Room Management** - Instance ID auto-join and production deployment
 - [ ] **Phase 20: Sound & Settings** - Mute toggle and host-configurable round time
 - [ ] **Phase 21: Card Playability Highlights** - Visual indicators for valid plays
@@ -82,9 +82,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 18-01-PLAN.md — Server-side token exchange endpoint and env var documentation
-- [ ] 18-02-PLAN.md — Discord adapters (auth OAuth2 flow, connection, room)
-- [ ] 18-03-PLAN.md — Wire Discord adapters into app startup and full verification
+- [x] 18-01-PLAN.md — Server-side token exchange endpoint and env var documentation
+- [x] 18-02-PLAN.md — Discord adapters (auth OAuth2 flow, connection, room)
+- [x] 18-03-PLAN.md — Wire Discord adapters into app startup and full verification
 
 ### Phase 19: Discord Room Management
 **Goal**: Complete Discord Activity integration with instance ID auto-join and production deployment
@@ -156,7 +156,7 @@ Phases execute in numeric order: 16 → 17 → 18 → 19 → 20 → 21 → 22
 |-------|----------------|--------|-----------|
 | 16. Networking Foundation | 5/5 | Complete | 2026-02-16 |
 | 17. Platform Abstraction | 2/2 | Complete | 2026-02-17 |
-| 18. Discord Authentication | 0/3 | Not started | - |
+| 18. Discord Authentication | 3/3 | Complete | 2026-02-17 |
 | 19. Discord Room Management | 0/TBD | Not started | - |
 | 20. Sound & Settings | 0/TBD | Not started | - |
 | 21. Card Playability Highlights | 0/TBD | Not started | - |
@@ -164,4 +164,4 @@ Phases execute in numeric order: 16 → 17 → 18 → 19 → 20 → 21 → 22
 
 ---
 *Roadmap created: 2026-02-15*
-*Last updated: 2026-02-17 — Phase 18 planned (3 plans in 2 waves)*
+*Last updated: 2026-02-17 — Phase 18 complete (3/3 plans, verified)*

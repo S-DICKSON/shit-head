@@ -29,9 +29,9 @@ Requirements for v2.0 milestone: UI improvements + Discord Activity integration.
 
 ### Discord Activity — Authentication
 
-- [ ] **DISC-04**: Discord SDK initializes and completes OAuth2 flow in Activity iframe
-- [ ] **DISC-05**: Server-side token exchange endpoint exchanges OAuth code for access token (client secret never exposed)
-- [ ] **DISC-06**: Discord user identity (username, avatar) used as player info in Discord mode
+- [x] **DISC-04**: Discord SDK initializes and completes OAuth2 flow in Activity iframe
+- [x] **DISC-05**: Server-side token exchange endpoint exchanges OAuth code for access token (client secret never exposed)
+- [x] **DISC-06**: Discord user identity (username, avatar) used as player info in Discord mode
 
 ### Discord Activity — Networking
 
@@ -95,9 +95,9 @@ Deferred to later milestones.
 | DISC-01 | Phase 17 | Complete |
 | DISC-02 | Phase 17 | Complete |
 | DISC-03 | Phase 17 | Complete |
-| DISC-04 | Phase 18 | Pending |
-| DISC-05 | Phase 18 | Pending |
-| DISC-06 | Phase 18 | Pending |
+| DISC-04 | Phase 18 | Complete |
+| DISC-05 | Phase 18 | Complete |
+| DISC-06 | Phase 18 | Complete |
 | DISC-07 | Phase 16 | Complete |
 | DISC-08 | Phase 16 | Complete |
 | DISC-09 | Phase 16 | Complete |
@@ -115,4 +115,4 @@ Deferred to later milestones.
 
 ---
 *Requirements defined: 2026-02-15*
-*Last updated: 2026-02-17 after Phase 17 completion*
+*Last updated: 2026-02-17 after Phase 18 completion*

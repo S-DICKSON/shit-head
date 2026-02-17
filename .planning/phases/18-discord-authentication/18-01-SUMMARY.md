@@ -69,7 +69,7 @@ Each task was committed atomically:
 1. **Task 1: Add /api/token POST endpoint to Bun server** - `d6b2fa6` (feat)
 2. **Task 2: Create .env.example files for Discord credentials** - `061d881` (chore)
 
-**Plan metadata:** (pending docs commit)
+**Plan metadata:** `cfdf8df` (docs: complete plan)
 
 ## Files Created/Modified
 - `packages/server/src/index.ts` - Added /api/token route between /health and /game-ws
