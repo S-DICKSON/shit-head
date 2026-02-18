@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 ## Current Position
 
 Phase: 19 of 23 (Discord Room Management) / 23 of 23 (Frontend Testing) — parallel execution
-Plan: 1 of 4 complete in phase 23; 5 of 6 complete in phase 19
-Status: In progress — Phase 23 Plan 01 complete; Phase 19 Plan 06 remaining
-Last activity: 2026-02-18 — Completed 23-01-PLAN.md (test foundation: mock factory, App.test.ts fix, platform detection tests)
+Plan: 1 of 4 complete in phase 23; 6 of 6 complete in phase 19 (awaiting human verification checkpoint)
+Status: In progress — Phase 19 awaiting checkpoint approval; Phase 23 Plan 01 complete
+Last activity: 2026-02-18 — Completed 19-06-PLAN.md (Task 1: DISCORD-SETUP.md production deployment + Phase 19 auto-join docs; all type checks/tests/lint pass)
 
-Progress: [████████░░] 18/23 phases complete (78% overall — Phases 19 and 23 in progress)
+Progress: [████████░░] 18/23 phases complete (78% overall — Phase 19 awaiting checkpoint, Phase 23 in progress)
 
 ## Performance Metrics
 
@@ -75,6 +75,8 @@ Recent decisions affecting v2.0 work:
 - getAvatarUrl uses BigInt(userId) % 5n for default avatar index to safely handle Discord snowflake IDs (19-05)
 - DiscordLobby auth failure: spinner persists indefinitely (no error screen) — locked decision from 19-CONTEXT.md (19-04)
 - joinOrCreate optional in RoomAdapter interface: WebRoomAdapter unchanged, Discord-only feature (19-04)
+- No cookies in server: /api/token returns JSON access_token only — cookie config (SameSite=None; Partitioned; Secure) documented for future reference (19-06)
+- instanceId-based auto-join is canonical Discord Activity room pattern: same voice channel = same instanceId = same room (19-06)
 
 ### Pending Todos
 
@@ -98,6 +100,6 @@ Web client UI fully updated: safe area, shithead marker, Discord avatars, specta
 ## Session Continuity
 
 Last session: 2026-02-18
-Stopped at: Completed 23-01-PLAN.md — test infrastructure foundation (mock factory, App.test.ts fix, platform detection/WebAuthAdapter tests)
+Stopped at: Completed 19-06-PLAN.md Task 1 — DISCORD-SETUP.md updated; paused at human-verify checkpoint for Phase 19 final verification
 Resume file: None
-Next: Execute 19-06-PLAN.md (Phase 19 final plan) or 23-02-PLAN.md (component tests)
+Next: Approve Phase 19 checkpoint (human verify manual testing items), then execute 23-02-PLAN.md (component tests)
