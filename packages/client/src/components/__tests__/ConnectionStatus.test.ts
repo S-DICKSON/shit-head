@@ -20,7 +20,8 @@ describe('ConnectionStatus.vue', () => {
     const s = useGameSocket() as any;
     s.connectionState.value = 'connected';
     s.connectionError.value = null;
-    vi.clearAllMocks();
+    // Reassign a fresh spy so clearMocks config doesn't break it
+    s.retryConnection = vi.fn();
   });
 
   it('does not render overlay when connected', () => {

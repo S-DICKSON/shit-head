@@ -18,7 +18,8 @@ describe('NotificationToast.vue', () => {
   beforeEach(() => {
     const s = useGameSocket() as any;
     s.notifications.value = [];
-    vi.clearAllMocks();
+    // Reassign a fresh spy so clearMocks config doesn't break it
+    s.dismissNotification = vi.fn();
   });
 
   it('renders nothing when no notifications', () => {
