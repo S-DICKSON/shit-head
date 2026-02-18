@@ -7,7 +7,7 @@ import { ref } from 'vue';
 // referenced by the module graph. In Docker/Bun single-thread mode the shared mock
 // must export everything that may be needed.
 vi.mock('@vueuse/core', () => ({
-  useDebounceFn: (fn: Function) => fn,
+  useDebounceFn: (fn: (...args: unknown[]) => unknown) => fn,
   useWebSocket: vi.fn(() => ({
     status: { value: 'OPEN' },
     data: { value: null },
