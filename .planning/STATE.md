@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 ## Current Position
 
 Phase: 19 of 23 (Discord Room Management) / 23 of 23 (Frontend Testing) — parallel execution
-Plan: 3 of 6 in phase 19 (Wave 3 in progress)
-Status: In progress — Wave 3 (19-03 complete, 19-04 and 19-05 parallel)
-Last activity: 2026-02-18 — Completed 19-03-PLAN.md (WebSocket handlers for Discord room management)
+Plan: 5 of 6 in phase 19 (Wave 3 in progress)
+Status: In progress — Wave 3 (19-03, 19-04, 19-05 complete; 19-06 remaining)
+Last activity: 2026-02-18 — Completed 19-05-PLAN.md (web client UI updates for Phase 19 features)
 
 Progress: [████████░░] 18/23 phases complete (78% overall — Phases 19 and 23 in progress)
 
@@ -66,6 +66,10 @@ Recent decisions affecting v2.0 work:
 - _newHostId prefix in setHostMigrationCallback: oldHostId used for removePlayerIndex, newHostId not needed (room.getState() reflects current host) (19-03)
 - Spectator check in handleClose placed before playerSockets.delete: early return ensures clean path separation (19-03)
 - Host migration wired in both start-game (in-game) and handleClose lobby paths via setHostMigrationCallback (19-03)
+- Safe area applied only at App.vue root (single point of truth): inner components use flex-1/h-full naturally (19-05)
+- Play-again button removed from Game.vue — server auto-returns after 5s via return-to-lobby message (19-05)
+- Discord avatar conditional uses !== undefined (not truthiness) — null is valid for web players using default Discord avatar (19-05)
+- getAvatarUrl uses BigInt(userId) % 5n for default avatar index to safely handle Discord snowflake IDs (19-05)
 
 ### Pending Todos
 
@@ -84,11 +88,11 @@ User setup required before Discord Activity testing:
 
 Server package (Room.ts, RoomManager.ts) now implements all new RoomState fields — server TypeScript errors resolved.
 WebSocket handlers now wire all Discord room lifecycle: join-or-create, host migration, spectator messaging, auto-return.
-Client packages will have TypeScript errors for new required RoomState fields until Plans 04-05 are executed (Wave 3 parallel).
+Web client UI fully updated: safe area, shithead marker, Discord avatars, spectator indicators, auto-return flow (plans 03-05 complete).
 
 ## Session Continuity
 
 Last session: 2026-02-18
-Stopped at: Completed 19-03-PLAN.md — WebSocket handlers for Discord room management
+Stopped at: Completed 19-05-PLAN.md — web client UI updates for Phase 19 features
 Resume file: None
-Next: Execute 19-04-PLAN.md and 19-05-PLAN.md (Wave 3 parallel — client-side Discord UI)
+Next: Execute 19-06-PLAN.md (Phase 19 final plan)
