@@ -132,10 +132,10 @@ Plans:
   2. Cards in hand show gray/disabled state when not playable
   3. Playability indicators work without hover (always visible on mobile)
   4. Highlights correctly handle Shithead's complex rules (7s, 8s invisibility, 2s reset pile)
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 21-01: TBD during planning
+- [ ] 21-01-PLAN.md — Client-side card rules, playability computed properties, and visual CSS highlights
 
 ### Phase 22: Mobile Card Categories
 **Goal**: Improve mobile UX with normal/power card category navigation and carousel for large hands
@@ -177,10 +177,10 @@ Phases execute in numeric order: 16 -> 17 -> 18 -> 19 -> 20 -> 21 -> 22 -> 23
 | 18. Discord Authentication | 4/4 | Complete | 2026-02-17 |
 | 19. Discord Room Management | 0/6 | Not started | - |
 | 20. Sound & Settings | 0/TBD | Not started | - |
-| 21. Card Playability Highlights | 0/TBD | Not started | - |
+| 21. Card Playability Highlights | 0/1 | Not started | - |
 | 22. Mobile Card Categories | 0/TBD | Not started | - |
 | 23. Frontend Testing | 0/4 | Not started | - |
 
 ---
 *Roadmap created: 2026-02-15*
-*Last updated: 2026-02-18 -- Phase 23 planned: 4 plans in 2 waves*
+*Last updated: 2026-02-18 -- Phase 21 planned: 1 plan in 1 wave*
