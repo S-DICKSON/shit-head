@@ -88,7 +88,7 @@ Plans:
 - [x] 18-04-PLAN.md — UAT gap closure: lazy-load Discord adapters, fix Dockerfile lockfiles, guard token endpoint
 
 ### Phase 19: Discord Room Management
-**Goal**: Complete Discord Activity integration with instance ID auto-join and production deployment
+**Goal**: Complete Discord Activity integration with instance ID auto-join, room lifecycle improvements, and production deployment
 **Depends on**: Phase 18
 **Requirements**: DISC-10, DISC-11, DISC-12, DISC-13, DISC-14, DISC-15
 **Success Criteria** (what must be TRUE):
@@ -98,10 +98,15 @@ Plans:
   4. Discord Activity deployed to production with HTTPS and URL mappings configured
   5. cloudflared tunnel setup documented for local Discord Activity testing
   6. Cookies (if introduced) use `SameSite=None; Partitioned; Secure` for Discord's third-party iframe context
-**Plans**: TBD
+**Plans**: 6 plans
 
 Plans:
-- [ ] 19-01: TBD during planning
+- [ ] 19-01-PLAN.md — Shared types and schemas (join-or-create, spectator-state, room state extensions)
+- [ ] 19-02-PLAN.md — Server room lifecycle (host migration, spectators, auto-return, shithead tracking)
+- [ ] 19-03-PLAN.md — Server WebSocket handlers (join-or-create handler, host migration broadcast, spectator messaging)
+- [ ] 19-04-PLAN.md — Discord client flow (DiscordLobby, auto-join, routing, spectator state in useGameSocket)
+- [ ] 19-05-PLAN.md — Cross-platform UI updates (safe area CSS, shithead marker, remove play-again, spectator indicators)
+- [ ] 19-06-PLAN.md — Deployment docs and final verification (DISCORD-SETUP.md, cookie config, full test suite)
 
 ### Phase 20: Sound & Settings
 **Goal**: Add sound mute toggle and host-configurable round time
@@ -158,11 +163,11 @@ Phases execute in numeric order: 16 -> 17 -> 18 -> 19 -> 20 -> 21 -> 22
 | 16. Networking Foundation | 5/5 | Complete | 2026-02-16 |
 | 17. Platform Abstraction | 2/2 | Complete | 2026-02-17 |
 | 18. Discord Authentication | 4/4 | Complete | 2026-02-17 |
-| 19. Discord Room Management | 0/TBD | Not started | - |
+| 19. Discord Room Management | 0/6 | Not started | - |
 | 20. Sound & Settings | 0/TBD | Not started | - |
 | 21. Card Playability Highlights | 0/TBD | Not started | - |
 | 22. Mobile Card Categories | 0/TBD | Not started | - |
 
 ---
 *Roadmap created: 2026-02-15*
-*Last updated: 2026-02-17 -- Phase 18 complete (all gaps closed, verified)*
+*Last updated: 2026-02-18 -- Phase 19 planned (6 plans in 4 waves)*
