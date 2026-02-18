@@ -30,26 +30,20 @@
             >
               ?
             </button>
-            <!-- Face-up card (top layer, overlays the face-down) -->
-            <button
+
+            <!-- Face-up card (top layer) — uses PlayingCard tilt component -->
+            <div
               v-if="i <= faceUp.length"
-              class="absolute inset-0 w-14 h-21 sm:w-16 sm:h-24 bg-white text-black rounded border-2 flex flex-col items-center justify-center text-xs sm:text-sm transition-all"
-              :class="[
-                selectedFaceUpIndex === (i - 1)
-                  ? 'ring-2 ring-yellow-400 -translate-y-2 border-yellow-400 shadow-lg'
-                  : 'border-gray-300',
-                activeSource !== 'face-up'
-                  ? 'opacity-40 cursor-not-allowed'
-                  : 'cursor-pointer hover:border-gray-400'
-              ]"
+              class="absolute inset-0"
               :style="{ zIndex: 1 }"
-              @click="$emit('select-face-up', i - 1)"
             >
-              <span class="font-bold">{{ faceUp[i - 1].kind === 'standard' ? faceUp[i - 1].rank : 'JKR' }}</span>
-              <span :class="suitColor(faceUp[i - 1])">
-                {{ faceUp[i - 1].kind === 'standard' ? suitSymbol(faceUp[i - 1].suit) : '★' }}
-              </span>
-            </button>
+              <PlayingCard
+                :card="faceUp[i - 1]"
+                :selected="selectedFaceUpIndex === (i - 1)"
+                :disabled="activeSource !== 'face-up'"
+                @click="$emit('select-face-up', i - 1)"
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -73,13 +67,11 @@
             :key="group.rank"
             class="bg-gray-800/50 rounded-lg p-2 flex items-center gap-3"
           >
-            <!-- Sample card visual -->
-            <div class="w-10 h-15 bg-white text-black rounded border-2 border-gray-300 flex flex-col items-center justify-center text-xs flex-shrink-0">
-              <span class="font-bold">{{ group.rank }}</span>
-              <span :class="suitColor(group.cards[0])">
-                {{ group.cards[0].kind === 'standard' ? suitSymbol(group.cards[0].suit) : '★' }}
-              </span>
-            </div>
+            <!-- Sample card visual — uses PlayingCard tilt component -->
+            <PlayingCard
+              :card="group.cards[0]"
+              :disabled="activeSource !== 'hand' || !isMyTurn"
+            />
 
             <!-- Rank label -->
             <div class="flex-1 text-sm text-green-200">
@@ -109,32 +101,21 @@
           </div>
         </div>
 
-        <!-- Desktop/small hand view (normal card buttons) -->
+        <!-- Desktop/small hand view -->
         <TransitionGroup
           v-else
           name="card-list"
           tag="div"
           class="flex justify-center gap-1 sm:gap-2 flex-wrap"
         >
-          <button
+          <PlayingCard
             v-for="(card, i) in hand"
             :key="cardKey(card)"
-            class="w-14 h-21 sm:w-16 sm:h-24 bg-white text-black rounded border-2 flex flex-col items-center justify-center text-xs sm:text-sm transition-all"
-            :class="[
-              selectedHandIndices.has(i)
-                ? 'ring-2 ring-yellow-400 -translate-y-2 border-yellow-400 shadow-lg'
-                : 'border-gray-300',
-              activeSource !== 'hand'
-                ? 'opacity-40 cursor-not-allowed'
-                : 'cursor-pointer hover:border-gray-400'
-            ]"
+            :card="card"
+            :selected="selectedHandIndices.has(i)"
+            :disabled="activeSource !== 'hand'"
             @click="$emit('toggle-hand-card', i)"
-          >
-            <span class="font-bold">{{ card.kind === 'standard' ? card.rank : 'JKR' }}</span>
-            <span :class="suitColor(card)">
-              {{ card.kind === 'standard' ? suitSymbol(card.suit) : '★' }}
-            </span>
-          </button>
+          />
         </TransitionGroup>
       </div>
     </div>
@@ -176,6 +157,7 @@ import type { Card } from '@shit-head/shared';
 import { computed, ref, onMounted, onUnmounted } from 'vue';
 import { useDoubleTap } from '../composables/useDoubleTap';
 import { useCardGrouping } from '../composables/useCardGrouping';
+import PlayingCard from './PlayingCard.vue';
 
 const props = defineProps<{
   hand: Card[];
@@ -241,27 +223,11 @@ function handleGroupedPlay() {
   clearGroupSelection();
 }
 
-// Helper: suit symbol
-function suitSymbol(suit: string): string {
-  const symbols: Record<string, string> = {
-    hearts: '\u2665',
-    diamonds: '\u2666',
-    clubs: '\u2663',
-    spades: '\u2660',
-  };
-  return symbols[suit] ?? suit;
-}
-
-// Helper: suit color
-function suitColor(card: Card): string {
-  if (card.kind === 'joker') return 'text-purple-600';
-  return ['hearts', 'diamonds'].includes(card.suit) ? 'text-red-600' : 'text-black';
-}
-
 // Helper: stable card key for TransitionGroup
 function cardKey(card: Card): string {
   return card.kind === 'standard' ? `${card.suit}-${card.rank}` : `joker-${card.id}`;
 }
+
 </script>
 
 <style scoped>

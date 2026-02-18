@@ -5,7 +5,6 @@
   "compilerOptions": {
     "composite": true,
     "tsBuildInfoFile": "./tsconfig.app.tsbuildinfo",
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
     }
