@@ -56,6 +56,10 @@ Recent decisions affecting v2.0 work:
 - reconnectSchema roomCode widened to min(1).max(100): reconnect works for Discord Activity sessions (19-01)
 - spectatorStateSchema omits hand data: spectators get only public game view (19-01)
 - avatarHash fields nullable optional: null for web players, hash string for Discord users — backward compatible (19-01)
+- onHostMigrated dedicated callback (not reusing onPlayerRemoved): cleaner handler semantics for host migration (19-02)
+- autoReturnToLobby() separate from resetToLobby(): former promotes spectators, latter keeps play-again-only-players flow (19-02)
+- Spectator limit: maxPlayers + 4 — up to 8 in room (4 playing, 4 watching) (19-02)
+- removePlayer() returns false on host migration (room continues), true only for empty room destroy (19-02)
 - Singleton mock test pattern: reassign vi.fn() in beforeEach (not vi.clearAllMocks()) — clearMocks:true config resets spies on cached objects (23-02)
 - ConnectionStatus overlay test: find('.fixed').exists() — Vue Transition renders no DOM when v-if false (23-02)
 - NotificationToast element selector: find('[class*="rounded-lg"]') — partial class match for Tailwind multi-class bindings (23-02)
@@ -75,7 +79,8 @@ User setup required before Discord Activity testing:
 - Discord Developer Portal credentials needed (DISCORD_CLIENT_ID, DISCORD_CLIENT_SECRET, VITE_DISCORD_CLIENT_ID)
 - See .planning/phases/18-discord-authentication/18-01-USER-SETUP.md
 
-Server and client packages will have TypeScript errors for new required RoomState fields (spectatorCount, shitheadPlayerId) until Plans 02-05 are executed.
+Server package (Room.ts, RoomManager.ts) now implements all new RoomState fields — server TypeScript errors resolved.
+Client packages will have TypeScript errors for new required RoomState fields until Plans 03-05 are executed.
 
 ## Session Continuity
 
