@@ -73,7 +73,9 @@ withDefaults(defineProps<Props>(), {
 
 function getAvatarUrl(avatarHash: string | null | undefined, userId: string, size = 48): string {
   if (!avatarHash) {
-    const defaultIndex = Number(BigInt(userId) % 5n);
+    let hash = 0;
+    for (let i = 0; i < userId.length; i++) hash = (hash * 31 + userId.charCodeAt(i)) | 0;
+    const defaultIndex = ((hash % 5) + 5) % 5;
     return `https://cdn.discordapp.com/embed/avatars/${defaultIndex}.png`;
   }
   const extension = avatarHash.startsWith('a_') ? 'gif' : 'webp';
