@@ -118,10 +118,12 @@ Plans:
   2. Mute preference persists across sessions (localStorage)
   3. Host can configure round time (30s, 45s, 60s) in lobby before game starts
   4. Configured round time applies to all players' turn timers in that room
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 20-01: TBD during planning
+- [ ] 20-01-PLAN.md — Sound mute toggle (composable + MuteButton component + tests)
+- [ ] 20-02-PLAN.md — Shared types + server round time (RoomState, Room.setRoundTime, handler)
+- [ ] 20-03-PLAN.md — Client round time integration (lobby selectors, TurnTimer, MuteButton in PlayingPhase)
 
 ### Phase 21: Card Playability Highlights
 **Goal**: Show visual indicators for which cards are valid to play
