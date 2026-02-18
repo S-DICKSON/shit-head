@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 ## Current Position
 
 Phase: 19 of 23 (Discord Room Management) / 23 of 23 (Frontend Testing) — parallel execution
-Plan: 1 of 4 complete in phase 23; 6 of 6 complete in phase 19 (awaiting human verification checkpoint)
-Status: In progress — Phase 19 awaiting checkpoint approval; Phase 23 Plan 01 complete
-Last activity: 2026-02-18 — Completed 19-06-PLAN.md (Task 1: DISCORD-SETUP.md production deployment + Phase 19 auto-join docs; all type checks/tests/lint pass)
+Plan: 3 of 4 complete in phase 23; 6 of 6 complete in phase 19 (awaiting human verification checkpoint)
+Status: In progress — Phase 19 awaiting checkpoint approval; Phase 23 Plans 01-03 complete
+Last activity: 2026-02-18 — Completed 23-03-PLAN.md (Landing + Lobby component tests; 22 new tests, all pass, lint clean)
 
 Progress: [████████░░] 18/23 phases complete (78% overall — Phase 19 awaiting checkpoint, Phase 23 in progress)
 
@@ -63,6 +63,9 @@ Recent decisions affecting v2.0 work:
 - Singleton mock test pattern: reassign vi.fn() in beforeEach (not vi.clearAllMocks()) — clearMocks:true config resets spies on cached objects (23-02)
 - ConnectionStatus overlay test: find('.fixed').exists() — Vue Transition renders no DOM when v-if false (23-02)
 - NotificationToast element selector: find('[class*="rounded-lg"]') — partial class match for Tailwind multi-class bindings (23-02)
+- Landing room code input test: set inputEl.value then trigger('input') — handleRoomCodeInput reads event.target.value not v-model (23-03)
+- Lobby RoomCode child stub: stubs: { RoomCode: true } — display-only child not under test in Lobby tests (23-03)
+- createTestRouter: no unused params to satisfy @typescript-eslint/no-unused-vars (23-03)
 - App.test.ts: use real router plugin (not global.stubs) to avoid Bun WeakMap error; assert bg-green-900 not min-h-screen (Tailwind v4 converts to inline style in Docker) (23-01)
 - dangerouslyIgnoreUnhandledErrors: true in vitest config — suppresses Bun/jsdom WebSocket connection noise from make test-client exit code (23-01)
 - createMockSocket factory at src/test/mocks/useGameSocket.mock.ts — canonical shape reference; test files inline vi.mock factories (no top-level await in factory) (23-01)
@@ -100,6 +103,6 @@ Web client UI fully updated: safe area, shithead marker, Discord avatars, specta
 ## Session Continuity
 
 Last session: 2026-02-18
-Stopped at: Completed 19-06-PLAN.md Task 1 — DISCORD-SETUP.md updated; paused at human-verify checkpoint for Phase 19 final verification
+Stopped at: Completed 23-03-PLAN.md — Landing + Lobby tests (22 tests, all pass)
 Resume file: None
-Next: Approve Phase 19 checkpoint (human verify manual testing items), then execute 23-02-PLAN.md (component tests)
+Next: Execute 23-04-PLAN.md (Game view tests)
