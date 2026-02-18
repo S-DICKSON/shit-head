@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 
 ## Current Position
 
-Phase: 18 of 22 (Discord Authentication)
-Plan: 4 of 4 in phase (gap closure plan)
-Status: Phase complete — all UAT gaps closed
-Last activity: 2026-02-17 — Completed 18-04-PLAN.md (UAT gap closure: dynamic import, Dockerfile lockfile, /api/token 400)
+Phase: 19 of 22 (Discord Room Management)
+Plan: 1 of 6 in phase
+Status: In progress
+Last activity: 2026-02-18 — Completed 19-01-PLAN.md (shared types: join-or-create, spectator, avatarHash, shitheadPlayerId)
 
-Progress: [████████░░] 18/22 phases complete (82% overall)
+Progress: [████████░░] 18/22 phases complete (82% overall — Phase 19 in progress)
 
 ## Performance Metrics
 
@@ -25,9 +25,9 @@ Progress: [████████░░] 18/22 phases complete (82% overall)
 - Quick tasks completed: 20
 
 **v2.0 Velocity:**
-- Total plans completed: 10
-- Average duration: 2.9 minutes
-- Total execution time: 0.48 hours
+- Total plans completed: 11
+- Average duration: 2.8 minutes
+- Total execution time: 0.51 hours
 
 ## Accumulated Context
 
@@ -52,11 +52,19 @@ Recent decisions affecting v2.0 work:
 - Discord SDK: dynamic import() via top-level await in main.ts — never static import in barrel (18-04)
 - Dockerfile lockfile: bun.lock* glob (not bun.lockb*) — repo uses text format lockfile (18-04)
 - /api/token: inner SyntaxError catch returns 400; outer catch still handles unexpected 500 errors (18-04)
+- roomStateSchema code widened to min(1).max(100): supports Discord instanceIds alongside 6-char web codes (19-01)
+- reconnectSchema roomCode widened to min(1).max(100): reconnect works for Discord Activity sessions (19-01)
+- spectatorStateSchema omits hand data: spectators get only public game view (19-01)
+- avatarHash fields nullable optional: null for web players, hash string for Discord users — backward compatible (19-01)
 
 ### Pending Todos
 
 1 pending — `/gsd:check-todos` to review
 - Add debug gamestate dev tooling (tooling)
+
+### Roadmap Evolution
+
+- Phase 23 added: Frontend Testing — Vue component and integration tests for the client package
 
 ### Blockers/Concerns
 
@@ -64,9 +72,11 @@ User setup required before Discord Activity testing:
 - Discord Developer Portal credentials needed (DISCORD_CLIENT_ID, DISCORD_CLIENT_SECRET, VITE_DISCORD_CLIENT_ID)
 - See .planning/phases/18-discord-authentication/18-01-USER-SETUP.md
 
+Server and client packages will have TypeScript errors for new required RoomState fields (spectatorCount, shitheadPlayerId) until Plans 02-05 are executed.
+
 ## Session Continuity
 
-Last session: 2026-02-17
-Stopped at: Completed 18-04-PLAN.md — Phase 18 UAT gaps fully closed
+Last session: 2026-02-18
+Stopped at: Completed 19-01-PLAN.md — Phase 19 shared type contracts established
 Resume file: None
-Next: `/gsd:plan-phase 19`
+Next: Execute 19-02-PLAN.md (server room management)
