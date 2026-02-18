@@ -24,6 +24,8 @@ const {
   forcedCardIndices,
   activeSource,
   hasSelection,
+  playableHandIndices,
+  playableFaceUpIndices,
   toggleHandCard,
   selectFaceUpCard,
   selectFaceDownCard,
@@ -127,6 +129,8 @@ watch(
         :is-my-turn="isMyTurn"
         :active-source="activeSource"
         :has-selection="hasSelection"
+        :playable-hand-indices="playableHandIndices"
+        :playable-face-up-indices="playableFaceUpIndices"
         @toggle-hand-card="toggleHandCard"
         @select-face-up="selectFaceUpCard"
         @select-face-down="selectFaceDownCard"
