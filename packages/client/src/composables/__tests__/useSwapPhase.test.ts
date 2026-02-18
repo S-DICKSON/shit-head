@@ -1,9 +1,20 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ref } from 'vue';
 
-// Mock useDebounceFn to execute immediately (no debounce in tests)
+// Mock useDebounceFn to execute immediately (no debounce in tests).
+// useWebSocket must also be included because useGameSocket.ts imports it from @vueuse/core;
+// even though useGameSocket is mocked separately, Vitest validates all named exports
+// referenced by the module graph. In Docker/Bun single-thread mode the shared mock
+// must export everything that may be needed.
 vi.mock('@vueuse/core', () => ({
   useDebounceFn: (fn: Function) => fn,
+  useWebSocket: vi.fn(() => ({
+    status: { value: 'OPEN' },
+    data: { value: null },
+    send: vi.fn(),
+    close: vi.fn(),
+    open: vi.fn(),
+  })),
 }));
 
 // vi.mock is hoisted before all imports — must be declared before any import of the mocked module
