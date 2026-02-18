@@ -35,7 +35,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 20: Sound & Settings** - Mute toggle and host-configurable round time
 - [ ] **Phase 21: Card Playability Highlights** - Visual indicators for valid plays
 - [ ] **Phase 22: Mobile Card Categories** - Normal/power card navigation for large hands
-- [ ] **Phase 23: Frontend Testing** - Vue component and integration tests for the client package
+- [x] **Phase 23: Frontend Testing** - Vue component and integration tests for the client package
 
 ## Phase Details
 
@@ -162,10 +162,10 @@ Plans:
 **Plans**: 4 plans
 
 Plans:
-- [ ] 23-01-PLAN.md — Test infrastructure, fix App.test.ts, platform detection + WebAuthAdapter tests
-- [ ] 23-02-PLAN.md — ConnectionStatus and NotificationToast component tests
-- [ ] 23-03-PLAN.md — Landing and Lobby view component tests
-- [ ] 23-04-PLAN.md — usePlayingPhase and useSwapPhase composable tests
+- [x] 23-01-PLAN.md — Test infrastructure, fix App.test.ts, platform detection + WebAuthAdapter tests
+- [x] 23-02-PLAN.md — ConnectionStatus and NotificationToast component tests
+- [x] 23-03-PLAN.md — Landing and Lobby view component tests
+- [x] 23-04-PLAN.md — usePlayingPhase and useSwapPhase composable tests
 
 ## Progress
 
@@ -181,8 +181,8 @@ Phases execute in numeric order: 16 -> 17 -> 18 -> 19 -> 20 -> 21 -> 22 -> 23
 | 20. Sound & Settings | 0/TBD | Not started | - |
 | 21. Card Playability Highlights | 0/1 | Not started | - |
 | 22. Mobile Card Categories | 0/TBD | Not started | - |
-| 23. Frontend Testing | 0/4 | Not started | - |
+| 23. Frontend Testing | 4/4 | Complete | 2026-02-18 |
 
 ---
 *Roadmap created: 2026-02-15*
-*Last updated: 2026-02-18 -- Phase 22 planned: 1 plan in 1 wave*
+*Last updated: 2026-02-18 -- Phase 23 complete: 4 plans, 122 tests*
