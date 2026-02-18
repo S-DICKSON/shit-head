@@ -106,6 +106,32 @@ Click "Save Changes".
 
 The Activity should load in the Discord iframe, with full API and WebSocket connectivity through the `/.proxy` paths.
 
+## Discord Room Management (Phase 19)
+
+### How Auto-Join Works
+
+1. All players in the same Discord voice channel who launch the Activity share the same `instanceId`
+2. The client sends `join-or-create` with the `instanceId` as the room key
+3. First player creates the room; subsequent players join the existing room
+4. If a game is already in progress, late joiners become spectators
+5. When the game ends, all players (including spectators) return to the lobby
+
+### Instance ID Behavior
+
+- `instanceId` is stable when multiple players are in the Activity
+- If a solo player pops out the Activity, `instanceId` may change (they get a new room)
+- This is expected Discord SDK behavior (GitHub issue #202)
+
+### Testing Discord Auto-Join Locally
+
+1. Start the dev environment: `make dev-discord`
+2. Note the cloudflared tunnel URL from the output
+3. Update Discord Developer Portal URL mappings to point to the tunnel URL
+4. Open Discord, join a voice channel
+5. Launch the Activity — you should auto-join a lobby with no manual steps
+6. Have a second account open the Activity in the same voice channel
+7. They should appear in the same lobby automatically
+
 ## Manual Testing Checklist
 
 After launching the Activity in Discord, verify the following:
@@ -181,6 +207,40 @@ When deploying to production:
   - Discord Activities require HTTPS
   - Ensure SSL certificate is valid and active
   - Test Activity loads without mixed content warnings
+
+## Production Deployment
+
+### Environment Variables
+
+Set these in your hosting provider (Render):
+
+| Variable | Where | Value |
+|----------|-------|-------|
+| `DISCORD_CLIENT_ID` | Server | From Discord Developer Portal |
+| `DISCORD_CLIENT_SECRET` | Server | From Discord Developer Portal |
+| `VITE_DISCORD_CLIENT_ID` | Client build | Same as DISCORD_CLIENT_ID |
+
+### Discord Developer Portal Configuration
+
+1. Go to Applications -> Your App -> Activities
+2. Under URL Mappings, configure:
+   - **Root mapping**: Prefix `/` -> Target `your-production-domain.com`
+   - **Proxy mapping**: Prefix `/.proxy` -> Target `your-production-domain.com/.proxy`
+3. Under Supported Platforms, enable Desktop and Web
+
+### Cookie Configuration
+
+If your server introduces cookies (session, auth), configure them for Discord's third-party iframe context:
+
+```
+Set-Cookie: name=value; SameSite=None; Partitioned; Secure; Path=/
+```
+
+- `SameSite=None` — required for cross-origin iframe (Discord embeds your app)
+- `Partitioned` — required by Chrome's third-party cookie deprecation (CHIPS)
+- `Secure` — required when using SameSite=None
+
+Currently, the Shithead server does NOT use cookies. Discord auth uses memory-only access tokens (see `packages/server/src/index.ts` `/api/token` endpoint). This section is for future reference if cookies are added.
 
 ## Troubleshooting
 
