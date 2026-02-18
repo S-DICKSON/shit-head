@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-02-15)
 
 **Core value:** Friends can play a complete, rule-accurate game of Shithead together online with zero friction
-**Current focus:** v2.0 Phase 19 - Discord Room Management
+**Current focus:** v2.0 Phase 23 - Frontend Testing
 
 ## Current Position
 
-Phase: 19 of 22 (Discord Room Management)
-Plan: 1 of 6 in phase
+Phase: 23 of 23 (Frontend Testing)
+Plan: 2 of 4 in phase
 Status: In progress
-Last activity: 2026-02-18 — Completed 19-01-PLAN.md (shared types: join-or-create, spectator, avatarHash, shitheadPlayerId)
+Last activity: 2026-02-18 — Completed 23-02-PLAN.md (ConnectionStatus + NotificationToast component tests)
 
 Progress: [████████░░] 18/22 phases complete (82% overall — Phase 19 in progress)
 
@@ -56,6 +56,9 @@ Recent decisions affecting v2.0 work:
 - reconnectSchema roomCode widened to min(1).max(100): reconnect works for Discord Activity sessions (19-01)
 - spectatorStateSchema omits hand data: spectators get only public game view (19-01)
 - avatarHash fields nullable optional: null for web players, hash string for Discord users — backward compatible (19-01)
+- Singleton mock test pattern: reassign vi.fn() in beforeEach (not vi.clearAllMocks()) — clearMocks:true config resets spies on cached objects (23-02)
+- ConnectionStatus overlay test: find('.fixed').exists() — Vue Transition renders no DOM when v-if false (23-02)
+- NotificationToast element selector: find('[class*="rounded-lg"]') — partial class match for Tailwind multi-class bindings (23-02)
 
 ### Pending Todos
 
@@ -77,6 +80,6 @@ Server and client packages will have TypeScript errors for new required RoomStat
 ## Session Continuity
 
 Last session: 2026-02-18
-Stopped at: Completed 19-01-PLAN.md — Phase 19 shared type contracts established
+Stopped at: Completed 23-02-PLAN.md — ConnectionStatus and NotificationToast component tests
 Resume file: None
-Next: Execute 19-02-PLAN.md (server room management)
+Next: Execute 23-03-PLAN.md (LobbyView component tests)
