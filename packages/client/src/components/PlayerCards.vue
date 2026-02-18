@@ -37,7 +37,11 @@
               :class="[
                 selectedFaceUpIndex === (i - 1)
                   ? 'ring-2 ring-yellow-400 -translate-y-2 border-yellow-400 shadow-lg'
-                  : 'border-gray-300',
+                  : playableFaceUpIndices.size > 0 && playableFaceUpIndices.has(i - 1)
+                    ? 'border-green-400 shadow-md shadow-green-400/40'
+                    : playableFaceUpIndices.size > 0
+                      ? 'border-gray-400 opacity-50'
+                      : 'border-gray-300',
                 activeSource !== 'face-up'
                   ? 'opacity-40 cursor-not-allowed'
                   : 'cursor-pointer hover:border-gray-400'
@@ -71,10 +75,24 @@
           <div
             v-for="group in groupedCards"
             :key="group.rank"
-            class="bg-gray-800/50 rounded-lg p-2 flex items-center gap-3"
+            class="rounded-lg p-2 flex items-center gap-3 transition-all"
+            :class="[
+              isGroupPlayable(group.indices)
+                ? 'bg-gray-800/50 ring-1 ring-green-400 shadow-sm shadow-green-400/30'
+                : playableHandIndices.size > 0
+                  ? 'bg-gray-800/50 opacity-50'
+                  : 'bg-gray-800/50'
+            ]"
           >
             <!-- Sample card visual -->
-            <div class="w-10 h-15 bg-white text-black rounded border-2 border-gray-300 flex flex-col items-center justify-center text-xs flex-shrink-0">
+            <div
+              class="w-10 h-15 bg-white text-black rounded border-2 flex flex-col items-center justify-center text-xs flex-shrink-0"
+              :class="[
+                isGroupPlayable(group.indices)
+                  ? 'border-green-400'
+                  : 'border-gray-300'
+              ]"
+            >
               <span class="font-bold">{{ group.rank }}</span>
               <span :class="suitColor(group.cards[0])">
                 {{ group.cards[0].kind === 'standard' ? suitSymbol(group.cards[0].suit) : '★' }}
@@ -123,7 +141,11 @@
             :class="[
               selectedHandIndices.has(i)
                 ? 'ring-2 ring-yellow-400 -translate-y-2 border-yellow-400 shadow-lg'
-                : 'border-gray-300',
+                : playableHandIndices.size > 0 && playableHandIndices.has(i)
+                  ? 'border-green-400 shadow-md shadow-green-400/40'
+                  : playableHandIndices.size > 0
+                    ? 'border-gray-400 opacity-50'
+                    : 'border-gray-300',
               activeSource !== 'hand'
                 ? 'opacity-40 cursor-not-allowed'
                 : 'cursor-pointer hover:border-gray-400'
@@ -186,6 +208,8 @@ const props = defineProps<{
   isMyTurn: boolean;
   activeSource: 'hand' | 'face-up' | 'face-down';
   hasSelection: boolean;
+  playableHandIndices: Set<number>;
+  playableFaceUpIndices: Set<number>;
 }>();
 
 const emit = defineEmits<{
@@ -239,6 +263,12 @@ const shouldShowGrouped = computed(() => isMobile.value && props.hand.length > 5
 function handleGroupedPlay() {
   emit('play-grouped-cards', selectedIndices.value);
   clearGroupSelection();
+}
+
+// Helper: check if any card in a group is playable (index-based to avoid JKR vs joker mismatch)
+function isGroupPlayable(groupIndices: number[]): boolean {
+  if (props.playableHandIndices.size === 0) return false;
+  return groupIndices.some(i => props.playableHandIndices.has(i));
 }
 
 // Helper: suit symbol
