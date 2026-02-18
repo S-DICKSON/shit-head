@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 ## Current Position
 
 Phase: 19 of 23 (Discord Room Management) / 23 of 23 (Frontend Testing) — parallel execution
-Plan: 3 of 4 complete in phase 23; 6 of 6 complete in phase 19 (awaiting human verification checkpoint)
-Status: In progress — Phase 19 awaiting checkpoint approval; Phase 23 Plans 01-03 complete
-Last activity: 2026-02-18 — Completed 23-03-PLAN.md (Landing + Lobby component tests; 22 new tests, all pass, lint clean)
+Plan: 4 of 4 complete in phase 23 (PHASE COMPLETE); 6 of 6 complete in phase 19 (awaiting human verification checkpoint)
+Status: Phase 23 complete; Phase 19 awaiting checkpoint approval
+Last activity: 2026-02-18 — Completed 23-04-PLAN.md (usePlayingPhase + useSwapPhase tests; 31 new tests, 122 total pass, lint clean)
 
-Progress: [████████░░] 18/23 phases complete (78% overall — Phase 19 awaiting checkpoint, Phase 23 in progress)
+Progress: [█████████░] 22/23 phases complete (96% overall — Phase 19 awaiting checkpoint)
 
 ## Performance Metrics
 
@@ -61,6 +61,8 @@ Recent decisions affecting v2.0 work:
 - Spectator limit: maxPlayers + 4 — up to 8 in room (4 playing, 4 watching) (19-02)
 - removePlayer() returns false on host migration (room continues), true only for empty room destroy (19-02)
 - Singleton mock test pattern: reassign vi.fn() in beforeEach (not vi.clearAllMocks()) — clearMocks:true config resets spies on cached objects (23-02)
+- Mock @vueuse/core for useDebounceFn must also export useWebSocket stub — Docker/Bun single-thread shares mocks across files; missing export causes full suite failure (23-04)
+- useDebounceFn mocked as identity (fn) => fn — makes swap sends synchronous for test assertions without fake timers (23-04)
 - ConnectionStatus overlay test: find('.fixed').exists() — Vue Transition renders no DOM when v-if false (23-02)
 - NotificationToast element selector: find('[class*="rounded-lg"]') — partial class match for Tailwind multi-class bindings (23-02)
 - Landing room code input test: set inputEl.value then trigger('input') — handleRoomCodeInput reads event.target.value not v-model (23-03)
@@ -102,7 +104,7 @@ Web client UI fully updated: safe area, shithead marker, Discord avatars, specta
 
 ## Session Continuity
 
-Last session: 2026-02-18
-Stopped at: Completed 23-03-PLAN.md — Landing + Lobby tests (22 tests, all pass)
+Last session: 2026-02-18T20:35:03Z
+Stopped at: Completed 23-04-PLAN.md — usePlayingPhase + useSwapPhase tests (31 tests, 122 total, all pass). Phase 23 complete.
 Resume file: None
-Next: Execute 23-04-PLAN.md (Game view tests)
+Next: Approve Phase 19 checkpoint (human verify manual testing items)
