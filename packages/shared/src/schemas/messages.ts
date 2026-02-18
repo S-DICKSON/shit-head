@@ -8,15 +8,18 @@ const lobbyPlayerSchema = z.object({
   id: z.string(),
   nickname: z.string(),
   isHost: z.boolean(),
+  avatarHash: z.string().nullable().optional(), // Discord avatar hash, null for web players
 });
 
 const roomStateSchema: z.ZodType<RoomState> = z.object({
-  code: z.string().length(6),
+  code: z.string().min(1).max(100), // Supports both 6-char web codes and Discord instanceIds
   players: z.array(lobbyPlayerSchema),
   status: z.enum(['waiting', 'countdown', 'playing']),
   hostId: z.string(),
   maxPlayers: z.literal(4),
   minPlayers: z.literal(2),
+  spectatorCount: z.number().int().min(0),
+  shitheadPlayerId: z.string().nullable(),
 });
 
 // Card schemas (Phase 3: Deck & Dealing)
@@ -46,6 +49,8 @@ const opponentViewSchema: z.ZodType<OpponentView> = z.object({
   faceDownCount: z.number(),
   faceUp: z.array(cardSchema),
   handCount: z.number(),
+  isShithead: z.boolean().optional(),             // Previous game's loser gets the poo emoji
+  avatarHash: z.string().nullable().optional(),   // Discord avatar hash for gameplay display
 });
 
 // Client-to-server message schemas
@@ -94,7 +99,7 @@ export const playFaceDownSchema = z.object({
 
 export const reconnectSchema = z.object({
   type: z.literal('reconnect'),
-  roomCode: z.string().length(6),
+  roomCode: z.string().min(1).max(100), // Supports both 6-char web codes and Discord instanceIds
 });
 
 export const renamePlayerSchema = z.object({
@@ -104,6 +109,13 @@ export const renamePlayerSchema = z.object({
 
 export const playAgainSchema = z.object({
   type: z.literal('play-again'),
+});
+
+export const joinOrCreateSchema = z.object({
+  type: z.literal('join-or-create'),
+  instanceId: z.string().min(1).max(100),
+  nickname: z.string().min(1).max(20).trim(),
+  avatarHash: z.string().nullable().optional(),
 });
 
 export const clientMessageSchema = z.discriminatedUnion('type', [
@@ -119,6 +131,7 @@ export const clientMessageSchema = z.discriminatedUnion('type', [
   reconnectSchema,
   renamePlayerSchema,
   playAgainSchema,
+  joinOrCreateSchema,
 ]);
 
 // Server-to-client message schemas
@@ -294,6 +307,21 @@ export const errorSchema = z.object({
   ]),
 });
 
+export const spectatorStateSchema = z.object({
+  type: z.literal('spectator-state'),
+  room: roomStateSchema,
+  playerId: z.string(),
+  discardPile: z.array(cardSchema),
+  opponents: z.array(opponentViewSchema),
+  drawPileCount: z.number(),
+  currentPlayerIndex: z.number(),
+});
+
+export const spectatorCountSchema = z.object({
+  type: z.literal('spectator-count'),
+  count: z.number().int().min(0),
+});
+
 export const serverMessageSchema = z.discriminatedUnion('type', [
   roomCreatedSchema,
   roomJoinedSchema,
@@ -317,4 +345,6 @@ export const serverMessageSchema = z.discriminatedUnion('type', [
   gameOverSchema,
   returnToLobbySchema,
   errorSchema,
+  spectatorStateSchema,
+  spectatorCountSchema,
 ]);
