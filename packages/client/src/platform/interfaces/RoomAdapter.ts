@@ -27,4 +27,14 @@ export interface RoomAdapter {
    * Leave the current room.
    */
   leaveRoom(): void;
+
+  /**
+   * Join or create a room using an instance ID (Discord only).
+   * Creates the room if it doesn't exist, joins if it does.
+   *
+   * @param instanceId - Discord Activity instance ID
+   * @param nickname - Player's display name
+   * @param avatarHash - Optional Discord avatar hash
+   */
+  joinOrCreate?(instanceId: string, nickname: string, avatarHash?: string | null): void;
 }

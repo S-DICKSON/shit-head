@@ -53,4 +53,22 @@ export class DiscordRoomAdapter implements RoomAdapter {
   leaveRoom(): void {
     this.socket.send({ type: 'leave-room' });
   }
+
+  /**
+   * Join or create a room using Discord instanceId.
+   * Server creates room if it doesn't exist, joins if it does.
+   * If game in progress, server adds as spectator.
+   *
+   * @param instanceId - Discord Activity instance ID (room key)
+   * @param nickname - Player's Discord display name
+   * @param avatarHash - Player's Discord avatar hash
+   */
+  joinOrCreate(instanceId: string, nickname: string, avatarHash?: string | null): void {
+    this.socket.send({
+      type: 'join-or-create',
+      instanceId,
+      nickname,
+      avatarHash: avatarHash ?? null,
+    });
+  }
 }

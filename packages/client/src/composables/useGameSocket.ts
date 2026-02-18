@@ -1,6 +1,6 @@
 import { ref, watch, effectScope } from 'vue';
 import { useWebSocket } from '@vueuse/core';
-import type { ClientMessage, ServerMessage, RoomState, PlayerGameView } from '@shit-head/shared';
+import type { ClientMessage, ServerMessage, RoomState, PlayerGameView, Card, OpponentView } from '@shit-head/shared';
 
 // Singleton state to share socket across all components
 let socketInstance: ReturnType<typeof createGameSocket> | null = null;
@@ -98,6 +98,11 @@ function createGameSocket() {
 
   // Game-over state
   const shitheadNickname = ref<string | null>(null);
+
+  // Spectator state
+  const isSpectator = ref<boolean>(false);
+  const spectatorCount = ref<number>(0);
+  const spectatorGameView = ref<{ discardPile: Card[]; opponents: OpponentView[]; drawPileCount: number; currentPlayerIndex: number } | null>(null);
 
   // Notification state
   interface GameNotification {
@@ -338,6 +343,20 @@ function createGameSocket() {
             };
           }
           break;
+        case 'spectator-state':
+          playerId.value = message.playerId;
+          roomState.value = message.room;
+          isSpectator.value = true;
+          spectatorGameView.value = {
+            discardPile: message.discardPile,
+            opponents: message.opponents,
+            drawPileCount: message.drawPileCount,
+            currentPlayerIndex: message.currentPlayerIndex,
+          };
+          break;
+        case 'spectator-count':
+          spectatorCount.value = message.count;
+          break;
         case 'return-to-lobby':
           // Reset game state — we're back in lobby
           gameView.value = null;
@@ -348,6 +367,10 @@ function createGameSocket() {
           burnTriggered.value = false;
           turnTimeRemaining.value = 45;
           turnTimerPlayerIndex.value = -1;
+          // Clear spectator state on return to lobby
+          isSpectator.value = false;
+          spectatorGameView.value = null;
+          spectatorCount.value = 0;
           // Update room state with the reset room
           roomState.value = message.room;
           break;
@@ -459,6 +482,10 @@ function createGameSocket() {
     dismissNotification,
     // Game-over state
     shitheadNickname,
+    // Spectator state
+    isSpectator,
+    spectatorCount,
+    spectatorGameView,
   };
 }
 
