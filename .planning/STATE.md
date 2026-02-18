@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 
 ## Current Position
 
-Phase: 19 of 23 (Discord Room Management) / 23 of 23 (Frontend Testing) — parallel execution
-Plan: 4 of 4 complete in phase 23 (PHASE COMPLETE); 6 of 6 complete in phase 19 (awaiting human verification checkpoint)
-Status: Phase 23 complete; Phase 19 awaiting checkpoint approval
-Last activity: 2026-02-18 — Completed 23-04-PLAN.md (usePlayingPhase + useSwapPhase tests; 31 new tests, 122 total pass, lint clean)
+Phase: 19 of 23 (Discord Room Management) / 21 of 23 (Card Playability Highlights) / 23 of 23 (Frontend Testing) — parallel execution
+Plan: 1 of 1 complete in phase 21; 4 of 4 complete in phase 23 (PHASE COMPLETE); 6 of 6 complete in phase 19 (awaiting human verification checkpoint)
+Status: Phase 21 plan 01 complete; Phase 23 complete; Phase 19 awaiting checkpoint approval
+Last activity: 2026-02-18 — Completed 21-01-PLAN.md (card playability highlights; green glow/gray-dim on hand+face-up cards, mobile grouped ring, client-side cardRules.ts)
 
-Progress: [█████████░] 22/23 phases complete (96% overall — Phase 19 awaiting checkpoint)
+Progress: [█████████░] 22/23 phases complete (96% overall — Phase 19 awaiting checkpoint; Phase 21 in progress)
 
 ## Performance Metrics
 
@@ -36,6 +36,10 @@ Progress: [█████████░] 22/23 phases complete (96% overall �
 Decisions are logged in PROJECT.md Key Decisions table.
 
 Recent decisions affecting v2.0 work:
+- Client copy of server pure functions in packages/client/src/game/ to avoid cross-package server dependency (21-01)
+- playableHandIndices.size > 0 guard pattern: zero size = no highlights = default border-gray-300 (not my turn) (21-01)
+- isGroupPlayable uses group.indices (index-based) not rank strings to avoid JKR vs joker kind mismatch (21-01)
+- Joker explicit early return in client canPlayOnPile: makes always-playable self-documenting, not implicit via getRankValue=999 (21-01)
 - Dual-mode architecture: Keep standalone web working alongside Discord Activity (adapter pattern prevents tech debt)
 - Risk-first ordering: Validate Discord proxy in Phase 16 before building features (project history: ngrok, Docker DNS WS failures)
 - Retry timing: 5 retries with exponential backoff (~31s total) — 10 retries was too long for UX
@@ -104,7 +108,7 @@ Web client UI fully updated: safe area, shithead marker, Discord avatars, specta
 
 ## Session Continuity
 
-Last session: 2026-02-18T20:35:03Z
-Stopped at: Completed 23-04-PLAN.md — usePlayingPhase + useSwapPhase tests (31 tests, 122 total, all pass). Phase 23 complete.
+Last session: 2026-02-18T20:38:28Z
+Stopped at: Completed 21-01-PLAN.md — card playability highlights (2 tasks, 4 files, 462 tests pass, type-check+lint clean)
 Resume file: None
 Next: Approve Phase 19 checkpoint (human verify manual testing items)
