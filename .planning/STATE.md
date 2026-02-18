@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 
 ## Current Position
 
-Phase: 23 of 23 (Frontend Testing)
-Plan: 2 of 4 in phase
-Status: In progress
-Last activity: 2026-02-18 — Completed 23-02-PLAN.md (ConnectionStatus + NotificationToast component tests)
+Phase: 19 of 23 (Discord Room Management) / 23 of 23 (Frontend Testing) — parallel execution
+Plan: 3 of 6 in phase 19 (Wave 3 in progress)
+Status: In progress — Wave 3 (19-03 complete, 19-04 and 19-05 parallel)
+Last activity: 2026-02-18 — Completed 19-03-PLAN.md (WebSocket handlers for Discord room management)
 
-Progress: [████████░░] 18/22 phases complete (82% overall — Phase 19 in progress)
+Progress: [████████░░] 18/23 phases complete (78% overall — Phases 19 and 23 in progress)
 
 ## Performance Metrics
 
@@ -63,6 +63,9 @@ Recent decisions affecting v2.0 work:
 - Singleton mock test pattern: reassign vi.fn() in beforeEach (not vi.clearAllMocks()) — clearMocks:true config resets spies on cached objects (23-02)
 - ConnectionStatus overlay test: find('.fixed').exists() — Vue Transition renders no DOM when v-if false (23-02)
 - NotificationToast element selector: find('[class*="rounded-lg"]') — partial class match for Tailwind multi-class bindings (23-02)
+- _newHostId prefix in setHostMigrationCallback: oldHostId used for removePlayerIndex, newHostId not needed (room.getState() reflects current host) (19-03)
+- Spectator check in handleClose placed before playerSockets.delete: early return ensures clean path separation (19-03)
+- Host migration wired in both start-game (in-game) and handleClose lobby paths via setHostMigrationCallback (19-03)
 
 ### Pending Todos
 
@@ -80,11 +83,12 @@ User setup required before Discord Activity testing:
 - See .planning/phases/18-discord-authentication/18-01-USER-SETUP.md
 
 Server package (Room.ts, RoomManager.ts) now implements all new RoomState fields — server TypeScript errors resolved.
-Client packages will have TypeScript errors for new required RoomState fields until Plans 03-05 are executed.
+WebSocket handlers now wire all Discord room lifecycle: join-or-create, host migration, spectator messaging, auto-return.
+Client packages will have TypeScript errors for new required RoomState fields until Plans 04-05 are executed (Wave 3 parallel).
 
 ## Session Continuity
 
 Last session: 2026-02-18
-Stopped at: Completed 23-02-PLAN.md — ConnectionStatus and NotificationToast component tests
+Stopped at: Completed 19-03-PLAN.md — WebSocket handlers for Discord room management
 Resume file: None
-Next: Execute 23-03-PLAN.md (LobbyView component tests)
+Next: Execute 19-04-PLAN.md and 19-05-PLAN.md (Wave 3 parallel — client-side Discord UI)
