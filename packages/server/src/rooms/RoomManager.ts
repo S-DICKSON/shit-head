@@ -20,8 +20,8 @@ export class RoomManager {
     setInterval(() => this.cleanupAbandonedRooms(), 5 * 60 * 1000);
   }
 
-  createRoom(hostId: string, nickname: string): OperationResult<RoomState> {
-    const room = new Room(hostId, nickname);
+  createRoom(hostId: string, nickname: string, avatarHash?: string | null): OperationResult<RoomState> {
+    const room = new Room(hostId, nickname, undefined, avatarHash);
     this.rooms.set(room.code, room);
     this.playerRoomIndex.set(hostId, room.code);
     this.markActivity(room.code);
@@ -32,7 +32,23 @@ export class RoomManager {
     };
   }
 
-  joinRoom(code: string, playerId: string, nickname: string): OperationResult<RoomState> {
+  /**
+   * Creates a room with a specific code — used for Discord Activities where
+   * the instanceId serves as the room code for automatic join-or-create flows.
+   */
+  createRoomWithCode(code: string, hostId: string, nickname: string, avatarHash?: string | null): OperationResult<RoomState> {
+    // Check if room with this code already exists
+    if (this.rooms.has(code)) {
+      return { success: false, error: 'Room already exists', code: 'ALREADY_IN_ROOM' };
+    }
+    const room = new Room(hostId, nickname, code, avatarHash);
+    this.rooms.set(code, room);
+    this.playerRoomIndex.set(hostId, code);
+    this.markActivity(code);
+    return { success: true, data: room.getState() };
+  }
+
+  joinRoom(code: string, playerId: string, nickname: string, avatarHash?: string | null): OperationResult<RoomState> {
     const room = this.rooms.get(code);
 
     if (!room) {
@@ -43,7 +59,7 @@ export class RoomManager {
       };
     }
 
-    const result = room.addPlayer(playerId, nickname);
+    const result = room.addPlayer(playerId, nickname, avatarHash);
 
     if (!result.success) {
       return result as OperationResult<RoomState>;
@@ -56,6 +72,35 @@ export class RoomManager {
       success: true,
       data: room.getState(),
     };
+  }
+
+  /**
+   * Joins an existing room or becomes a spectator if the game is in progress.
+   * Used by Discord Activity auto-join flow where clients arrive after the game starts.
+   */
+  joinRoomOrSpectate(code: string, playerId: string, nickname: string, avatarHash?: string | null): OperationResult<{ state: RoomState; isSpectator: boolean }> {
+    const room = this.rooms.get(code);
+    if (!room) {
+      return { success: false, error: 'Room not found', code: 'ROOM_NOT_FOUND' };
+    }
+
+    const roomState = room.getState();
+
+    if (roomState.status === 'waiting') {
+      // Normal join (lobby phase)
+      const result = room.addPlayer(playerId, nickname, avatarHash);
+      if (!result.success) return result as OperationResult<{ state: RoomState; isSpectator: boolean }>;
+      this.playerRoomIndex.set(playerId, code);
+      this.markActivity(code);
+      return { success: true, data: { state: room.getState(), isSpectator: false } };
+    }
+
+    // Game in progress — add as spectator
+    const result = room.addSpectator(playerId, nickname, avatarHash);
+    if (!result.success) return result as OperationResult<{ state: RoomState; isSpectator: boolean }>;
+    this.playerRoomIndex.set(playerId, code);
+    this.markActivity(code);
+    return { success: true, data: { state: room.getState(), isSpectator: true } };
   }
 
   leaveRoom(playerId: string): OperationResult {
@@ -82,7 +127,8 @@ export class RoomManager {
     const shouldDestroy = room.removePlayer(playerId);
     this.playerRoomIndex.delete(playerId);
 
-    // If host left, destroy the room and remove all players from index
+    // If room is empty (host left with no other players), destroy the room
+    // and remove all remaining player indexes
     if (shouldDestroy) {
       const state = room.getState();
       state.players.forEach(player => {
@@ -91,10 +137,23 @@ export class RoomManager {
       this.rooms.delete(roomCode);
       this.lastActivityTimes.delete(roomCode);
     } else {
+      // Room continues (either non-host left, or host migrated to next player)
       this.markActivity(roomCode);
     }
 
     return { success: true };
+  }
+
+  /**
+   * Removes a spectator from a room, cleaning up the player index.
+   */
+  removeSpectator(playerId: string): void {
+    const roomCode = this.playerRoomIndex.get(playerId);
+    if (!roomCode) return;
+    const room = this.rooms.get(roomCode);
+    if (!room) return;
+    room.removeSpectator(playerId);
+    this.playerRoomIndex.delete(playerId);
   }
 
   startGame(playerId: string): OperationResult {
