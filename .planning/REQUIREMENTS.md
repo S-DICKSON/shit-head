@@ -9,7 +9,7 @@ Requirements for v2.0 milestone: UI improvements + Discord Activity integration.
 
 ### Mobile UI
 
-- [ ] **MOBUI-01**: Card playability highlights show which cards in hand are valid to play on current pile
+- [x] **MOBUI-01**: Card playability highlights show which cards in hand are valid to play on current pile
 - [ ] **MOBUI-02**: When hand has > 5 cards, display splits into normal and power card categories
 - [ ] **MOBUI-03**: Power card category includes 2, 7, 8, 10, and Joker cards
 - [ ] **MOBUI-04**: Category navigation allows switching between normal and power card views on mobile

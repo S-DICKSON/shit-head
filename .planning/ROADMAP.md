@@ -33,7 +33,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 18: Discord Authentication** - OAuth2 flow with token exchange (verified)
 - [ ] **Phase 19: Discord Room Management** - Instance ID auto-join and production deployment
 - [ ] **Phase 20: Sound & Settings** - Mute toggle and host-configurable round time
-- [ ] **Phase 21: Card Playability Highlights** - Visual indicators for valid plays
+- [x] **Phase 21: Card Playability Highlights** - Visual indicators for valid plays
 - [ ] **Phase 22: Mobile Card Categories** - Normal/power card navigation for large hands
 - [x] **Phase 23: Frontend Testing** - Vue component and integration tests for the client package
 
@@ -137,7 +137,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 21-01-PLAN.md — Client-side card rules, playability computed properties, and visual CSS highlights
+- [x] 21-01-PLAN.md — Client-side card rules, playability computed properties, and visual CSS highlights
 
 ### Phase 22: Mobile Card Categories
 **Goal**: Improve mobile UX with normal/power card category navigation and carousel for large hands
@@ -179,10 +179,10 @@ Phases execute in numeric order: 16 -> 17 -> 18 -> 19 -> 20 -> 21 -> 22 -> 23
 | 18. Discord Authentication | 4/4 | Complete | 2026-02-17 |
 | 19. Discord Room Management | 0/6 | Not started | - |
 | 20. Sound & Settings | 0/TBD | Not started | - |
-| 21. Card Playability Highlights | 0/1 | Not started | - |
+| 21. Card Playability Highlights | 1/1 | Complete | 2026-02-18 |
 | 22. Mobile Card Categories | 0/TBD | Not started | - |
 | 23. Frontend Testing | 4/4 | Complete | 2026-02-18 |
 
 ---
 *Roadmap created: 2026-02-15*
-*Last updated: 2026-02-18 -- Phase 23 complete: 4 plans, 122 tests*
+*Last updated: 2026-02-18 -- Phase 21 complete: card playability highlights verified*

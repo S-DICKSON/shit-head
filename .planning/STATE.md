@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-15)
 
 **Core value:** Friends can play a complete, rule-accurate game of Shithead together online with zero friction
-**Current focus:** v2.0 Phase 23 - Frontend Testing
+**Current focus:** v2.0 Phase 21 complete — Card Playability Highlights
 
 ## Current Position
 
-Phase: 23 of 23 (Frontend Testing) — COMPLETE
-Plan: 4 of 4 complete in phase 23
-Status: Phase 23 complete — all 4 plans executed, verified (10/10 must-haves), 122 tests pass
-Last activity: 2026-02-18 — Completed phase 23 execution (test infra, component tests, composable tests)
+Phase: 21 of 23 (Card Playability Highlights) — COMPLETE
+Plan: 1 of 1 complete in phase 21
+Status: Phase 21 complete — 1 plan executed, verified (7/7 must-haves), all tests pass
+Last activity: 2026-02-18 — Completed phase 21 execution (client card rules, playability CSS highlights)
 
-Progress: [█████████░] 23/23 phases in v2.0 complete (Phase 19 awaiting human verification checkpoint)
+Progress: [█████████░] 19/23 phases complete (83% overall — Phases 19, 20, 22 remaining)
 
 ## Performance Metrics
 
@@ -109,6 +109,6 @@ Web client UI fully updated: safe area, shithead marker, Discord avatars, specta
 ## Session Continuity
 
 Last session: 2026-02-18
-Stopped at: Completed Phase 23 — Frontend Testing (4 plans, 122 client tests, verified)
+Stopped at: Completed Phase 21 — Card Playability Highlights (1 plan, verified 7/7 must-haves)
 Resume file: None
-Next: Phase 19 human verification or `/gsd:audit-milestone`
+Next: Phase 22 (Mobile Card Categories) or remaining phases
