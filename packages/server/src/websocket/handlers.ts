@@ -123,6 +123,87 @@ export function handleMessage(
       break;
     }
 
+    case 'join-or-create': {
+      const result = manager.joinRoomOrSpectate(
+        message.instanceId,
+        ws.data.playerId,
+        message.nickname,
+        message.avatarHash ?? null,
+      );
+
+      // If room doesn't exist, create it with instanceId as code
+      if (!result.success && result.code === 'ROOM_NOT_FOUND') {
+        const createResult = manager.createRoomWithCode(
+          message.instanceId,
+          ws.data.playerId,
+          message.nickname,
+          message.avatarHash ?? null,
+        );
+        if (!createResult.success) {
+          sendMessage(ws, { type: 'error', message: createResult.error, code: createResult.code });
+          return;
+        }
+        ws.data.roomCode = message.instanceId;
+        ws.subscribe(message.instanceId);
+        sendMessage(ws, {
+          type: 'room-created',
+          room: createResult.data,
+          playerId: ws.data.playerId,
+        });
+        break;
+      }
+
+      if (!result.success) {
+        sendMessage(ws, { type: 'error', message: result.error, code: result.code });
+        return;
+      }
+
+      ws.data.roomCode = message.instanceId;
+      ws.subscribe(message.instanceId);
+
+      if (result.data.isSpectator) {
+        // Spectator: send spectator-state with public game view
+        const room = manager.getRoom(message.instanceId);
+        if (room) {
+          const spectatorView = room.getSpectatorView();
+          sendMessage(ws, {
+            type: 'spectator-state',
+            room: result.data.state,
+            playerId: ws.data.playerId,
+            discardPile: spectatorView?.discardPile ?? [],
+            opponents: spectatorView?.opponents ?? [],
+            drawPileCount: spectatorView?.drawPileCount ?? 0,
+            currentPlayerIndex: spectatorView?.currentPlayerIndex ?? 0,
+          });
+
+          // Notify active players of spectator count update
+          const playerIds = room.getPlayerIds();
+          for (const pid of playerIds) {
+            const pWs = playerSockets.get(pid);
+            if (pWs) {
+              sendMessage(pWs, {
+                type: 'spectator-count',
+                count: room.getSpectatorCount(),
+              });
+            }
+          }
+        }
+      } else {
+        // Normal join (lobby)
+        sendMessage(ws, {
+          type: 'room-joined',
+          room: result.data.state,
+          playerId: ws.data.playerId,
+        });
+        // Notify others
+        publishToRoom(ws, message.instanceId, {
+          type: 'room-updated',
+          room: result.data.state,
+        });
+      }
+      break;
+    }
+
     case 'leave-room': {
       const roomCode = ws.data.roomCode;
 
@@ -133,19 +214,6 @@ export function handleMessage(
           code: 'ROOM_NOT_FOUND',
         });
         return;
-      }
-
-      // Check if leaving player is the host (room will be destroyed)
-      const room = manager.getRoomByPlayerId(ws.data.playerId);
-      const isHost = room?.getState().hostId === ws.data.playerId;
-
-      // If host is leaving, notify others before destroying room
-      if (isHost) {
-        publishToRoom(ws, roomCode, {
-          type: 'error',
-          message: 'Host left — room closed',
-          code: 'ROOM_NOT_FOUND',
-        });
       }
 
       const result = manager.leaveRoom(ws.data.playerId);
@@ -159,14 +227,16 @@ export function handleMessage(
         return;
       }
 
-      // Notify remaining players (non-host leave — room still exists)
-      if (!isHost) {
-        const updatedRoom = manager.getRoom(roomCode);
-        if (updatedRoom) {
-          publishToRoom(ws, roomCode, {
-            type: 'room-updated',
-            room: updatedRoom.getState(),
-          });
+      // Check if room still exists (host migration keeps it alive)
+      const updatedRoom = manager.getRoom(roomCode);
+      if (updatedRoom) {
+        // Room still active — broadcast updated state to remaining players
+        const playerIds = updatedRoom.getPlayerIds();
+        for (const pid of playerIds) {
+          const pWs = playerSockets.get(pid);
+          if (pWs) {
+            sendMessage(pWs, { type: 'room-updated', room: updatedRoom.getState() });
+          }
         }
       }
 
@@ -274,36 +344,38 @@ export function handleMessage(
             },
             onGameOver: (shitheadId, shitheadNickname) => {
               const playerIds = room.getPlayerIds();
+              const spectatorIds = room.getSpectatorIds();
+
+              // Send game-over to players
               for (const pid of playerIds) {
                 const pWs = playerSockets.get(pid);
                 if (pWs) {
-                  sendMessage(pWs, {
-                    type: 'game-over',
-                    shitheadId,
-                    shitheadNickname,
-                  });
+                  sendMessage(pWs, { type: 'game-over', shitheadId, shitheadNickname });
                 }
               }
 
-              // Set play-again callbacks after game-over
+              // Also notify spectators about game over
+              for (const sid of spectatorIds) {
+                const sWs = playerSockets.get(sid);
+                if (sWs) {
+                  sendMessage(sWs, { type: 'game-over', shitheadId, shitheadNickname });
+                }
+              }
+
+              // Set up return-to-lobby callback (auto-return triggers after 5s in Room.ts)
               room.setPlayAgainCallbacks({
                 onReturnToLobby: (removedPlayerIds) => {
                   const roomState = room.getState();
-                  const remainingPlayerIds = room.getPlayerIds();
-
-                  // Clean up removed players' indices
+                  // Clean up removed players' indices (should be empty for auto-return)
                   for (const pid of removedPlayerIds) {
                     manager.removePlayerIndex(pid);
                   }
-
-                  // Send return-to-lobby to remaining players
-                  for (const pid of remainingPlayerIds) {
+                  // Send return-to-lobby to ALL (players + newly promoted spectators)
+                  const allPlayerIds = room.getPlayerIds();
+                  for (const pid of allPlayerIds) {
                     const pWs = playerSockets.get(pid);
                     if (pWs) {
-                      sendMessage(pWs, {
-                        type: 'return-to-lobby',
-                        room: roomState,
-                      });
+                      sendMessage(pWs, { type: 'return-to-lobby', room: roomState });
                     }
                   }
                 },
@@ -337,7 +409,7 @@ export function handleMessage(
               if (autoPlayData.wasBlindPlay) {
                 // Face-down auto-play: broadcast face-down-result to all players
                 for (const pid of playerIds) {
-                  const view = room.getPlayerView(pid);
+                  const view = room.getAugmentedPlayerView(pid);
                   const pWs = playerSockets.get(pid);
                   if (view && pWs) {
                     sendMessage(pWs, {
@@ -356,7 +428,7 @@ export function handleMessage(
               } else {
                 // Hand or face-up auto-play: broadcast card-played with updated state
                 for (const pid of playerIds) {
-                  const view = room.getPlayerView(pid);
+                  const view = room.getAugmentedPlayerView(pid);
                   const pWs = playerSockets.get(pid);
                   if (view && pWs) {
                     sendMessage(pWs, {
@@ -444,12 +516,40 @@ export function handleMessage(
             },
           });
 
+          // Set host migration callback for in-game host migration
+          room.setHostMigrationCallback((oldHostId, _newHostId) => {
+            manager.removePlayerIndex(oldHostId);
+            // Broadcast room-updated with new host to all remaining players
+            const roomState = room.getState();
+            const playerIds = room.getPlayerIds();
+            for (const pid of playerIds) {
+              const pWs = playerSockets.get(pid);
+              if (pWs) {
+                sendMessage(pWs, { type: 'room-updated', room: roomState });
+              }
+            }
+          });
+
+          // Set spectator callbacks for in-game spectator joins
+          room.setSpectatorCallbacks({
+            onSpectatorJoined: (_spectatorId, _nickname) => {
+              // Broadcast spectator count to all active players
+              const playerIds = room.getPlayerIds();
+              for (const pid of playerIds) {
+                const pWs = playerSockets.get(pid);
+                if (pWs) {
+                  sendMessage(pWs, { type: 'spectator-count', count: room.getSpectatorCount() });
+                }
+              }
+            },
+          });
+
           room.startGame();
 
           // Send player-specific game-dealt messages to each player
           const playerIds = room.getPlayerIds();
           for (const playerId of playerIds) {
-            const view = room.getPlayerView(playerId);
+            const view = room.getAugmentedPlayerView(playerId);
             const playerWs = playerSockets.get(playerId);
 
             if (view && playerWs) {
@@ -510,7 +610,7 @@ export function handleMessage(
       // Send per-player swap-cards-updated to ALL players
       const playerIds = room.getPlayerIds();
       for (const playerId of playerIds) {
-        const view = room.getPlayerView(playerId);
+        const view = room.getAugmentedPlayerView(playerId);
         const playerWs = playerSockets.get(playerId);
         if (view && playerWs) {
           sendMessage(playerWs, {
@@ -588,7 +688,7 @@ export function handleMessage(
       // Send per-player views to ALL players in the room
       const playerIds = room.getPlayerIds();
       for (const playerId of playerIds) {
-        const view = room.getPlayerView(playerId);
+        const view = room.getAugmentedPlayerView(playerId);
         const playerWs = playerSockets.get(playerId);
         if (view && playerWs) {
           sendMessage(playerWs, {
@@ -630,7 +730,7 @@ export function handleMessage(
       // Send per-player views to ALL players
       const playerIds = room.getPlayerIds();
       for (const playerId of playerIds) {
-        const view = room.getPlayerView(playerId);
+        const view = room.getAugmentedPlayerView(playerId);
         const playerWs = playerSockets.get(playerId);
         if (view && playerWs) {
           sendMessage(playerWs, {
@@ -674,7 +774,7 @@ export function handleMessage(
       if (result.data) {
         const playerIds = room.getPlayerIds();
         for (const pid of playerIds) {
-          const view = room.getPlayerView(pid);
+          const view = room.getAugmentedPlayerView(pid);
           const pWs = playerSockets.get(pid);
           if (view && pWs) {
             sendMessage(pWs, {
@@ -707,11 +807,12 @@ export function handleMessage(
         return;
       }
 
-      // Check if this player was in this room
+      // Check if this player was in this room (as player or spectator)
       const roomState = room.getState();
       const playerInRoom = roomState.players.some(p => p.id === ws.data.playerId);
+      const isSpectator = room.isSpectator(ws.data.playerId);
 
-      if (!playerInRoom) {
+      if (!playerInRoom && !isSpectator) {
         sendMessage(ws, {
           type: 'error',
           message: 'You are not in this room',
@@ -725,6 +826,23 @@ export function handleMessage(
       ws.subscribe(message.roomCode);
       playerSockets.set(ws.data.playerId, ws);
 
+      // If spectator reconnecting, send spectator-state instead of player view
+      if (isSpectator) {
+        const spectatorView = room.getSpectatorView();
+        if (spectatorView) {
+          sendMessage(ws, {
+            type: 'spectator-state',
+            room: roomState,
+            playerId: ws.data.playerId,
+            discardPile: spectatorView.discardPile,
+            opponents: spectatorView.opponents,
+            drawPileCount: spectatorView.drawPileCount,
+            currentPlayerIndex: spectatorView.currentPlayerIndex,
+          });
+        }
+        return;
+      }
+
       // Handle reconnection in room (clears grace period timer)
       room.handlePlayerReconnect(ws.data.playerId);
 
@@ -736,7 +854,7 @@ export function handleMessage(
       });
 
       // If game in progress, send player-specific game view
-      const gameView = room.getPlayerView(ws.data.playerId);
+      const gameView = room.getAugmentedPlayerView(ws.data.playerId);
       if (gameView) {
         sendMessage(ws, {
           type: 'game-dealt',
@@ -848,10 +966,35 @@ export function handleMessage(
 }
 
 export function handleClose(ws: ServerWebSocket<WebSocketData>, manager: RoomManager): void {
+  const roomCode = ws.data.roomCode;
+
+  // Check if disconnecting player is a spectator before removing from sockets
+  if (roomCode) {
+    const room = manager.getRoom(roomCode);
+    if (room && room.isSpectator(ws.data.playerId)) {
+      // Clean up spectator: remove from room and player index
+      room.removeSpectator(ws.data.playerId);
+      manager.removePlayerIndex(ws.data.playerId);
+
+      // Broadcast updated spectator count to active players
+      const playerIds = room.getPlayerIds();
+      for (const pid of playerIds) {
+        const pWs = playerSockets.get(pid);
+        if (pWs) {
+          sendMessage(pWs, { type: 'spectator-count', count: room.getSpectatorCount() });
+        }
+      }
+
+      // Clean up socket tracking
+      playerSockets.delete(ws.data.playerId);
+      ws.unsubscribe(roomCode);
+      return; // Early return — spectator cleanup is complete, skip player disconnect logic
+    }
+  }
+
   // Always remove from active sockets (the WebSocket connection is dead)
   playerSockets.delete(ws.data.playerId);
 
-  const roomCode = ws.data.roomCode;
   if (!roomCode) return;
 
   const room = manager.getRoomByPlayerId(ws.data.playerId);
@@ -944,6 +1087,20 @@ export function handleClose(ws: ServerWebSocket<WebSocketData>, manager: RoomMan
             }
           }
         },
+      });
+
+      // Set host migration callback for lobby host migration
+      room.setHostMigrationCallback((oldHostId, _newHostId) => {
+        manager.removePlayerIndex(oldHostId);
+        // Broadcast room-updated with new host to all remaining players
+        const roomState = room.getState();
+        const playerIds = room.getPlayerIds();
+        for (const pid of playerIds) {
+          const pWs = playerSockets.get(pid);
+          if (pWs) {
+            sendMessage(pWs, { type: 'room-updated', room: roomState });
+          }
+        }
       });
     }
 

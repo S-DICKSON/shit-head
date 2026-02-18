@@ -153,9 +153,32 @@ describe('Room disconnect/reconnect lifecycle', () => {
       expect(room.getState().players).toHaveLength(2);
     });
 
-    test('lobby host disconnect triggers host-left after grace period', () => {
+    test('lobby host disconnect triggers host migration after grace period', () => {
       const room = new Room('player-1', 'Alice');
       room.addPlayer('player-2', 'Bob');
+
+      const onRemoved = vi.fn();
+      const onHostMigrated = vi.fn();
+      room.setDisconnectCallbacks({
+        onDisconnected: vi.fn(),
+        onReconnected: vi.fn(),
+        onRemoved,
+      });
+      room.setHostMigrationCallback(onHostMigrated);
+
+      room.handlePlayerDisconnect('player-1');
+      expect(onRemoved).not.toHaveBeenCalled();
+
+      vi.advanceTimersByTime(15000);
+      // With host migration, host-left is NOT fired; instead onHostMigrated fires and player-2 becomes host
+      expect(onRemoved).not.toHaveBeenCalled();
+      expect(onHostMigrated).toHaveBeenCalledWith('player-1', 'player-2');
+      expect(room.getState().hostId).toBe('player-2');
+    });
+
+    test('lobby host disconnect triggers host-left only when no other players remain', () => {
+      const room = new Room('player-1', 'Alice');
+      // Only the host in the room — no one to migrate to
 
       const onRemoved = vi.fn();
       room.setDisconnectCallbacks({
@@ -258,20 +281,23 @@ describe('Room disconnect/reconnect lifecycle', () => {
       expect(callbacks.onRemoved).toHaveBeenCalledWith('player-2', 'Player2', 'timeout');
     });
 
-    test('grace period expires and removes host with host-left reason', () => {
-      const { room, callbacks } = createRoomWithGame(3);
+    test('grace period expires and migrates host when other players remain', () => {
+      const { room } = createRoomWithGame(3);
+      const onHostMigrated = vi.fn();
+      room.setHostMigrationCallback(onHostMigrated);
 
       room.startGame();
       vi.advanceTimersByTime(2500);
 
-      // Disconnect player-1 (host)
+      // Disconnect player-1 (host) — 2 other connected players remain
       room.handlePlayerDisconnect('player-1');
 
-      // Advance timers by 90 seconds
+      // Advance timers by 90 seconds (grace period)
       vi.advanceTimersByTime(90000);
 
-      // onPlayerRemoved should fire with host-left reason
-      expect(callbacks.onRemoved).toHaveBeenCalledWith('player-1', 'Alice', 'host-left');
+      // With host migration, onHostMigrated fires instead of host-left
+      expect(onHostMigrated).toHaveBeenCalledWith('player-1', 'player-2');
+      expect(room.getState().hostId).toBe('player-2');
     });
   });
 

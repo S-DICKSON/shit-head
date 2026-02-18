@@ -18,6 +18,7 @@ describe('Room', () => {
       id: 'host-1',
       nickname: 'Alice',
       isHost: true,
+      avatarHash: null,
     });
   });
 
@@ -31,6 +32,7 @@ describe('Room', () => {
       id: 'player-2',
       nickname: 'Bob',
       isHost: false,
+      avatarHash: null,
     });
   });
 
@@ -89,12 +91,17 @@ describe('Room', () => {
     expect(state.players).toHaveLength(1);
   });
 
-  test('destroys room when host leaves', () => {
+  test('migrates host when host leaves (room continues)', () => {
     const room = new Room('host-1', 'Alice');
     room.addPlayer('player-2', 'Bob');
 
+    // With host migration, removePlayer returns false (room continues) and player-2 becomes host
     const shouldDestroy = room.removePlayer('host-1');
-    expect(shouldDestroy).toBe(true);
+    expect(shouldDestroy).toBe(false);
+    const state = room.getState();
+    expect(state.players).toHaveLength(1);
+    expect(state.hostId).toBe('player-2');
+    expect(state.players[0].isHost).toBe(true);
   });
 
   test('canStart returns false with fewer than 2 players', () => {
@@ -125,11 +132,14 @@ describe('Room', () => {
         id: 'host-1',
         nickname: 'Alice',
         isHost: true,
+        avatarHash: null,
       }],
       status: 'waiting',
       hostId: 'host-1',
       maxPlayers: 4,
       minPlayers: 2,
+      spectatorCount: 0,
+      shitheadPlayerId: null,
     });
   });
 
@@ -400,7 +410,7 @@ describe('RoomManager', () => {
     expect(room?.getState().players).toHaveLength(1);
   });
 
-  test('leaveRoom destroys room when host leaves', () => {
+  test('leaveRoom migrates host when host leaves (room continues)', () => {
     const createResult = manager.createRoom('host-1', 'Alice');
     expect(createResult.success).toBe(true);
     if (!createResult.success) return;
@@ -410,8 +420,11 @@ describe('RoomManager', () => {
 
     manager.leaveRoom('host-1');
 
+    // With host migration, room persists and player-2 becomes host
     const room = manager.getRoom(code);
-    expect(room).toBeUndefined();
+    expect(room).toBeDefined();
+    expect(room?.getState().hostId).toBe('player-2');
+    expect(room?.getState().players).toHaveLength(1);
   });
 
   test('startGame fails if caller is not host', () => {
