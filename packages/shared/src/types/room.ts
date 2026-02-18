@@ -10,6 +10,7 @@ export type LobbyPlayer = {
   id: string;
   nickname: string;
   isHost: boolean;
+  avatarHash?: string | null; // Discord avatar hash, null for web players
 };
 
 export type RoomStatus = 'waiting' | 'countdown' | 'playing';
@@ -21,4 +22,6 @@ export type RoomState = {
   hostId: string;
   maxPlayers: 4;
   minPlayers: 2;
+  spectatorCount: number;        // How many spectators are watching
+  shitheadPlayerId: string | null; // Previous game's loser, null when no previous game
 };

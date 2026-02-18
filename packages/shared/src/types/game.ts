@@ -45,6 +45,8 @@ export type OpponentView = {
   faceDownCount: number;  // Count only, not the actual cards
   faceUp: Card[];         // Visible to all
   handCount: number;      // Count only, not the actual cards
+  isShithead?: boolean;   // Previous game's loser gets the poo emoji
+  avatarHash?: string | null; // Discord avatar hash for gameplay display, null for web players
 };
 
 /**
