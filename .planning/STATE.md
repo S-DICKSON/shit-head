@@ -70,6 +70,8 @@ Recent decisions affecting v2.0 work:
 - Play-again button removed from Game.vue — server auto-returns after 5s via return-to-lobby message (19-05)
 - Discord avatar conditional uses !== undefined (not truthiness) — null is valid for web players using default Discord avatar (19-05)
 - getAvatarUrl uses BigInt(userId) % 5n for default avatar index to safely handle Discord snowflake IDs (19-05)
+- DiscordLobby auth failure: spinner persists indefinitely (no error screen) — locked decision from 19-CONTEXT.md (19-04)
+- joinOrCreate optional in RoomAdapter interface: WebRoomAdapter unchanged, Discord-only feature (19-04)
 
 ### Pending Todos
 
@@ -93,6 +95,6 @@ Web client UI fully updated: safe area, shithead marker, Discord avatars, specta
 ## Session Continuity
 
 Last session: 2026-02-18
-Stopped at: Completed 19-05-PLAN.md — web client UI updates for Phase 19 features
+Stopped at: Completed 19-04-PLAN.md — Discord auto-join client flow (DiscordLobby, spectator state, routing)
 Resume file: None
 Next: Execute 19-06-PLAN.md (Phase 19 final plan)
