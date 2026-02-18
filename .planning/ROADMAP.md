@@ -149,10 +149,10 @@ Plans:
   5. Normal category shows all non-power cards
   6. "Play Selected" confirmation button prevents accidental plays from mobile mis-taps
   7. All mobile breakpoints tested (existing desktop layouts unchanged)
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 22-01: TBD during planning
+- [ ] 22-01-PLAN.md — useCardCategories composable + PlayerCards.vue category tabs, carousel, and power card styling
 
 ### Phase 23: Frontend Testing
 **Goal**: Build comprehensive Vue component and integration test suite for the client package
@@ -183,4 +183,4 @@ Phases execute in numeric order: 16 -> 17 -> 18 -> 19 -> 20 -> 21 -> 22 -> 23
 
 ---
 *Roadmap created: 2026-02-15*
-*Last updated: 2026-02-18 -- Phase 21 planned: 1 plan in 1 wave*
+*Last updated: 2026-02-18 -- Phase 22 planned: 1 plan in 1 wave*
