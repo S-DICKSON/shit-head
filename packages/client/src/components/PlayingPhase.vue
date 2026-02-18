@@ -31,8 +31,8 @@ const {
   pickupPile,
 } = usePlayingPhase();
 
-// Get send and burnTriggered from useGameSocket
-const { send, burnTriggered } = useGameSocket();
+// Get send, burnTriggered and spectatorCount from useGameSocket
+const { send, burnTriggered, spectatorCount } = useGameSocket();
 
 function isOpponentCurrentTurn(opponentPlayerId: string): boolean {
   if (!roomState.value || gameView.value?.currentPlayerIndex === undefined) return false;
@@ -71,6 +71,14 @@ watch(
     >
       Leave
     </button>
+
+    <!-- Spectator count (visible to active players) -->
+    <span
+      v-if="spectatorCount > 0"
+      class="fixed top-2 right-2 z-40 px-3 py-1 text-xs font-medium bg-gray-800/70 text-gray-300 rounded-full backdrop-blur-sm"
+    >
+      &#128065; {{ spectatorCount }}
+    </span>
 
     <!-- Top bar: Opponents -->
     <div class="flex-shrink-0 pt-2">

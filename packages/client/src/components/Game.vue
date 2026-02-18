@@ -1,27 +1,22 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue';
+import { inject, onMounted, onUnmounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useGameSocket } from '../composables/useGameSocket';
+import { PlatformKey } from '../platform';
 import SwapPhase from './SwapPhase.vue';
 import PlayingPhase from './PlayingPhase.vue';
 
 const router = useRouter();
-const { gameView, shitheadNickname, send, onMessage } = useGameSocket();
-const playAgainClicked = ref(false);
+const platform = inject(PlatformKey);
+const { gameView, shitheadNickname, send, onMessage, isSpectator, spectatorGameView } = useGameSocket();
 const showLeaveConfirm = ref(false);
 
 // Guard against direct URL access without game state
 onMounted(() => {
-  if (!gameView.value) {
+  if (!gameView.value && !isSpectator.value) {
     router.push('/');
   }
 });
-
-// Handle play again
-const handlePlayAgain = () => {
-  playAgainClicked.value = true;
-  send({ type: 'play-again' });
-};
 
 // Handle leave request (shows confirmation modal)
 const requestLeave = () => {
@@ -46,10 +41,14 @@ const handleLeave = () => {
   router.push('/');
 };
 
-// Listen for return-to-lobby message to navigate back to lobby
+// Listen for return-to-lobby message to navigate back to lobby (platform-aware)
 const unregisterHandler = onMessage((msg) => {
   if (msg.type === 'return-to-lobby') {
-    router.push(`/room/${msg.room.code}`);
+    if (platform === 'discord') {
+      router.push('/discord-lobby');
+    } else {
+      router.push(`/room/${msg.room.code}`);
+    }
   }
 });
 
@@ -59,7 +58,29 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div v-if="gameView">
+  <!-- Spectator View -->
+  <div
+    v-if="isSpectator && spectatorGameView"
+    class="flex flex-col h-screen bg-green-900 text-white overflow-hidden"
+  >
+    <!-- Spectator Banner -->
+    <div class="bg-yellow-600/80 text-center py-2 px-4 text-sm font-medium">
+      Spectating &mdash; you'll join next game
+    </div>
+
+    <!-- Simplified game view for spectators (public info only) -->
+    <div class="flex-1 flex flex-col items-center justify-center px-4">
+      <p class="text-gray-300 text-lg mb-4">
+        Game in progress
+      </p>
+      <p class="text-gray-400 text-sm">
+        {{ spectatorGameView.opponents.length }} players active
+      </p>
+    </div>
+  </div>
+
+  <!-- Normal Player View -->
+  <div v-else-if="gameView">
     <!-- Swap Phase -->
     <SwapPhase
       v-if="gameView.phase === 'swapping' || gameView.phase === 'transitioning'"
@@ -83,26 +104,13 @@ onUnmounted(() => {
         </div>
         <div
           v-if="shitheadNickname"
-          class="text-3xl font-bold text-yellow-400 mb-8"
+          class="text-3xl font-bold text-yellow-400 mb-4"
         >
-          Loser! {{ shitheadNickname }} 💩
+          {{ shitheadNickname }} &#128169;
         </div>
-        <div class="flex flex-col gap-4 items-center">
-          <button
-            :disabled="playAgainClicked"
-            class="px-8 py-3 bg-green-600 hover:bg-green-700 disabled:bg-green-800 disabled:opacity-60
-                   text-white font-bold text-lg rounded-lg transition-all shadow-md"
-            @click="handlePlayAgain"
-          >
-            {{ playAgainClicked ? 'Waiting for others...' : 'Play Again' }}
-          </button>
-          <button
-            class="px-6 py-2 text-red-300 hover:text-red-100 hover:underline text-sm"
-            @click="handleLeave"
-          >
-            Leave Room
-          </button>
-        </div>
+        <p class="text-gray-300 text-sm animate-pulse">
+          Returning to lobby...
+        </p>
       </div>
     </div>
 

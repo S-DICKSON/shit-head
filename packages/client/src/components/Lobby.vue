@@ -191,9 +191,16 @@ onUnmounted(() => {
       <!-- Players Section -->
       <div class="mb-6">
         <div class="flex justify-between items-center mb-4">
-          <h2 class="text-xl font-bold text-gray-800">
-            Players {{ playerCount }}
-          </h2>
+          <div class="flex items-center gap-2">
+            <h2 class="text-xl font-bold text-gray-800">
+              Players {{ playerCount }}
+            </h2>
+            <span
+              v-if="roomState?.spectatorCount && roomState.spectatorCount > 0"
+              class="text-sm text-gray-500"
+              title="Spectators watching"
+            >&#128065; {{ roomState.spectatorCount }} watching</span>
+          </div>
           <button
             class="text-sm text-red-600 hover:text-red-700 hover:underline"
             @click="leaveRoom"
@@ -239,6 +246,13 @@ onUnmounted(() => {
                   class="text-gray-500 text-sm"
                 >(You)</span>
               </span>
+
+              <!-- Shithead marker -->
+              <span
+                v-if="(player.id !== playerId || !isRenaming) && roomState?.shitheadPlayerId === player.id"
+                class="text-2xl"
+                title="Lost last game"
+              >&#128169;</span>
 
               <!-- Rename button for current player -->
               <button
