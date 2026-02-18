@@ -20,7 +20,7 @@ vi.mock('../../composables/useGameSocket', () => {
 import { useGameSocket } from '../../composables/useGameSocket';
 import Lobby from '../Lobby.vue';
 
-function createTestRouter(initialPath = '/room/ABC123') {
+function createTestRouter() {
   const router = createRouter({
     history: createWebHashHistory(),
     routes: [
