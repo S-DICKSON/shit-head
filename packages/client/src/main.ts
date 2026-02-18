@@ -39,3 +39,7 @@ if (platform === 'web') {
 
 app.use(router)
 app.mount('#app')
+
+if (platform === 'discord') {
+  router.push('/discord-lobby')
+}
