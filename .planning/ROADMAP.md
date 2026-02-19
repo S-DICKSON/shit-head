@@ -32,7 +32,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 17: Platform Abstraction** - Dual-mode architecture without tech debt
 - [x] **Phase 18: Discord Authentication** - OAuth2 flow with token exchange (verified)
 - [x] **Phase 19: Discord Room Management** - Instance ID auto-join and production deployment
-- [ ] **Phase 20: Sound & Settings** - Mute toggle and host-configurable round time
+- [x] **Phase 20: Sound & Settings** - Mute toggle and host-configurable round time
 - [x] **Phase 21: Card Playability Highlights** - Visual indicators for valid plays
 - [ ] **Phase 22: Mobile Card Categories** - Normal/power card navigation for large hands
 - [x] **Phase 23: Frontend Testing** - Vue component and integration tests for the client package
@@ -121,9 +121,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 20-01-PLAN.md — Sound mute toggle (composable + MuteButton component + tests)
-- [ ] 20-02-PLAN.md — Shared types + server round time (RoomState, Room.setRoundTime, handler)
-- [ ] 20-03-PLAN.md — Client round time integration (lobby selectors, TurnTimer, MuteButton in PlayingPhase)
+- [x] 20-01-PLAN.md — Sound mute toggle (composable + MuteButton component + tests)
+- [x] 20-02-PLAN.md — Shared types + server round time (RoomState, Room.setRoundTime, handler)
+- [x] 20-03-PLAN.md — Client round time integration (lobby selectors, TurnTimer, MuteButton in PlayingPhase)
 
 ### Phase 21: Card Playability Highlights
 **Goal**: Show visual indicators for which cards are valid to play
@@ -178,11 +178,11 @@ Phases execute in numeric order: 16 -> 17 -> 18 -> 19 -> 20 -> 21 -> 22 -> 23
 | 17. Platform Abstraction | 2/2 | Complete | 2026-02-17 |
 | 18. Discord Authentication | 4/4 | Complete | 2026-02-17 |
 | 19. Discord Room Management | 6/6 | Complete | 2026-02-19 |
-| 20. Sound & Settings | 0/TBD | Not started | - |
+| 20. Sound & Settings | 3/3 | Complete | 2026-02-19 |
 | 21. Card Playability Highlights | 1/1 | Complete | 2026-02-18 |
 | 22. Mobile Card Categories | 0/TBD | Not started | - |
 | 23. Frontend Testing | 4/4 | Complete | 2026-02-18 |
 
 ---
 *Roadmap created: 2026-02-15*
-*Last updated: 2026-02-19 -- Phase 19 complete: Discord room management verified (6/6 must-haves)*
+*Last updated: 2026-02-19 -- Phase 20 complete: sound mute toggle + host-configurable round time verified (4/4 must-haves)*

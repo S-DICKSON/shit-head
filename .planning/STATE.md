@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-15)
 
 **Core value:** Friends can play a complete, rule-accurate game of Shithead together online with zero friction
-**Current focus:** v2.0 Phase 21 next — Card Playability Highlights (already complete); Phase 22 (Mobile Card Categories) next pending
+**Current focus:** v2.0 Phase 20 complete — Sound & Settings; Phase 22 (Mobile Card Categories) remaining
 
 ## Current Position
 
-Phase: 20 of 23 (Sound Settings) — COMPLETE
+Phase: 20 of 23 (Sound & Settings) — COMPLETE
 Plan: 3 of 3 complete in phase 20
-Status: Phase 20 complete — round time selector in lobby UI, dynamic TurnTimer, MuteButton in PlayingPhase
-Last activity: 2026-02-19 — Completed 20-03-PLAN.md (client round time selector + MuteButton + dynamic TurnTimer)
+Status: Phase 20 complete — 3 plans executed, verified (4/4 must-haves), all tests pass
+Last activity: 2026-02-19 — Completed phase 20 execution (mute toggle, round time config, client UI wiring)
 
-Progress: [█████████░] 20/23 phases complete (87% overall — Phase 20 complete, Phase 22 remaining)
+Progress: [██████████] 21/23 phases complete (91% overall — Phase 22 remaining)
 
 ## Performance Metrics
 
@@ -25,9 +25,9 @@ Progress: [█████████░] 20/23 phases complete (87% overall �
 - Quick tasks completed: 20
 
 **v2.0 Velocity:**
-- Total plans completed: 11
-- Average duration: 2.8 minutes
-- Total execution time: 0.51 hours
+- Total plans completed: 14
+- Average duration: 2.6 minutes
+- Total execution time: 0.58 hours
 
 ## Accumulated Context
 
@@ -117,6 +117,6 @@ Web client UI fully updated: safe area, shithead marker, Discord avatars, specta
 ## Session Continuity
 
 Last session: 2026-02-19
-Stopped at: Completed 20-03-PLAN.md — client round time selector in both lobbies, dynamic TurnTimer, MuteButton in PlayingPhase
+Stopped at: Completed Phase 20 — Sound & Settings (3 plans, verified 4/4 must-haves)
 Resume file: None
 Next: Phase 22 (Mobile Card Categories)

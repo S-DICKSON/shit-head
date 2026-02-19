@@ -17,9 +17,9 @@ Requirements for v2.0 milestone: UI improvements + Discord Activity integration.
 
 ### Sound & Settings
 
-- [ ] **SETS-01**: Sound mute toggle persists across sessions (localStorage)
-- [ ] **SETS-02**: Host can configure round time (30s, 45s, 60s) in lobby before game starts
-- [ ] **SETS-03**: Configured round time applies to all players' turn timers
+- [x] **SETS-01**: Sound mute toggle persists across sessions (localStorage)
+- [x] **SETS-02**: Host can configure round time (30s, 45s, 60s) in lobby before game starts
+- [x] **SETS-03**: Configured round time applies to all players' turn timers
 
 ### Discord Activity — Platform Infrastructure
 
@@ -89,9 +89,9 @@ Deferred to later milestones.
 | MOBUI-03 | Phase 22 | Pending |
 | MOBUI-04 | Phase 22 | Pending |
 | MOBUI-05 | Phase 22 | Pending |
-| SETS-01 | Phase 20 | Pending |
-| SETS-02 | Phase 20 | Pending |
-| SETS-03 | Phase 20 | Pending |
+| SETS-01 | Phase 20 | Complete |
+| SETS-02 | Phase 20 | Complete |
+| SETS-03 | Phase 20 | Complete |
 | DISC-01 | Phase 17 | Complete |
 | DISC-02 | Phase 17 | Complete |
 | DISC-03 | Phase 17 | Complete |
@@ -115,4 +115,4 @@ Deferred to later milestones.
 
 ---
 *Requirements defined: 2026-02-15*
-*Last updated: 2026-02-17 after Phase 18 completion*
+*Last updated: 2026-02-19 after Phase 20 completion*
