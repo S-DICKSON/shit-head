@@ -12,6 +12,8 @@ const lobbyPlayerSchema = z.object({
   discordUserId: z.string().nullable().optional(), // Discord user ID for CDN avatar URLs
 });
 
+const roundTimeSchema = z.union([z.literal(30), z.literal(45), z.literal(60)]);
+
 const roomStateSchema: z.ZodType<RoomState> = z.object({
   code: z.string().min(1).max(100), // Supports both 6-char web codes and Discord instanceIds
   players: z.array(lobbyPlayerSchema),
@@ -21,6 +23,7 @@ const roomStateSchema: z.ZodType<RoomState> = z.object({
   minPlayers: z.literal(2),
   spectatorCount: z.number().int().min(0),
   shitheadPlayerId: z.string().nullable(),
+  roundTime: roundTimeSchema,
 });
 
 // Card schemas (Phase 3: Deck & Dealing)
@@ -121,6 +124,11 @@ export const joinOrCreateSchema = z.object({
   discordUserId: z.string().nullable().optional(),
 });
 
+export const setRoundTimeSchema = z.object({
+  type: z.literal('set-round-time'),
+  roundTime: roundTimeSchema,
+});
+
 export const clientMessageSchema = z.discriminatedUnion('type', [
   createRoomSchema,
   joinRoomSchema,
@@ -135,6 +143,7 @@ export const clientMessageSchema = z.discriminatedUnion('type', [
   renamePlayerSchema,
   playAgainSchema,
   joinOrCreateSchema,
+  setRoundTimeSchema,
 ]);
 
 // Server-to-client message schemas
@@ -261,7 +270,7 @@ export const gameOverSchema = z.object({
 
 export const turnTimerTickSchema = z.object({
   type: z.literal('turn-timer-tick'),
-  timeRemaining: z.number().int().min(0).max(45),
+  timeRemaining: z.number().int().min(0).max(60),
   currentPlayerIndex: z.number().int().min(0),
 });
 

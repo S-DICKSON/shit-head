@@ -16,6 +16,8 @@ export type LobbyPlayer = {
 
 export type RoomStatus = 'waiting' | 'countdown' | 'playing';
 
+export type RoundTime = 30 | 45 | 60;
+
 export type RoomState = {
   code: string;
   players: LobbyPlayer[];
@@ -25,4 +27,5 @@ export type RoomState = {
   minPlayers: 2;
   spectatorCount: number;        // How many spectators are watching
   shitheadPlayerId: string | null; // Previous game's loser, null when no previous game
+  roundTime: RoundTime;
 };
