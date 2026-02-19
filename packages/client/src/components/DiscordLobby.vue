@@ -140,6 +140,10 @@ const startGame = () => {
   send({ type: 'start-game' });
 };
 
+const setRoundTime = (time: 30 | 45 | 60) => {
+  send({ type: 'set-round-time', roundTime: time });
+};
+
 // Message handlers
 const unregister = onMessage((msg) => {
   if (msg.type === 'game-starting') {
@@ -282,6 +286,24 @@ onUnmounted(() => {
           v-if="isHost"
           class="mt-6"
         >
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-600 mb-2">Round Time</label>
+            <div class="flex gap-2">
+              <button
+                v-for="time in [30, 45, 60]"
+                :key="time"
+                :class="[
+                  'px-4 py-2 rounded-lg text-sm font-medium border transition-all',
+                  roomState?.roundTime === time
+                    ? 'bg-green-600 text-white border-green-600'
+                    : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                ]"
+                @click="setRoundTime(time as 30 | 45 | 60)"
+              >
+                {{ time }}s
+              </button>
+            </div>
+          </div>
           <button
             :disabled="!canStartGame"
             class="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-bold py-4 rounded-lg transition-all shadow-md hover:shadow-lg text-lg"
@@ -295,7 +317,13 @@ onUnmounted(() => {
           v-else
           class="mt-6 text-center text-gray-600 italic"
         >
-          Waiting for host to start...
+          <p>Waiting for host to start...</p>
+          <p
+            v-if="roomState?.roundTime"
+            class="text-sm mt-1"
+          >
+            Round time: {{ roomState.roundTime }}s
+          </p>
         </div>
       </template>
 
