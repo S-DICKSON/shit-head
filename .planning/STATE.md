@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-15)
 
 **Core value:** Friends can play a complete, rule-accurate game of Shithead together online with zero friction
-**Current focus:** v2.0 Phase 20 complete — Sound & Settings; Phase 22 (Mobile Card Categories) remaining
+**Current focus:** v2.0 Phase 22 complete — Mobile Card Categories
 
 ## Current Position
 
-Phase: 20 of 23 (Sound & Settings) — COMPLETE
-Plan: 3 of 3 complete in phase 20
-Status: Phase 20 complete — 3 plans executed, verified (4/4 must-haves), all tests pass
-Last activity: 2026-02-19 — Completed quick task 022 (mobile viewport overflow fix)
+Phase: 22 of 23 (Mobile Card Categories) — COMPLETE
+Plan: 1 of 1 complete in phase 22
+Status: Phase 22 complete — category tabs + carousel + two-step play confirmation for mobile hand navigation
+Last activity: 2026-02-19 — Completed 22-01-PLAN.md (useCardCategories composable + PlayerCards.vue category UI)
 
-Progress: [██████████] 21/23 phases complete (91% overall — Phase 22 remaining)
+Progress: [██████████] 22/23 phases complete (96% overall — Phase 23 remaining)
 
 ## Performance Metrics
 
@@ -94,6 +94,11 @@ Recent decisions affecting v2.0 work:
 - set-round-time broadcasts room-updated to all players after success (same pattern as rename-player) (20-02)
 - roomState?.roundTime ?? 45 fallback in TurnTimer binding and return-to-lobby reset: defensive for edge cases (20-03)
 - MuteButton before TurnTimer in PlayingPhase template: both fixed-position overlays, order has no visual impact (20-03)
+- isPowerCard includes 7 and Joker beyond server isSpecialCard (2,8,10) — UI categorization purpose (22-01)
+- Tab buttons as sole category switching mechanism — avoids useSwipe touch conflict with carousel scroll (22-01)
+- groupedCards excluded from PlayerCards destructuring — component uses activeGroups (display layer only) (22-01)
+- isGroupPlayable removed from carousel — new carousel uses isPowerGroup for gold styling, not playability ring (22-01)
+- confirmTimer as module-level let (not ref) — no reactivity needed, pure timeout management (22-01)
 
 ### Pending Todos
 
@@ -117,6 +122,6 @@ Web client UI fully updated: safe area, shithead marker, Discord avatars, specta
 ## Session Continuity
 
 Last session: 2026-02-19
-Stopped at: Completed quick task 022 — mobile viewport overflow fix (1edf5b8)
+Stopped at: Completed 22-01-PLAN.md — useCardCategories composable + PlayerCards.vue category tabs/carousel
 Resume file: None
-Next: Phase 22 (Mobile Card Categories)
+Next: Phase 23 (Frontend Testing)
