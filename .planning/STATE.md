@@ -122,6 +122,6 @@ Web client UI fully updated: safe area, shithead marker, Discord avatars, specta
 ## Session Continuity
 
 Last session: 2026-02-19
-Stopped at: Completed 22-01-PLAN.md — useCardCategories composable + PlayerCards.vue category tabs/carousel
+Stopped at: Completed quick task 021 — mobile double-tap-to-zoom fix (touch-action: manipulation + user-scalable=no)
 Resume file: None
 Next: Phase 23 (Frontend Testing)
