@@ -67,62 +67,104 @@
           <span class="text-xs text-green-300 uppercase tracking-wide">Hand ({{ hand.length }})</span>
         </div>
 
-        <!-- Mobile grouped view (> 5 cards on mobile) -->
+        <!-- Mobile grouped view (> 5 cards on mobile) with category tabs + carousel -->
         <div
           v-if="shouldShowGrouped"
-          class="flex flex-col gap-2 max-h-[30vh] overflow-y-auto px-2"
+          class="flex flex-col gap-2 px-2"
         >
+          <!-- Category tab bar -->
           <div
-            v-for="group in groupedCards"
-            :key="group.rank"
-            class="rounded-lg p-2 flex items-center gap-3 transition-all"
-            :class="[
-              isGroupPlayable(group.indices)
-                ? 'bg-gray-800/50 ring-1 ring-green-400 shadow-sm shadow-green-400/30'
-                : playableHandIndices.size > 0
-                  ? 'bg-gray-800/50 opacity-50'
-                  : 'bg-gray-800/50'
-            ]"
+            class="flex gap-1"
+            role="tablist"
+            aria-label="Card categories"
           >
-            <!-- Sample card visual -->
-            <div
-              class="w-10 h-15 bg-white text-black rounded border-2 flex flex-col items-center justify-center text-xs flex-shrink-0"
-              :class="[
-                isGroupPlayable(group.indices)
-                  ? 'border-green-400'
-                  : 'border-gray-300'
-              ]"
+            <button
+              role="tab"
+              :aria-selected="activeCategory === 'normal'"
+              :tabindex="activeCategory === 'normal' ? 0 : -1"
+              class="flex-1 min-h-[60px] rounded-lg text-sm font-semibold transition-colors"
+              :class="activeCategory === 'normal'
+                ? 'bg-green-600 text-white'
+                : 'bg-gray-700 text-gray-300'"
+              @click="switchCategory('normal')"
             >
-              <span class="font-bold">{{ group.rank }}</span>
-              <span :class="suitColor(group.cards[0])">
-                {{ group.cards[0].kind === 'standard' ? suitSymbol(group.cards[0].suit) : '★' }}
-              </span>
-            </div>
+              Normal ({{ normalCount }})
+            </button>
+            <button
+              role="tab"
+              :aria-selected="activeCategory === 'power'"
+              :tabindex="activeCategory === 'power' ? 0 : -1"
+              class="flex-1 min-h-[60px] rounded-lg text-sm font-semibold transition-colors"
+              :class="activeCategory === 'power'
+                ? 'bg-yellow-600 text-black'
+                : 'bg-gray-700 text-gray-300'"
+              @click="switchCategory('power')"
+            >
+              Power ({{ powerCount }})
+            </button>
+          </div>
 
-            <!-- Rank label -->
-            <div class="flex-1 text-sm text-green-200">
-              {{ group.count }}× {{ group.rank }}{{ group.count > 1 ? 's' : '' }}
-            </div>
+          <!-- Empty category message -->
+          <div
+            v-if="activeGroups.length === 0"
+            class="text-center text-gray-400 text-sm py-6"
+          >
+            No {{ activeCategory === 'power' ? 'power' : 'normal' }} cards in hand
+          </div>
 
-            <!-- Quantity selectors -->
-            <div class="flex items-center gap-2">
-              <button
-                class="w-8 h-8 rounded-full bg-gray-600 text-white font-bold flex items-center justify-center disabled:opacity-30 transition-colors"
-                :disabled="activeSource !== 'hand' || !isMyTurn || getSelectedCount(group.rank) === 0"
-                @click="decrementSelection(group.rank)"
+          <!-- Horizontal carousel of card groups -->
+          <div
+            v-else
+            class="flex overflow-x-auto gap-3 px-1 pb-2 snap-x snap-mandatory"
+            style="-webkit-overflow-scrolling: touch;"
+          >
+            <div
+              v-for="group in activeGroups"
+              :key="group.rank"
+              class="snap-start flex-shrink-0 w-[75vw] max-w-[260px] rounded-xl p-3 flex items-center gap-3"
+              :class="isPowerGroup(group.cards)
+                ? 'bg-yellow-900/30 border border-yellow-500/60'
+                : 'bg-gray-800/50 border border-gray-700'"
+            >
+              <!-- Sample card visual -->
+              <div
+                class="w-10 h-15 bg-white text-black rounded border-2 flex flex-col items-center justify-center text-xs flex-shrink-0"
+                :class="isPowerGroup(group.cards) ? 'border-yellow-400' : 'border-gray-300'"
               >
-                −
-              </button>
-              <span class="w-6 text-center text-sm font-bold text-yellow-400">
-                {{ getSelectedCount(group.rank) }}
-              </span>
-              <button
-                class="w-8 h-8 rounded-full bg-gray-600 text-white font-bold flex items-center justify-center disabled:opacity-30 transition-colors"
-                :disabled="activeSource !== 'hand' || !isMyTurn || getSelectedCount(group.rank) >= group.count"
-                @click="incrementSelection(group.rank)"
+                <span class="font-bold">{{ group.rank }}</span>
+                <span :class="suitColor(group.cards[0])">
+                  {{ group.cards[0].kind === 'standard' ? suitSymbol(group.cards[0].suit) : '★' }}
+                </span>
+              </div>
+
+              <!-- Rank label -->
+              <div
+                class="flex-1 text-sm"
+                :class="isPowerGroup(group.cards) ? 'text-yellow-200' : 'text-green-200'"
               >
-                +
-              </button>
+                {{ group.count }}× {{ group.rank }}{{ group.count > 1 ? 's' : '' }}
+              </div>
+
+              <!-- Quantity selectors -->
+              <div class="flex items-center gap-2">
+                <button
+                  class="w-[60px] h-[60px] rounded-full bg-gray-600 text-white font-bold flex items-center justify-center disabled:opacity-30 transition-colors"
+                  :disabled="activeSource !== 'hand' || !isMyTurn || getSelectedCount(group.rank) === 0"
+                  @click="decrementSelection(group.rank)"
+                >
+                  −
+                </button>
+                <span class="w-6 text-center text-sm font-bold text-yellow-400">
+                  {{ getSelectedCount(group.rank) }}
+                </span>
+                <button
+                  class="w-[60px] h-[60px] rounded-full bg-gray-600 text-white font-bold flex items-center justify-center disabled:opacity-30 transition-colors"
+                  :disabled="activeSource !== 'hand' || !isMyTurn || getSelectedCount(group.rank) >= group.count"
+                  @click="incrementSelection(group.rank)"
+                >
+                  +
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -167,11 +209,15 @@
         <div class="flex justify-center gap-4">
           <button
             v-if="shouldShowGrouped ? hasGroupSelection : hasSelection"
-            class="px-6 py-2 bg-yellow-500 text-black font-bold rounded-lg disabled:opacity-50 hover:bg-yellow-400 transition-colors"
+            class="px-6 py-2 font-bold rounded-lg disabled:opacity-50 transition-colors"
+            :class="{
+              'animate-pulse bg-red-500 hover:bg-red-400 text-white': shouldShowGrouped && playConfirming,
+              'bg-yellow-500 hover:bg-yellow-400 text-black': !(shouldShowGrouped && playConfirming),
+            }"
             :disabled="!isMyTurn"
-            @click="shouldShowGrouped ? handleGroupedPlay() : emit('play-cards')"
+            @click="shouldShowGrouped ? handleGroupedPlayConfirm() : emit('play-cards')"
           >
-            Play
+            {{ shouldShowGrouped && playConfirming ? 'Confirm Play?' : 'Play' }}
           </button>
           <button
             class="px-6 py-2 bg-red-500 text-white font-bold rounded-lg disabled:opacity-50 hover:bg-red-400 transition-colors"
@@ -195,9 +241,9 @@
 
 <script setup lang="ts">
 import type { Card } from '@shit-head/shared';
-import { computed, ref, onMounted, onUnmounted } from 'vue';
+import { computed, ref, watch, onMounted, onUnmounted } from 'vue';
 import { useDoubleTap } from '../composables/useDoubleTap';
-import { useCardGrouping } from '../composables/useCardGrouping';
+import { useCardCategories, isPowerCard } from '../composables/useCardCategories';
 
 const props = defineProps<{
   hand: Card[];
@@ -244,31 +290,61 @@ onUnmounted(() => {
 
 const isMobile = computed(() => windowWidth.value < 640);
 
-// Card grouping for mobile
+// Card grouping + category split for mobile
 const handRef = computed(() => props.hand);
 const {
-  groupedCards,
   incrementSelection,
   decrementSelection,
   selectedIndices,
   hasGroupSelection,
   clearGroupSelection,
   getSelectedCount,
-} = useCardGrouping(handRef);
+  activeCategory,
+  activeGroups,
+  powerCount,
+  normalCount,
+  switchCategory,
+} = useCardCategories(handRef);
 
 // Determine if we should show grouped view
 const shouldShowGrouped = computed(() => isMobile.value && props.hand.length > 5);
 
-// Handle play button click for grouped mode
-function handleGroupedPlay() {
-  emit('play-grouped-cards', selectedIndices.value);
-  clearGroupSelection();
+// Two-step play confirmation to prevent accidental mis-taps in grouped mode
+const playConfirming = ref(false);
+let confirmTimer: ReturnType<typeof setTimeout> | null = null;
+
+function handleGroupedPlayConfirm() {
+  if (playConfirming.value) {
+    // Second tap — fire the play
+    playConfirming.value = false;
+    if (confirmTimer) {
+      clearTimeout(confirmTimer);
+      confirmTimer = null;
+    }
+    emit('play-grouped-cards', selectedIndices.value);
+    clearGroupSelection();
+  } else {
+    // First tap — enter confirm state, auto-cancel after 3s
+    playConfirming.value = true;
+    confirmTimer = setTimeout(() => {
+      playConfirming.value = false;
+    }, 3000);
+  }
 }
 
-// Helper: check if any card in a group is playable (index-based to avoid JKR vs joker mismatch)
-function isGroupPlayable(groupIndices: number[]): boolean {
-  if (props.playableHandIndices.size === 0) return false;
-  return groupIndices.some(i => props.playableHandIndices.has(i));
+// Clear selection and cancel confirm state when switching categories
+watch(activeCategory, () => {
+  clearGroupSelection();
+  playConfirming.value = false;
+  if (confirmTimer) {
+    clearTimeout(confirmTimer);
+    confirmTimer = null;
+  }
+});
+
+// Helper: check if a group contains power cards (first card is representative since groups are by rank)
+function isPowerGroup(cards: Card[]): boolean {
+  return cards.length > 0 && isPowerCard(cards[0]);
 }
 
 // Helper: suit symbol
@@ -309,5 +385,14 @@ function cardKey(card: Card): string {
 }
 .card-list-leave-active {
   position: absolute;
+}
+
+/* Hide scrollbar on horizontal carousel */
+.snap-x::-webkit-scrollbar {
+  display: none;
+}
+.snap-x {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 </style>
