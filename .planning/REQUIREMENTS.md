@@ -10,10 +10,10 @@ Requirements for v2.0 milestone: UI improvements + Discord Activity integration.
 ### Mobile UI
 
 - [x] **MOBUI-01**: Card playability highlights show which cards in hand are valid to play on current pile
-- [ ] **MOBUI-02**: When hand has > 5 cards, display splits into normal and power card categories
-- [ ] **MOBUI-03**: Power card category includes 2, 7, 8, 10, and Joker cards
-- [ ] **MOBUI-04**: Category navigation allows switching between normal and power card views on mobile
-- [ ] **MOBUI-05**: Touch-optimized card interactions with proper touch targets on mobile
+- [x] **MOBUI-02**: When hand has > 5 cards, display splits into normal and power card categories
+- [x] **MOBUI-03**: Power card category includes 2, 7, 8, 10, and Joker cards
+- [x] **MOBUI-04**: Category navigation allows switching between normal and power card views on mobile
+- [x] **MOBUI-05**: Touch-optimized card interactions with proper touch targets on mobile
 
 ### Sound & Settings
 
@@ -84,11 +84,11 @@ Deferred to later milestones.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| MOBUI-01 | Phase 21 | Pending |
-| MOBUI-02 | Phase 22 | Pending |
-| MOBUI-03 | Phase 22 | Pending |
-| MOBUI-04 | Phase 22 | Pending |
-| MOBUI-05 | Phase 22 | Pending |
+| MOBUI-01 | Phase 21 | Complete |
+| MOBUI-02 | Phase 22 | Complete |
+| MOBUI-03 | Phase 22 | Complete |
+| MOBUI-04 | Phase 22 | Complete |
+| MOBUI-05 | Phase 22 | Complete |
 | SETS-01 | Phase 20 | Complete |
 | SETS-02 | Phase 20 | Complete |
 | SETS-03 | Phase 20 | Complete |
@@ -115,4 +115,4 @@ Deferred to later milestones.
 
 ---
 *Requirements defined: 2026-02-15*
-*Last updated: 2026-02-19 after Phase 20 completion*
+*Last updated: 2026-02-19 after Phase 22 completion*

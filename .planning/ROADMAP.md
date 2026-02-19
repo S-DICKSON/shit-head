@@ -34,7 +34,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 19: Discord Room Management** - Instance ID auto-join and production deployment
 - [x] **Phase 20: Sound & Settings** - Mute toggle and host-configurable round time
 - [x] **Phase 21: Card Playability Highlights** - Visual indicators for valid plays
-- [ ] **Phase 22: Mobile Card Categories** - Normal/power card navigation for large hands
+- [x] **Phase 22: Mobile Card Categories** - Normal/power card navigation for large hands
 - [x] **Phase 23: Frontend Testing** - Vue component and integration tests for the client package
 
 ## Phase Details
@@ -154,7 +154,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 22-01-PLAN.md — useCardCategories composable + PlayerCards.vue category tabs, carousel, and power card styling
+- [x] 22-01-PLAN.md — useCardCategories composable + PlayerCards.vue category tabs, carousel, and power card styling
 
 ### Phase 23: Frontend Testing
 **Goal**: Build comprehensive Vue component and integration test suite for the client package
@@ -180,9 +180,9 @@ Phases execute in numeric order: 16 -> 17 -> 18 -> 19 -> 20 -> 21 -> 22 -> 23
 | 19. Discord Room Management | 6/6 | Complete | 2026-02-19 |
 | 20. Sound & Settings | 3/3 | Complete | 2026-02-19 |
 | 21. Card Playability Highlights | 1/1 | Complete | 2026-02-18 |
-| 22. Mobile Card Categories | 0/TBD | Not started | - |
+| 22. Mobile Card Categories | 1/1 | Complete | 2026-02-19 |
 | 23. Frontend Testing | 4/4 | Complete | 2026-02-18 |
 
 ---
 *Roadmap created: 2026-02-15*
-*Last updated: 2026-02-19 -- Phase 20 complete: sound mute toggle + host-configurable round time verified (4/4 must-haves)*
+*Last updated: 2026-02-19 -- Phase 22 complete: mobile card categories verified (7/7 must-haves)*
