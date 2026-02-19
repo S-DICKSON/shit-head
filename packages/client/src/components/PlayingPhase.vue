@@ -4,6 +4,7 @@ import { usePlayingPhase } from '../composables/usePlayingPhase';
 import { useGameSocket } from '../composables/useGameSocket';
 import TurnTimer from './TurnTimer.vue';
 import TurnBanner from './TurnBanner.vue';
+import MuteButton from './MuteButton.vue';
 import OpponentCards from './OpponentCards.vue';
 import DrawPile from './DrawPile.vue';
 import DiscardPile from './DiscardPile.vue';
@@ -140,10 +141,13 @@ watch(
       />
     </div>
 
+    <!-- Mute Button (fixed overlay) -->
+    <MuteButton />
+
     <!-- Turn Timer (fixed overlay in bottom-right) -->
     <TurnTimer
       :time-remaining="turnTimeRemaining"
-      :total-time="45"
+      :total-time="roomState?.roundTime ?? 45"
     />
 
     <!-- ARIA live region for screen readers -->

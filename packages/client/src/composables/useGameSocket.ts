@@ -365,7 +365,7 @@ function createGameSocket() {
           swapPhaseReason.value = null;
           readyPlayers.value = [];
           burnTriggered.value = false;
-          turnTimeRemaining.value = 45;
+          turnTimeRemaining.value = message.room.roundTime ?? 45;
           turnTimerPlayerIndex.value = -1;
           // Clear spectator state on return to lobby
           isSpectator.value = false;
