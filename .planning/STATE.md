@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 ## Current Position
 
 Phase: 20 of 23 (Sound Settings) — In progress
-Plan: 1 of N complete in phase 20
-Status: Plan 20-01 complete — mute toggle with localStorage persistence, MuteButton.vue, mute tests
-Last activity: 2026-02-19 — Completed 20-01-PLAN.md (mute composable + MuteButton component)
+Plan: 2 of N complete in phase 20
+Status: Plan 20-02 complete — configurable round time (30/45/60s) in RoomState, Room.setRoundTime(), set-round-time WebSocket handler
+Last activity: 2026-02-19 — Completed 20-02-PLAN.md (shared types/schemas + server Room + WebSocket handler for round time)
 
 Progress: [█████████░] 19/23 phases complete (83% overall — Phases 20 in progress, 22 remaining)
 
@@ -88,6 +88,10 @@ Recent decisions affecting v2.0 work:
 - instanceId-based auto-join is canonical Discord Activity room pattern: same voice channel = same instanceId = same room (19-06)
 - muteState at module level (not inside composable) — singleton pattern ensures all component instances share one reactive ref (20-01)
 - mockOscillator.start assertion for post-unmute beep test: module-level audioContext persists across Vitest tests; checking createOscillator on fresh mock fails because old cached context is reused (20-01)
+- roundTime stored as mutable instance variable (not readonly) to allow setRoundTime() changes — TURN_DURATION removed entirely (20-02)
+- setRoundTime lobbies-only enforcement: returns INVALID_ACTION if status !== waiting (20-02)
+- turnTimerTickSchema max raised from 45 to 60: prevents Zod validation failure when server sends timeRemaining: 60 (20-02)
+- set-round-time broadcasts room-updated to all players after success (same pattern as rename-player) (20-02)
 
 ### Pending Todos
 
@@ -111,6 +115,6 @@ Web client UI fully updated: safe area, shithead marker, Discord avatars, specta
 ## Session Continuity
 
 Last session: 2026-02-19
-Stopped at: Completed 20-01-PLAN.md — mute toggle (muteState ref, toggleMute, MuteButton.vue, SwapPhase integration, 4 mute tests)
+Stopped at: Completed 20-02-PLAN.md — round time backend (RoundTime type, setRoundTimeSchema, Room.setRoundTime(), set-round-time handler)
 Resume file: None
-Next: Phase 20 remaining plans (round time, PlayingPhase mute button) or Phase 22 (Mobile Card Categories)
+Next: Phase 20 remaining plans (client round time selector in lobby UI, PlayingPhase mute button) or Phase 22 (Mobile Card Categories)
