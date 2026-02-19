@@ -14,8 +14,8 @@ type OperationResult<T = void> = T extends void
 export class Room {
   public readonly code: string;
   private hostId: string;
-  private players: Map<string, { id: string; nickname: string; isHost: boolean; avatarHash?: string | null }>;
-  private spectators: Map<string, { id: string; nickname: string; avatarHash?: string | null }>;
+  private players: Map<string, { id: string; nickname: string; isHost: boolean; avatarHash?: string | null; discordUserId?: string | null }>;
+  private spectators: Map<string, { id: string; nickname: string; avatarHash?: string | null; discordUserId?: string | null }>;
   private status: RoomStatus;
   private readonly maxPlayers = 4;
   private readonly minPlayers = 2;
@@ -55,7 +55,7 @@ export class Room {
   private playAgainTimeout: ReturnType<typeof setTimeout> | null = null;
   private onReturnToLobby?: (removedPlayerIds: string[]) => void;
 
-  constructor(hostId: string, hostNickname: string, code?: string, avatarHash?: string | null) {
+  constructor(hostId: string, hostNickname: string, code?: string, avatarHash?: string | null, discordUserId?: string | null) {
     this.code = code || generateRoomCode();
     this.hostId = hostId;
     this.status = 'waiting';
@@ -68,10 +68,11 @@ export class Room {
       nickname: hostNickname,
       isHost: true,
       avatarHash: avatarHash ?? null,
+      discordUserId: discordUserId ?? null,
     });
   }
 
-  addPlayer(id: string, nickname: string, avatarHash?: string | null): OperationResult {
+  addPlayer(id: string, nickname: string, avatarHash?: string | null, discordUserId?: string | null): OperationResult {
     // Validate nickname
     const trimmedNickname = nickname.trim();
     if (trimmedNickname.length === 0 || trimmedNickname.length > 20) {
@@ -115,12 +116,13 @@ export class Room {
       nickname: trimmedNickname,
       isHost: false,
       avatarHash: avatarHash ?? null,
+      discordUserId: discordUserId ?? null,
     });
 
     return { success: true };
   }
 
-  addSpectator(id: string, nickname: string, avatarHash?: string | null): OperationResult {
+  addSpectator(id: string, nickname: string, avatarHash?: string | null, discordUserId?: string | null): OperationResult {
     if (this.spectators.has(id) || this.players.has(id)) {
       return { success: false, error: 'Already in room', code: 'ALREADY_IN_ROOM' };
     }
@@ -128,7 +130,7 @@ export class Room {
     if (this.players.size + this.spectators.size >= this.maxPlayers + 4) {
       return { success: false, error: 'Room is full', code: 'ROOM_FULL' };
     }
-    this.spectators.set(id, { id, nickname: nickname.trim(), avatarHash });
+    this.spectators.set(id, { id, nickname: nickname.trim(), avatarHash, discordUserId: discordUserId ?? null });
     this.onSpectatorJoined?.(id, nickname);
     return { success: true };
   }
@@ -164,6 +166,7 @@ export class Room {
       handCount: p.hand.length,
       isShithead: p.playerId === this.shitheadPlayerId,
       avatarHash: this.players.get(p.playerId)?.avatarHash ?? null,
+      discordUserId: this.players.get(p.playerId)?.discordUserId ?? null,
     }));
     return {
       discardPile: this.gameState.discardPile,
@@ -266,6 +269,7 @@ export class Room {
         ...o,
         isShithead: o.playerId === this.shitheadPlayerId,
         avatarHash: this.players.get(o.playerId)?.avatarHash ?? null,
+        discordUserId: this.players.get(o.playerId)?.discordUserId ?? null,
       })),
     };
   }
@@ -284,6 +288,7 @@ export class Room {
       nickname: p.nickname,
       isHost: p.isHost,
       avatarHash: p.avatarHash ?? null,
+      discordUserId: p.discordUserId ?? null,
     }));
 
     return {
@@ -473,6 +478,7 @@ export class Room {
         nickname: spectator.nickname,
         isHost: false,
         avatarHash: spectator.avatarHash,
+        discordUserId: spectator.discordUserId,
       });
     }
     this.spectators.clear();

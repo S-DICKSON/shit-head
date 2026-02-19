@@ -6,6 +6,7 @@ export default defineConfig({
   plugins: [vue(), tailwindcss()],
   build: {
     outDir: 'dist',  // Output for CF Pages deployment
+    target: 'esnext',  // Required for top-level await (Discord SDK lazy imports)
   },
   server: {
     host: '0.0.0.0',  // Required for Docker

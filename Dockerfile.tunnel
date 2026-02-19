@@ -6,6 +6,7 @@ FROM oven/bun:1 AS client-build
 WORKDIR /app
 COPY package.json bun.lock* tsconfig.json ./
 COPY packages/client/package.json ./packages/client/
+COPY packages/server/package.json ./packages/server/
 COPY packages/shared/package.json ./packages/shared/
 COPY packages/shared/tsconfig.json ./packages/shared/
 COPY packages/client/tsconfig.json ./packages/client/
@@ -15,12 +16,15 @@ RUN bun install --frozen-lockfile
 COPY packages/client/ ./packages/client/
 COPY packages/shared/ ./packages/shared/
 WORKDIR /app/packages/client
+ARG VITE_DISCORD_CLIENT_ID
+ENV VITE_DISCORD_CLIENT_ID=$VITE_DISCORD_CLIENT_ID
 RUN bunx vite build
 
 # Stage 2: Run server with built client
 FROM oven/bun:1
 WORKDIR /app
 COPY package.json bun.lock* tsconfig.json ./
+COPY packages/client/package.json ./packages/client/
 COPY packages/server/package.json ./packages/server/
 COPY packages/shared/package.json ./packages/shared/
 RUN bun install --frozen-lockfile --production

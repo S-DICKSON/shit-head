@@ -36,19 +36,19 @@ export class RoomManager {
    * Creates a room with a specific code — used for Discord Activities where
    * the instanceId serves as the room code for automatic join-or-create flows.
    */
-  createRoomWithCode(code: string, hostId: string, nickname: string, avatarHash?: string | null): OperationResult<RoomState> {
+  createRoomWithCode(code: string, hostId: string, nickname: string, avatarHash?: string | null, discordUserId?: string | null): OperationResult<RoomState> {
     // Check if room with this code already exists
     if (this.rooms.has(code)) {
       return { success: false, error: 'Room already exists', code: 'ALREADY_IN_ROOM' };
     }
-    const room = new Room(hostId, nickname, code, avatarHash);
+    const room = new Room(hostId, nickname, code, avatarHash, discordUserId);
     this.rooms.set(code, room);
     this.playerRoomIndex.set(hostId, code);
     this.markActivity(code);
     return { success: true, data: room.getState() };
   }
 
-  joinRoom(code: string, playerId: string, nickname: string, avatarHash?: string | null): OperationResult<RoomState> {
+  joinRoom(code: string, playerId: string, nickname: string, avatarHash?: string | null, discordUserId?: string | null): OperationResult<RoomState> {
     const room = this.rooms.get(code);
 
     if (!room) {
@@ -59,7 +59,7 @@ export class RoomManager {
       };
     }
 
-    const result = room.addPlayer(playerId, nickname, avatarHash);
+    const result = room.addPlayer(playerId, nickname, avatarHash, discordUserId);
 
     if (!result.success) {
       return result as OperationResult<RoomState>;
@@ -78,7 +78,7 @@ export class RoomManager {
    * Joins an existing room or becomes a spectator if the game is in progress.
    * Used by Discord Activity auto-join flow where clients arrive after the game starts.
    */
-  joinRoomOrSpectate(code: string, playerId: string, nickname: string, avatarHash?: string | null): OperationResult<{ state: RoomState; isSpectator: boolean }> {
+  joinRoomOrSpectate(code: string, playerId: string, nickname: string, avatarHash?: string | null, discordUserId?: string | null): OperationResult<{ state: RoomState; isSpectator: boolean }> {
     const room = this.rooms.get(code);
     if (!room) {
       return { success: false, error: 'Room not found', code: 'ROOM_NOT_FOUND' };
@@ -88,7 +88,7 @@ export class RoomManager {
 
     if (roomState.status === 'waiting') {
       // Normal join (lobby phase)
-      const result = room.addPlayer(playerId, nickname, avatarHash);
+      const result = room.addPlayer(playerId, nickname, avatarHash, discordUserId);
       if (!result.success) return result as OperationResult<{ state: RoomState; isSpectator: boolean }>;
       this.playerRoomIndex.set(playerId, code);
       this.markActivity(code);
@@ -96,7 +96,7 @@ export class RoomManager {
     }
 
     // Game in progress — add as spectator
-    const result = room.addSpectator(playerId, nickname, avatarHash);
+    const result = room.addSpectator(playerId, nickname, avatarHash, discordUserId);
     if (!result.success) return result as OperationResult<{ state: RoomState; isSpectator: boolean }>;
     this.playerRoomIndex.set(playerId, code);
     this.markActivity(code);

@@ -53,7 +53,9 @@ tunnel: ## Start cloudflared tunnel for mobile testing (one command)
 	docker compose -f docker-compose.tunnel.yml up --build
 
 dev-discord: install ## Start Discord Activity dev environment (with cloudflared tunnel)
-	docker compose -f docker-compose.discord.yml up --build
+	@if [ ! -f packages/server/.env ]; then echo "ERROR: packages/server/.env missing — cp packages/server/.env.example packages/server/.env"; exit 1; fi
+	@if [ ! -f packages/client/.env ]; then echo "ERROR: packages/client/.env missing — cp packages/client/.env.example packages/client/.env"; exit 1; fi
+	set -a && . packages/client/.env && set +a && docker compose -f docker-compose.discord.yml up --build
 
 dev-discord-down: ## Stop Discord Activity dev environment
 	docker compose -f docker-compose.discord.yml down -v --remove-orphans

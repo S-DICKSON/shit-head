@@ -47,6 +47,7 @@ export type OpponentView = {
   handCount: number;      // Count only, not the actual cards
   isShithead?: boolean;   // Previous game's loser gets the poo emoji
   avatarHash?: string | null; // Discord avatar hash for gameplay display, null for web players
+  discordUserId?: string | null; // Discord user ID for CDN avatar URLs
 };
 
 /**

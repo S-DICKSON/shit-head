@@ -8,7 +8,7 @@
       <!-- Discord avatar (only shown when avatarHash is present) -->
       <img
         v-if="opponent.avatarHash !== undefined"
-        :src="getAvatarUrl(opponent.avatarHash, opponent.playerId)"
+        :src="getAvatarUrl(opponent.avatarHash, opponent.discordUserId || opponent.playerId)"
         :alt="opponent.nickname"
         class="w-6 h-6 rounded-full inline-block"
       >

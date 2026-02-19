@@ -11,6 +11,7 @@ export type LobbyPlayer = {
   nickname: string;
   isHost: boolean;
   avatarHash?: string | null; // Discord avatar hash, null for web players
+  discordUserId?: string | null; // Discord user ID for CDN avatar URLs
 };
 
 export type RoomStatus = 'waiting' | 'countdown' | 'playing';

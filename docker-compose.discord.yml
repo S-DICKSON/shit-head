@@ -1,46 +1,29 @@
 # Discord Activity local development
-# Extends the standard dev services with a cloudflared tunnel
+# Builds client + serves from server (single origin, reliable WebSocket)
 # Usage: make dev-discord
+#
+# Prerequisites:
+#   1. Create packages/server/.env with DISCORD_CLIENT_ID and DISCORD_CLIENT_SECRET
+#   2. Create packages/client/.env with VITE_DISCORD_CLIENT_ID
+#   See .planning/phases/18-discord-authentication/18-01-USER-SETUP.md
 
 services:
-  client:
+  app:
     build:
       context: .
-      dockerfile: packages/client/Dockerfile
-      target: dev
-    ports:
-      - "5173:5173"
-    working_dir: /app/packages/client
-    volumes:
-      - ./packages/client:/app/packages/client
-      - ./packages/shared:/app/packages/shared
-      - /app/node_modules
-      - /app/packages/client/node_modules
-      - /app/packages/shared/node_modules
-    environment:
-      - NODE_ENV=development
-    depends_on:
-      - server
-
-  server:
-    build:
-      context: .
-      dockerfile: packages/server/Dockerfile
-      target: dev
+      dockerfile: Dockerfile.tunnel
+      args:
+        - VITE_DISCORD_CLIENT_ID=${VITE_DISCORD_CLIENT_ID}
     ports:
       - "3000:3000"
-    volumes:
-      - ./packages/server:/app/packages/server
-      - ./packages/shared:/app/packages/shared
-      - /app/node_modules
-      - /app/packages/server/node_modules
-      - /app/packages/shared/node_modules
+    env_file:
+      - packages/server/.env
     environment:
-      - NODE_ENV=development
+      - NODE_ENV=production
       - PORT=3000
 
   tunnel:
     image: cloudflare/cloudflared:latest
-    command: tunnel --no-autoupdate --url http://client:5173
+    command: tunnel --no-autoupdate --url http://app:3000
     depends_on:
-      - client
+      - app

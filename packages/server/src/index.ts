@@ -34,9 +34,15 @@ const server = Bun.serve<WebSocketData>({
 
   async fetch(req, server) {
     const url = new URL(req.url);
+    // Strip Discord Activity /.proxy prefix (Discord adds this for all proxied requests)
+    let pathname = url.pathname;
+    if (pathname.startsWith('/.proxy/')) {
+      pathname = pathname.replace(/^\/.proxy/, '');
+      if (pathname === '/ws') pathname = '/game-ws';
+    }
 
     // Health check endpoint with metrics
-    if (url.pathname === '/health') {
+    if (pathname === '/health') {
       return new Response(
         JSON.stringify({
           status: 'ok',
@@ -57,11 +63,11 @@ const server = Bun.serve<WebSocketData>({
 
     // Discord OAuth2 token exchange endpoint
     // Exchanges authorization code for access token using server-side client secret
-    if (url.pathname === '/api/token' && req.method === 'POST') {
+    if (pathname === '/api/token' && req.method === 'POST') {
       try {
-        let body: { code?: string };
+        let body: { code?: string; code_verifier?: string };
         try {
-          body = await req.json() as { code?: string };
+          body = await req.json() as { code?: string; code_verifier?: string };
         } catch (e) {
           if (e instanceof SyntaxError) {
             return new Response(JSON.stringify({ error: 'Invalid JSON body' }), {
@@ -90,17 +96,24 @@ const server = Bun.serve<WebSocketData>({
           });
         }
 
+        // Build token exchange params — use PKCE code_verifier if provided
+        const tokenParams: Record<string, string> = {
+          client_id: discordClientId,
+          client_secret: discordClientSecret,
+          grant_type: 'authorization_code',
+          code: body.code,
+          redirect_uri: 'https://127.0.0.1',
+        };
+        if (body.code_verifier) {
+          tokenParams.code_verifier = body.code_verifier;
+        }
+
         const tokenResponse = await fetch('https://discord.com/api/oauth2/token', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
           },
-          body: new URLSearchParams({
-            client_id: discordClientId,
-            client_secret: discordClientSecret,
-            grant_type: 'authorization_code',
-            code: body.code,
-          }),
+          body: new URLSearchParams(tokenParams),
         });
 
         if (!tokenResponse.ok) {
@@ -127,7 +140,8 @@ const server = Bun.serve<WebSocketData>({
     }
 
     // WebSocket upgrade endpoint with Origin validation
-    if (url.pathname === '/game-ws') {
+    // /game-ws = web client, /ws = Discord Activity (Discord strips /.proxy prefix)
+    if (pathname === '/game-ws' || pathname === '/ws') {
       const origin = req.headers.get('Origin');
 
       // Validate origin in production (skip when serving static files — same-origin tunnel mode)

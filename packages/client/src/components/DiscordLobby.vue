@@ -23,6 +23,8 @@ const authAdapter = inject(AuthAdapterKey);
 
 // State
 const isAuthenticating = ref(true);
+const authError = ref<string | null>(null);
+const authStep = ref('Initializing...');
 const countdown = ref<number | null>(null);
 
 // Computed
@@ -60,7 +62,7 @@ async function withRetry<T>(fn: () => Promise<T>, maxRetries = 3): Promise<T> {
     try {
       return await fn();
     } catch (err) {
-      lastError = err instanceof Error ? err : new Error(String(err));
+      lastError = err instanceof Error ? err : new Error(JSON.stringify(err));
       if (attempt < maxRetries - 1) {
         // Exponential backoff: 1s, 2s, 4s
         await new Promise(r => setTimeout(r, 1000 * Math.pow(2, attempt)));
@@ -78,19 +80,22 @@ onMounted(async () => {
   }
 
   try {
-    // Step 1: Authenticate with retry (silent retries per locked decision)
+    // Step 1: Authenticate with retry
     if (!authAdapter.isAuthenticated()) {
+      authStep.value = 'Authenticating with Discord...';
       await withRetry(() => authAdapter.authenticate());
     }
 
     // Step 2: Get Discord user info and SDK
+    authStep.value = 'Getting user info...';
     const user = await authAdapter.getCurrentUser();
     if (!user) {
-      // Stay in authenticating state — do not show error screen
+      authError.value = 'Could not get Discord user info';
       return;
     }
 
     // Step 3: Get SDK for instanceId
+    authStep.value = 'Joining game...';
     const discordAuth = authAdapter as DiscordAuthAdapter;
     const sdk = discordAuth.getSdk();
     const instanceId = sdk.instanceId;
@@ -105,6 +110,7 @@ onMounted(async () => {
         instanceId,
         nickname: user.name,
         avatarHash: discordUser?.avatar ?? null,
+        discordUserId: discordUser?.id ?? null,
       });
     };
 
@@ -122,9 +128,9 @@ onMounted(async () => {
       setTimeout(() => clearInterval(checkInterval), 10000);
     }
   } catch (err) {
-    // All retries exhausted — stay in authenticating/spinner state (no error screen per locked decision)
-    // The spinner will persist, which is better than a hard error screen
+    const msg = err instanceof Error ? err.message : JSON.stringify(err, null, 2);
     console.error('Discord auth failed after retries:', err);
+    authError.value = msg;
   }
 });
 
@@ -165,14 +171,33 @@ onUnmounted(() => {
 <template>
   <div class="min-h-screen flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl shadow-xl p-8 w-full max-w-2xl">
-      <!-- Authenticating/connecting state (spinner, no error screen) -->
+      <!-- Auth error state -->
       <div
-        v-if="isAuthenticating"
+        v-if="authError"
+        class="text-center py-8"
+      >
+        <p class="text-red-600 font-bold text-lg mb-2">
+          Discord Auth Error
+        </p>
+        <p class="text-red-500 text-sm mb-4 break-all">
+          {{ authError }}
+        </p>
+        <button
+          class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg"
+          @click="window.location.reload()"
+        >
+          Retry
+        </button>
+      </div>
+
+      <!-- Authenticating/connecting state -->
+      <div
+        v-else-if="isAuthenticating"
         class="text-center py-8"
       >
         <div class="inline-block w-8 h-8 border-4 border-green-600 border-t-transparent rounded-full animate-spin mb-4" />
         <p class="text-gray-600 text-lg">
-          Connecting to Discord...
+          {{ authStep }}
         </p>
       </div>
 
@@ -218,7 +243,7 @@ onUnmounted(() => {
             >
               <!-- Discord Avatar -->
               <img
-                :src="getAvatarUrl(player.avatarHash, player.id)"
+                :src="getAvatarUrl(player.avatarHash, player.discordUserId || player.id)"
                 :alt="player.nickname"
                 class="w-8 h-8 rounded-full"
               >

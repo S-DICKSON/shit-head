@@ -129,6 +129,7 @@ export function handleMessage(
         ws.data.playerId,
         message.nickname,
         message.avatarHash ?? null,
+        message.discordUserId ?? null,
       );
 
       // If room doesn't exist, create it with instanceId as code
@@ -138,6 +139,7 @@ export function handleMessage(
           ws.data.playerId,
           message.nickname,
           message.avatarHash ?? null,
+          message.discordUserId ?? null,
         );
         if (!createResult.success) {
           sendMessage(ws, { type: 'error', message: createResult.error, code: createResult.code });

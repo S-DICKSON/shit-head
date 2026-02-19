@@ -9,6 +9,7 @@ const lobbyPlayerSchema = z.object({
   nickname: z.string(),
   isHost: z.boolean(),
   avatarHash: z.string().nullable().optional(), // Discord avatar hash, null for web players
+  discordUserId: z.string().nullable().optional(), // Discord user ID for CDN avatar URLs
 });
 
 const roomStateSchema: z.ZodType<RoomState> = z.object({
@@ -51,6 +52,7 @@ const opponentViewSchema: z.ZodType<OpponentView> = z.object({
   handCount: z.number(),
   isShithead: z.boolean().optional(),             // Previous game's loser gets the poo emoji
   avatarHash: z.string().nullable().optional(),   // Discord avatar hash for gameplay display
+  discordUserId: z.string().nullable().optional(), // Discord user ID for CDN avatar URLs
 });
 
 // Client-to-server message schemas
@@ -116,6 +118,7 @@ export const joinOrCreateSchema = z.object({
   instanceId: z.string().min(1).max(100),
   nickname: z.string().min(1).max(20).trim(),
   avatarHash: z.string().nullable().optional(),
+  discordUserId: z.string().nullable().optional(),
 });
 
 export const clientMessageSchema = z.discriminatedUnion('type', [

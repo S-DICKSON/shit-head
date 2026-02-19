@@ -86,13 +86,11 @@ Copy the tunnel URL (e.g., `https://randomly-generated-subdomain.trycloudflare.c
 2. Navigate to "Activities" → "URL Mappings"
 3. Add the following mappings:
 
-**Root mapping:**
+**Root mapping only:**
 - Prefix: `/`
-- Target: `https://your-tunnel-url.trycloudflare.com`
+- Target: `your-tunnel-url.trycloudflare.com`
 
-**Proxy mapping:**
-- Prefix: `/.proxy`
-- Target: `https://your-tunnel-url.trycloudflare.com/.proxy`
+Do **NOT** add a `/.proxy` mapping — Discord reserves that prefix and handles it automatically.
 
 Click "Save Changes".
 
@@ -225,7 +223,7 @@ Set these in your hosting provider (Render):
 1. Go to Applications -> Your App -> Activities
 2. Under URL Mappings, configure:
    - **Root mapping**: Prefix `/` -> Target `your-production-domain.com`
-   - **Proxy mapping**: Prefix `/.proxy` -> Target `your-production-domain.com/.proxy`
+   - Do NOT add a `/.proxy` mapping — Discord handles this automatically
 3. Under Supported Platforms, enable Desktop and Web
 
 ### Cookie Configuration
