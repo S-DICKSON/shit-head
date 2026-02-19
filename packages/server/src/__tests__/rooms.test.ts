@@ -19,6 +19,7 @@ describe('Room', () => {
       nickname: 'Alice',
       isHost: true,
       avatarHash: null,
+      discordUserId: null,
     });
   });
 
@@ -33,6 +34,7 @@ describe('Room', () => {
       nickname: 'Bob',
       isHost: false,
       avatarHash: null,
+      discordUserId: null,
     });
   });
 
@@ -133,6 +135,7 @@ describe('Room', () => {
         nickname: 'Alice',
         isHost: true,
         avatarHash: null,
+        discordUserId: null,
       }],
       status: 'waiting',
       hostId: 'host-1',
@@ -140,6 +143,7 @@ describe('Room', () => {
       minPlayers: 2,
       spectatorCount: 0,
       shitheadPlayerId: null,
+      roundTime: 45,
     });
   });
 

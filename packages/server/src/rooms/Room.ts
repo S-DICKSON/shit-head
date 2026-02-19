@@ -1,6 +1,6 @@
 // Room class - individual room state and logic
 import { customAlphabet } from 'nanoid';
-import type { RoomState, RoomStatus, LobbyPlayer, ErrorCode, GameState, PlayerGameView, Card, OpponentView } from '@shit-head/shared';
+import type { RoomState, RoomStatus, LobbyPlayer, ErrorCode, GameState, PlayerGameView, Card, OpponentView, RoundTime } from '@shit-head/shared';
 import { GameEngine, type BlindPlayResult, type AutoPlayResult } from '../game/GameEngine';
 
 // Custom alphabet excludes confusable characters: 0/O, 1/I/L, 5/S
@@ -27,7 +27,7 @@ export class Room {
   private turnTimer: ReturnType<typeof setInterval> | null = null;
   private turnTimerDelay: ReturnType<typeof setTimeout> | null = null;
   private turnTimeRemaining: number = 45;
-  private readonly TURN_DURATION = 45;
+  private roundTime: RoundTime = 45;
   private readonly TURN_START_DELAY = 1500; // 1.5 seconds per Claude's discretion
   private disconnectedPlayers: Map<string, {
     disconnectTime: number;
@@ -236,6 +236,18 @@ export class Room {
     return this.players.size >= this.minPlayers && this.status === 'waiting';
   }
 
+  setRoundTime(time: RoundTime): OperationResult {
+    if (this.status !== 'waiting') {
+      return {
+        success: false,
+        error: 'Cannot change round time after game starts',
+        code: 'INVALID_ACTION',
+      };
+    }
+    this.roundTime = time;
+    return { success: true };
+  }
+
   startCountdown(): void {
     this.status = 'countdown';
   }
@@ -300,6 +312,7 @@ export class Room {
       minPlayers: this.minPlayers,
       spectatorCount: this.spectators.size,
       shitheadPlayerId: this.shitheadPlayerId,
+      roundTime: this.roundTime,
     };
   }
 
@@ -613,7 +626,7 @@ export class Room {
 
   startTurnTimer(playerIndex: number): void {
     this.clearTurnTimer();
-    this.turnTimeRemaining = this.TURN_DURATION;
+    this.turnTimeRemaining = this.roundTime;
 
     this.turnTimerDelay = setTimeout(() => {
       // Fire initial tick with full time

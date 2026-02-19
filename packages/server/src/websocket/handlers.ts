@@ -964,6 +964,39 @@ export function handleMessage(
 
       break;
     }
+
+    case 'set-round-time': {
+      const roomCode = ws.data.roomCode;
+      if (!roomCode) {
+        sendMessage(ws, { type: 'error', message: 'Not in a room', code: 'ROOM_NOT_FOUND' });
+        return;
+      }
+
+      const room = manager.getRoom(roomCode);
+      if (!room) {
+        sendMessage(ws, { type: 'error', message: 'Room not found', code: 'ROOM_NOT_FOUND' });
+        return;
+      }
+
+      // Host-only validation
+      const roomState = room.getState();
+      if (roomState.hostId !== ws.data.playerId) {
+        sendMessage(ws, { type: 'error', message: 'Only the host can change round time', code: 'NOT_HOST' });
+        return;
+      }
+
+      const result = room.setRoundTime(message.roundTime);
+      if (!result.success) {
+        sendMessage(ws, { type: 'error', message: result.error, code: result.code });
+        return;
+      }
+
+      // Broadcast updated room state to all players
+      const updatedState = room.getState();
+      sendMessage(ws, { type: 'room-updated', room: updatedState });
+      publishToRoom(ws, roomCode, { type: 'room-updated', room: updatedState });
+      break;
+    }
   }
 }
 
