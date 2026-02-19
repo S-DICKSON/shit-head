@@ -7,6 +7,9 @@
     Leave
   </button>
 
+  <!-- Mute button -->
+  <MuteButton />
+
   <!-- Transition overlay -->
   <div
     v-if="isTransitioning"
@@ -125,6 +128,7 @@
 
 <script setup lang="ts">
 import { useSwapPhase } from '../composables/useSwapPhase';
+import MuteButton from './MuteButton.vue';
 
 const emit = defineEmits<{
   leave: [];
