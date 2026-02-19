@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-15)
 
 **Core value:** Friends can play a complete, rule-accurate game of Shithead together online with zero friction
-**Current focus:** v2.0 Phase 21 complete — Card Playability Highlights
+**Current focus:** v2.0 Phase 20 in progress — Sound Settings
 
 ## Current Position
 
-Phase: 21 of 23 (Card Playability Highlights) — COMPLETE
-Plan: 1 of 1 complete in phase 21
-Status: Phase 21 complete — 1 plan executed, verified (7/7 must-haves), all tests pass
-Last activity: 2026-02-18 — Completed phase 21 execution (client card rules, playability CSS highlights)
+Phase: 20 of 23 (Sound Settings) — In progress
+Plan: 1 of N complete in phase 20
+Status: Plan 20-01 complete — mute toggle with localStorage persistence, MuteButton.vue, mute tests
+Last activity: 2026-02-19 — Completed 20-01-PLAN.md (mute composable + MuteButton component)
 
-Progress: [█████████░] 19/23 phases complete (83% overall — Phases 19, 20, 22 remaining)
+Progress: [█████████░] 19/23 phases complete (83% overall — Phases 20 in progress, 22 remaining)
 
 ## Performance Metrics
 
@@ -86,6 +86,8 @@ Recent decisions affecting v2.0 work:
 - joinOrCreate optional in RoomAdapter interface: WebRoomAdapter unchanged, Discord-only feature (19-04)
 - No cookies in server: /api/token returns JSON access_token only — cookie config (SameSite=None; Partitioned; Secure) documented for future reference (19-06)
 - instanceId-based auto-join is canonical Discord Activity room pattern: same voice channel = same instanceId = same room (19-06)
+- muteState at module level (not inside composable) — singleton pattern ensures all component instances share one reactive ref (20-01)
+- mockOscillator.start assertion for post-unmute beep test: module-level audioContext persists across Vitest tests; checking createOscillator on fresh mock fails because old cached context is reused (20-01)
 
 ### Pending Todos
 
@@ -108,7 +110,7 @@ Web client UI fully updated: safe area, shithead marker, Discord avatars, specta
 
 ## Session Continuity
 
-Last session: 2026-02-18
-Stopped at: Completed Phase 21 — Card Playability Highlights (1 plan, verified 7/7 must-haves)
+Last session: 2026-02-19
+Stopped at: Completed 20-01-PLAN.md — mute toggle (muteState ref, toggleMute, MuteButton.vue, SwapPhase integration, 4 mute tests)
 Resume file: None
-Next: Phase 22 (Mobile Card Categories) or remaining phases
+Next: Phase 20 remaining plans (round time, PlayingPhase mute button) or Phase 22 (Mobile Card Categories)
