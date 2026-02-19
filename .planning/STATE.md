@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-15)
 
 **Core value:** Friends can play a complete, rule-accurate game of Shithead together online with zero friction
-**Current focus:** v2.0 Phase 20 in progress — Sound Settings
+**Current focus:** v2.0 Phase 21 next — Card Playability Highlights (already complete); Phase 22 (Mobile Card Categories) next pending
 
 ## Current Position
 
-Phase: 20 of 23 (Sound Settings) — In progress
-Plan: 2 of N complete in phase 20
-Status: Plan 20-02 complete — configurable round time (30/45/60s) in RoomState, Room.setRoundTime(), set-round-time WebSocket handler
-Last activity: 2026-02-19 — Completed 20-02-PLAN.md (shared types/schemas + server Room + WebSocket handler for round time)
+Phase: 20 of 23 (Sound Settings) — COMPLETE
+Plan: 3 of 3 complete in phase 20
+Status: Phase 20 complete — round time selector in lobby UI, dynamic TurnTimer, MuteButton in PlayingPhase
+Last activity: 2026-02-19 — Completed 20-03-PLAN.md (client round time selector + MuteButton + dynamic TurnTimer)
 
-Progress: [█████████░] 20/23 phases complete (87% overall — Phase 19 verified, Phase 20 in progress, 22 remaining)
+Progress: [█████████░] 20/23 phases complete (87% overall — Phase 20 complete, Phase 22 remaining)
 
 ## Performance Metrics
 
@@ -92,6 +92,8 @@ Recent decisions affecting v2.0 work:
 - setRoundTime lobbies-only enforcement: returns INVALID_ACTION if status !== waiting (20-02)
 - turnTimerTickSchema max raised from 45 to 60: prevents Zod validation failure when server sends timeRemaining: 60 (20-02)
 - set-round-time broadcasts room-updated to all players after success (same pattern as rename-player) (20-02)
+- roomState?.roundTime ?? 45 fallback in TurnTimer binding and return-to-lobby reset: defensive for edge cases (20-03)
+- MuteButton before TurnTimer in PlayingPhase template: both fixed-position overlays, order has no visual impact (20-03)
 
 ### Pending Todos
 
@@ -115,6 +117,6 @@ Web client UI fully updated: safe area, shithead marker, Discord avatars, specta
 ## Session Continuity
 
 Last session: 2026-02-19
-Stopped at: Completed 20-02-PLAN.md — round time backend (RoundTime type, setRoundTimeSchema, Room.setRoundTime(), set-round-time handler)
+Stopped at: Completed 20-03-PLAN.md — client round time selector in both lobbies, dynamic TurnTimer, MuteButton in PlayingPhase
 Resume file: None
-Next: Phase 20 remaining plans (client round time selector in lobby UI, PlayingPhase mute button) or Phase 22 (Mobile Card Categories)
+Next: Phase 22 (Mobile Card Categories)
