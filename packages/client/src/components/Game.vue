@@ -61,7 +61,8 @@ onUnmounted(() => {
   <!-- Spectator View -->
   <div
     v-if="isSpectator && spectatorGameView"
-    class="flex flex-col h-screen bg-green-900 text-white overflow-hidden"
+    class="flex flex-col bg-green-900 text-white overflow-hidden"
+    style="height: calc(100dvh - var(--safe-top) - var(--safe-bottom));"
   >
     <!-- Spectator Banner -->
     <div class="bg-yellow-600/80 text-center py-2 px-4 text-sm font-medium">

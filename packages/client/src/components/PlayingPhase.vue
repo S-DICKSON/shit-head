@@ -66,7 +66,10 @@ watch(
 </script>
 
 <template>
-  <div class="flex flex-col h-screen bg-green-900 text-white overflow-hidden">
+  <div
+    class="flex flex-col bg-green-900 text-white overflow-hidden"
+    style="height: calc(100dvh - var(--safe-top) - var(--safe-bottom));"
+  >
     <!-- Leave button -->
     <button
       class="fixed top-2 left-2 z-40 px-3 py-1 text-xs font-medium bg-gray-800/70 hover:bg-gray-800/90 text-gray-300 hover:text-white rounded-full backdrop-blur-sm transition-all"
