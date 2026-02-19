@@ -6,3 +6,7 @@
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-left: env(safe-area-inset-left, 0px);
 }
+
+#app {
+  touch-action: manipulation;
+}
