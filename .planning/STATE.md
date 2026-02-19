@@ -109,6 +109,12 @@ Recent decisions affecting v2.0 work:
 
 - Phase 23 added: Frontend Testing — Vue component and integration tests for the client package
 
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 021 | Bug: mobile touch controls causing zoom on double-tap pile pickup | 2026-02-19 | 1f75ba5 | [021-bug-mobile-touch-controls-causing-zoom-o](./quick/021-bug-mobile-touch-controls-causing-zoom-o/) |
+
 ### Blockers/Concerns
 
 User setup required before Discord Activity testing:
@@ -122,6 +128,6 @@ Web client UI fully updated: safe area, shithead marker, Discord avatars, specta
 ## Session Continuity
 
 Last session: 2026-02-19
-Stopped at: Completed quick task 021 — mobile double-tap-to-zoom fix (touch-action: manipulation + user-scalable=no)
+Stopped at: Completed quick task 021: mobile double-tap-to-zoom bug fix
 Resume file: None
 Next: Phase 23 (Frontend Testing)
