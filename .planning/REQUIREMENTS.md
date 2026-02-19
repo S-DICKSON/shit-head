@@ -41,15 +41,15 @@ Requirements for v2.0 milestone: UI improvements + Discord Activity integration.
 
 ### Discord Activity — Room Management
 
-- [ ] **DISC-10**: Discord Activity uses instance ID for automatic room creation/joining
-- [ ] **DISC-11**: Players in same Discord voice channel auto-join same game instance
-- [ ] **DISC-12**: Room codes still work for standalone web mode (unchanged)
+- [x] **DISC-10**: Discord Activity uses instance ID for automatic room creation/joining
+- [x] **DISC-11**: Players in same Discord voice channel auto-join same game instance
+- [x] **DISC-12**: Room codes still work for standalone web mode (unchanged)
 
 ### Discord Activity — Mobile & Polish
 
-- [ ] **DISC-13**: Discord safe area CSS variables applied to prevent UI cutoff on mobile devices
-- [ ] **DISC-14**: Discord Activity deployed and configured in Discord Developer Portal
-- [ ] **DISC-15**: cloudflared tunnel setup documented for local Discord Activity testing
+- [x] **DISC-13**: Discord safe area CSS variables applied to prevent UI cutoff on mobile devices
+- [x] **DISC-14**: Discord Activity deployed and configured in Discord Developer Portal
+- [x] **DISC-15**: cloudflared tunnel setup documented for local Discord Activity testing
 
 ## Future Requirements
 
@@ -101,12 +101,12 @@ Deferred to later milestones.
 | DISC-07 | Phase 16 | Complete |
 | DISC-08 | Phase 16 | Complete |
 | DISC-09 | Phase 16 | Complete |
-| DISC-10 | Phase 19 | Pending |
-| DISC-11 | Phase 19 | Pending |
-| DISC-12 | Phase 19 | Pending |
-| DISC-13 | Phase 19 | Pending |
-| DISC-14 | Phase 19 | Pending |
-| DISC-15 | Phase 19 | Pending |
+| DISC-10 | Phase 19 | Complete |
+| DISC-11 | Phase 19 | Complete |
+| DISC-12 | Phase 19 | Complete |
+| DISC-13 | Phase 19 | Complete |
+| DISC-14 | Phase 19 | Complete |
+| DISC-15 | Phase 19 | Complete |
 
 **Coverage:**
 - v2.0 requirements: 23 total

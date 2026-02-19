@@ -31,7 +31,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 16: Networking Foundation** - Validate Discord proxy with WebSocket connections
 - [x] **Phase 17: Platform Abstraction** - Dual-mode architecture without tech debt
 - [x] **Phase 18: Discord Authentication** - OAuth2 flow with token exchange (verified)
-- [ ] **Phase 19: Discord Room Management** - Instance ID auto-join and production deployment
+- [x] **Phase 19: Discord Room Management** - Instance ID auto-join and production deployment
 - [ ] **Phase 20: Sound & Settings** - Mute toggle and host-configurable round time
 - [x] **Phase 21: Card Playability Highlights** - Visual indicators for valid plays
 - [ ] **Phase 22: Mobile Card Categories** - Normal/power card navigation for large hands
@@ -102,12 +102,12 @@ Plans:
 **Plans**: 6 plans
 
 Plans:
-- [ ] 19-01-PLAN.md — Shared types and schemas (join-or-create, spectator-state, room state extensions)
-- [ ] 19-02-PLAN.md — Server room lifecycle (host migration, spectators, auto-return, shithead tracking)
-- [ ] 19-03-PLAN.md — Server WebSocket handlers (join-or-create handler, host migration broadcast, spectator messaging)
-- [ ] 19-04-PLAN.md — Discord client flow (DiscordLobby, auto-join, routing, spectator state in useGameSocket)
-- [ ] 19-05-PLAN.md — Cross-platform UI updates (safe area CSS, shithead marker, remove play-again, spectator indicators)
-- [ ] 19-06-PLAN.md — Deployment docs and final verification (DISCORD-SETUP.md, cookie config, full test suite)
+- [x] 19-01-PLAN.md — Shared types and schemas (join-or-create, spectator-state, room state extensions)
+- [x] 19-02-PLAN.md — Server room lifecycle (host migration, spectators, auto-return, shithead tracking)
+- [x] 19-03-PLAN.md — Server WebSocket handlers (join-or-create handler, host migration broadcast, spectator messaging)
+- [x] 19-04-PLAN.md — Discord client flow (DiscordLobby, auto-join, routing, spectator state in useGameSocket)
+- [x] 19-05-PLAN.md — Cross-platform UI updates (safe area CSS, shithead marker, remove play-again, spectator indicators)
+- [x] 19-06-PLAN.md — Deployment docs and final verification (DISCORD-SETUP.md, cookie config, full test suite)
 
 ### Phase 20: Sound & Settings
 **Goal**: Add sound mute toggle and host-configurable round time
@@ -177,7 +177,7 @@ Phases execute in numeric order: 16 -> 17 -> 18 -> 19 -> 20 -> 21 -> 22 -> 23
 | 16. Networking Foundation | 5/5 | Complete | 2026-02-16 |
 | 17. Platform Abstraction | 2/2 | Complete | 2026-02-17 |
 | 18. Discord Authentication | 4/4 | Complete | 2026-02-17 |
-| 19. Discord Room Management | 0/6 | Not started | - |
+| 19. Discord Room Management | 6/6 | Complete | 2026-02-19 |
 | 20. Sound & Settings | 0/TBD | Not started | - |
 | 21. Card Playability Highlights | 1/1 | Complete | 2026-02-18 |
 | 22. Mobile Card Categories | 0/TBD | Not started | - |
@@ -185,4 +185,4 @@ Phases execute in numeric order: 16 -> 17 -> 18 -> 19 -> 20 -> 21 -> 22 -> 23
 
 ---
 *Roadmap created: 2026-02-15*
-*Last updated: 2026-02-18 -- Phase 21 complete: card playability highlights verified*
+*Last updated: 2026-02-19 -- Phase 19 complete: Discord room management verified (6/6 must-haves)*
