@@ -245,8 +245,9 @@ onUnmounted(() => {
               :key="player.id"
               class="py-3 px-4 flex items-center gap-3"
             >
-              <!-- Discord Avatar -->
+              <!-- Discord Avatar (only shown for Discord users) -->
               <img
+                v-if="player.discordUserId"
                 :src="getAvatarUrl(player.avatarHash, player.discordUserId || player.id)"
                 :alt="player.nickname"
                 class="w-8 h-8 rounded-full"
