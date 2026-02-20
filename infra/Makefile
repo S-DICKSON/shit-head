@@ -1,4 +1,4 @@
-.PHONY: help up down login shell init plan apply apply-retry destroy output ssh
+.PHONY: help up down login shell init plan apply apply-retry destroy output ssh deploy
 
 .DEFAULT_GOAL := help
 
@@ -28,16 +28,6 @@ plan: up ## Preview infrastructure changes (secrets via Infisical)
 apply: up ## Apply infrastructure changes (secrets via Infisical)
 	$(INFRA_EXEC) "infisical run --env=prod -- tofu apply"
 
-apply-retry: up ## Retry apply every 5 min until capacity available
-	@echo "Retrying tofu apply until capacity is available (Ctrl+C to stop)..."
-	@attempt=1; while true; do \
-		echo "\n=== Attempt $$attempt — $$(date) ==="; \
-		$(INFRA_EXEC) "infisical run --env=prod -- tofu apply -auto-approve" && { echo "\n✓ Instance provisioned!"; break; }; \
-		echo "Out of capacity. Retrying in 5 minutes..."; \
-		sleep 300; \
-		attempt=$$((attempt + 1)); \
-	done
-
 destroy: up ## Tear down all infrastructure (secrets via Infisical)
 	$(INFRA_EXEC) "infisical run --env=prod -- tofu destroy"
 
@@ -46,3 +36,6 @@ output: up ## Show infrastructure outputs
 
 ssh: up ## SSH into the VPS (key via Infisical)
 	docker compose exec infra bash -c "infisical run --env=prod -- sh -c 'echo \"\$$VPS_SSH_PRIVATE_KEY\" > /tmp/vps_key && chmod 600 /tmp/vps_key && ssh -o StrictHostKeyChecking=no -i /tmp/vps_key root@46.225.52.135; rm -f /tmp/vps_key'"
+
+deploy: up ## Deploy latest image to VPS (secrets via Infisical)
+	$(INFRA_EXEC) "infisical run --env=prod -- bash /scripts/deploy.sh"

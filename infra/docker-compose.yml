@@ -5,6 +5,7 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ./opentofu:/infra
+      - ./scripts:/scripts
     stdin_open: true
     tty: true
     entrypoint: ["tail", "-f", "/dev/null"]
