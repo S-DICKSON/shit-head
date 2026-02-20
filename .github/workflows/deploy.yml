@@ -49,6 +49,8 @@ jobs:
           target: production
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          build-args: |
+            VITE_DISCORD_CLIENT_ID=${{ secrets.DISCORD_CLIENT_ID }}
 
       - name: Setup SSH
         uses: webfactory/ssh-agent@v0.9.1
@@ -62,6 +64,8 @@ jobs:
           DEPLOY_IMAGE: ${{ env.IMAGE }}
           DEPLOY_DOMAIN: splatmonkey.com
           DEPLOY_ORIGINS: https://splatmonkey.com
+          DISCORD_CLIENT_ID: ${{ secrets.DISCORD_CLIENT_ID }}
+          DISCORD_CLIENT_SECRET: ${{ secrets.DISCORD_CLIENT_SECRET }}
         run: |
           ssh -o StrictHostKeyChecking=no root@46.225.52.135 << ENDSSH
             # Login to GHCR (variables interpolated by runner before SSH)
@@ -75,6 +79,8 @@ jobs:
           NODE_ENV=production
           PORT=3000
           ALLOWED_ORIGINS=${DEPLOY_ORIGINS}
+          DISCORD_CLIENT_ID=${DISCORD_CLIENT_ID}
+          DISCORD_CLIENT_SECRET=${DISCORD_CLIENT_SECRET}
           ENVEOF
 
             # Update systemd service with correct image
