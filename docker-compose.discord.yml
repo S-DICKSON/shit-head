@@ -21,9 +21,11 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3000
+    restart: unless-stopped
 
   tunnel:
     image: cloudflare/cloudflared:latest
     command: tunnel --no-autoupdate --url http://app:3000
     depends_on:
       - app
+    restart: unless-stopped
