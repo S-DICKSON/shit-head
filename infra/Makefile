@@ -1,4 +1,4 @@
-.PHONY: help up down login shell init plan apply apply-retry destroy output ssh deploy
+.PHONY: help up down login shell init plan apply destroy output ssh
 
 .DEFAULT_GOAL := help
 
@@ -28,6 +28,7 @@ plan: up ## Preview infrastructure changes (secrets via Infisical)
 apply: up ## Apply infrastructure changes (secrets via Infisical)
 	$(INFRA_EXEC) "infisical run --env=prod -- tofu apply"
 
+
 destroy: up ## Tear down all infrastructure (secrets via Infisical)
 	$(INFRA_EXEC) "infisical run --env=prod -- tofu destroy"
 
@@ -36,6 +37,3 @@ output: up ## Show infrastructure outputs
 
 ssh: up ## SSH into the VPS (key via Infisical)
 	docker compose exec infra bash -c "infisical run --env=prod -- sh -c 'echo \"\$$VPS_SSH_PRIVATE_KEY\" > /tmp/vps_key && chmod 600 /tmp/vps_key && ssh -o StrictHostKeyChecking=no -i /tmp/vps_key root@46.225.52.135; rm -f /tmp/vps_key'"
-
-deploy: up ## Deploy latest image to VPS (secrets via Infisical)
-	$(INFRA_EXEC) "infisical run --env=prod -- bash /scripts/deploy.sh"
