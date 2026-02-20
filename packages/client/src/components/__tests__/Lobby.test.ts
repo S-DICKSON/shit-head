@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ref } from 'vue';
-import { mount, flushPromises } from '@vue/test-utils';
+import { render, screen, fireEvent, waitFor } from '@testing-library/vue';
 import { createRouter, createWebHashHistory } from 'vue-router';
 
 // vi.mock is hoisted before all imports — must be declared before any import of the mocked module
@@ -60,52 +60,52 @@ describe('Lobby.vue', () => {
     localStorage.clear();
   });
 
-  async function mountLobby(path = '/room/ABC123') {
-    const router = createTestRouter(path);
+  async function renderLobby(path = '/room/ABC123') {
+    const router = createTestRouter();
     await router.push(path);
     await router.isReady();
-    const wrapper = mount(Lobby, {
+    render(Lobby, {
       global: {
         plugins: [router],
         stubs: { RoomCode: true },
       },
     });
-    await flushPromises();
-    return { wrapper, router };
+    return { router };
   }
 
   // Player list rendering
   describe('player list rendering', () => {
     it('renders all players from roomState', async () => {
-      const { wrapper } = await mountLobby();
-      expect(wrapper.text()).toContain('Alice');
-      expect(wrapper.text()).toContain('Bob');
+      await renderLobby();
+      await waitFor(() => expect(screen.getByText('Alice')).toBeInTheDocument());
+      expect(screen.getByText('Bob')).toBeInTheDocument();
     });
 
     it('shows player count', async () => {
-      const { wrapper } = await mountLobby();
-      expect(wrapper.text()).toContain('2/4');
+      await renderLobby();
+      await waitFor(() => expect(screen.getByText(/2\/4/)).toBeInTheDocument());
     });
 
     it('marks current player with (You)', async () => {
-      const { wrapper } = await mountLobby();
+      await renderLobby();
       // player-1 is Alice and is the current player
-      expect(wrapper.text()).toContain('(You)');
+      await waitFor(() => expect(screen.getByText('(You)')).toBeInTheDocument());
     });
 
     it('shows host indicator (star) for host player', async () => {
-      const { wrapper } = await mountLobby();
-      // The star character ★ should be present for the host
-      expect(wrapper.html()).toContain('★');
+      await renderLobby();
+      await waitFor(() => expect(document.body.innerHTML).toContain('\u2605'));
     });
   });
 
   // Host controls
   describe('host controls', () => {
     it('shows Start Game button for host', async () => {
-      const { wrapper } = await mountLobby();
-      const startBtn = wrapper.findAll('button').find(b => b.text().includes('Start Game') || b.text().includes('Waiting for players'));
-      expect(startBtn).toBeTruthy();
+      await renderLobby();
+      await waitFor(() => {
+        const btn = screen.queryByRole('button', { name: /Start Game|Waiting for players/ });
+        expect(btn).toBeInTheDocument();
+      });
     });
 
     it('disables Start Game when not enough players', async () => {
@@ -113,25 +113,30 @@ describe('Lobby.vue', () => {
       s.roomState.value = createRoomState({
         players: [{ id: 'player-1', nickname: 'Alice', isHost: true }],
       });
-      const { wrapper } = await mountLobby();
-      const startBtn = wrapper.findAll('button').find(b => b.text().includes('Waiting for players'));
-      expect(startBtn).toBeTruthy();
-      expect(startBtn!.element.disabled).toBe(true);
+      await renderLobby();
+      await waitFor(() => {
+        const startBtn = screen.queryByRole('button', { name: /Waiting for players/ });
+        expect(startBtn).toBeInTheDocument();
+        expect(startBtn).toBeDisabled();
+      });
     });
 
     it('enables Start Game when minimum players met', async () => {
       // Default roomState has 2 players which meets minPlayers: 2
-      const { wrapper } = await mountLobby();
-      const startBtn = wrapper.findAll('button').find(b => b.text().includes('Start Game'));
-      expect(startBtn).toBeTruthy();
-      expect(startBtn!.element.disabled).toBe(false);
+      await renderLobby();
+      await waitFor(() => {
+        const startBtn = screen.queryByRole('button', { name: /Start Game/ });
+        expect(startBtn).toBeInTheDocument();
+        expect(startBtn).not.toBeDisabled();
+      });
     });
 
     it('sends start-game message on Start click', async () => {
       const s = useGameSocket() as any;
-      const { wrapper } = await mountLobby();
-      const startBtn = wrapper.findAll('button').find(b => b.text().includes('Start Game'));
-      await startBtn!.trigger('click');
+      await renderLobby();
+      await waitFor(() => expect(screen.queryByRole('button', { name: /Start Game/ })).toBeInTheDocument());
+      const startBtn = screen.getByRole('button', { name: /Start Game/ });
+      await fireEvent.click(startBtn);
       expect(s.send).toHaveBeenCalledWith({ type: 'start-game' });
     });
   });
@@ -141,18 +146,16 @@ describe('Lobby.vue', () => {
     it('shows waiting message for non-host', async () => {
       const s = useGameSocket() as any;
       s.playerId.value = 'player-2';
-      const { wrapper } = await mountLobby();
-      expect(wrapper.text()).toContain('Waiting for host to start');
+      await renderLobby();
+      await waitFor(() => expect(screen.getByText(/Waiting for host to start/)).toBeInTheDocument());
     });
 
     it('does not show Start Game button for non-host', async () => {
       const s = useGameSocket() as any;
       s.playerId.value = 'player-2';
-      const { wrapper } = await mountLobby();
-      const startBtn = wrapper.findAll('button').find(b =>
-        b.text().includes('Start Game') || b.text().includes('Waiting for players')
-      );
-      expect(startBtn).toBeUndefined();
+      await renderLobby();
+      await waitFor(() => expect(screen.getByText(/Waiting for host to start/)).toBeInTheDocument());
+      expect(screen.queryByRole('button', { name: /Start Game|Waiting for players/ })).not.toBeInTheDocument();
     });
   });
 
@@ -160,13 +163,11 @@ describe('Lobby.vue', () => {
   describe('leave room', () => {
     it('sends leave-room on Leave click and navigates to landing', async () => {
       const s = useGameSocket() as any;
-      const { wrapper, router } = await mountLobby();
-      const leaveBtn = wrapper.findAll('button').find(b => b.text().includes('Leave Room'));
-      expect(leaveBtn).toBeTruthy();
-      await leaveBtn!.trigger('click');
+      const { router } = await renderLobby();
+      await waitFor(() => expect(screen.getByRole('button', { name: /Leave Room/ })).toBeInTheDocument());
+      await fireEvent.click(screen.getByRole('button', { name: /Leave Room/ }));
       expect(s.send).toHaveBeenCalledWith({ type: 'leave-room' });
-      await flushPromises();
-      expect(router.currentRoute.value.path).toBe('/');
+      await waitFor(() => expect(router.currentRoute.value.path).toBe('/'));
     });
   });
 });

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ref, nextTick } from 'vue';
-import { mount } from '@vue/test-utils';
+import { render, screen, fireEvent } from '@testing-library/vue';
 import { createRouter, createWebHashHistory } from 'vue-router';
 
 // vi.mock is hoisted before all imports — must be declared before any import of the mocked module
@@ -44,11 +44,12 @@ describe('Landing.vue', () => {
     vi.clearAllMocks();
   });
 
-  async function mountLanding() {
+  async function renderLanding() {
     const router = createTestRouter();
     await router.push('/');
     await router.isReady();
-    return { wrapper: mount(Landing, { global: { plugins: [router] } }), router };
+    render(Landing, { global: { plugins: [router] } });
+    return { router };
   }
 
   // Connection state rendering
@@ -56,50 +57,49 @@ describe('Landing.vue', () => {
     it('shows connecting banner when status is CONNECTING', async () => {
       const s = useGameSocket() as any;
       s.status.value = 'CONNECTING';
-      const { wrapper } = await mountLanding();
-      expect(wrapper.text()).toContain('Connecting to server');
+      await renderLanding();
+      expect(screen.getByText(/Connecting to server/)).toBeInTheDocument();
     });
 
     it('shows not connected banner when status is CLOSED', async () => {
       const s = useGameSocket() as any;
       s.status.value = 'CLOSED';
-      const { wrapper } = await mountLanding();
-      expect(wrapper.text()).toContain('Not connected');
+      await renderLanding();
+      expect(screen.getByText(/Not connected/)).toBeInTheDocument();
     });
 
     it('hides connection banners when status is OPEN', async () => {
-      const { wrapper } = await mountLanding();
-      expect(wrapper.text()).not.toContain('Connecting to server');
-      expect(wrapper.text()).not.toContain('Not connected');
+      await renderLanding();
+      expect(screen.queryByText(/Connecting to server/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Not connected/)).not.toBeInTheDocument();
     });
   });
 
   // Create room button logic
   describe('Create room button', () => {
     it('disables Create button when no nickname', async () => {
-      const { wrapper } = await mountLanding();
-      const createBtn = wrapper.findAll('button').find(b => b.text().includes('Create New Room'));
-      expect(createBtn).toBeTruthy();
-      expect(createBtn!.element.disabled).toBe(true);
+      await renderLanding();
+      const createBtn = screen.getByRole('button', { name: /Create New Room/ });
+      expect(createBtn).toBeDisabled();
     });
 
     it('enables Create button when nickname provided and connected', async () => {
-      const { wrapper } = await mountLanding();
-      const nicknameInput = wrapper.find('#nickname');
-      await nicknameInput.setValue('Alice');
+      await renderLanding();
+      const nicknameInput = document.querySelector('#nickname') as HTMLInputElement;
+      await fireEvent.update(nicknameInput, 'Alice');
       await nextTick();
-      const createBtn = wrapper.findAll('button').find(b => b.text().includes('Create New Room'));
-      expect(createBtn!.element.disabled).toBe(false);
+      const createBtn = screen.getByRole('button', { name: /Create New Room/ });
+      expect(createBtn).not.toBeDisabled();
     });
 
     it('sends create-room message on Create click', async () => {
       const s = useGameSocket() as any;
-      const { wrapper } = await mountLanding();
-      const nicknameInput = wrapper.find('#nickname');
-      await nicknameInput.setValue('Bob');
+      await renderLanding();
+      const nicknameInput = document.querySelector('#nickname') as HTMLInputElement;
+      await fireEvent.update(nicknameInput, 'Bob');
       await nextTick();
-      const createBtn = wrapper.findAll('button').find(b => b.text().includes('Create New Room'));
-      await createBtn!.trigger('click');
+      const createBtn = screen.getByRole('button', { name: /Create New Room/ });
+      await fireEvent.click(createBtn);
       expect(s.send).toHaveBeenCalledWith({ type: 'create-room', nickname: 'Bob' });
     });
   });
@@ -107,49 +107,45 @@ describe('Landing.vue', () => {
   // Join room button logic
   describe('Join room button', () => {
     it('disables Join button when no room code', async () => {
-      const { wrapper } = await mountLanding();
-      const nicknameInput = wrapper.find('#nickname');
-      await nicknameInput.setValue('Alice');
+      await renderLanding();
+      const nicknameInput = document.querySelector('#nickname') as HTMLInputElement;
+      await fireEvent.update(nicknameInput, 'Alice');
       await nextTick();
-      const joinBtn = wrapper.findAll('button').find(b => b.text().includes('Join Room'));
-      expect(joinBtn).toBeTruthy();
-      expect(joinBtn!.element.disabled).toBe(true);
+      const joinBtn = screen.getByRole('button', { name: /Join Room/ });
+      expect(joinBtn).toBeDisabled();
     });
 
     it('enables Join button when nickname and 6-char code provided', async () => {
-      const { wrapper } = await mountLanding();
-      const nicknameInput = wrapper.find('#nickname');
-      await nicknameInput.setValue('Alice');
+      await renderLanding();
+      const nicknameInput = document.querySelector('#nickname') as HTMLInputElement;
+      await fireEvent.update(nicknameInput, 'Alice');
       await nextTick();
 
-      // Simulate entering a room code via roomCode ref directly
-      const roomCodeInput = wrapper.find('#roomCode');
-      await roomCodeInput.setValue('ABC123');
-      // Trigger the input event to run handleRoomCodeInput
-      await roomCodeInput.trigger('input');
+      // Simulate entering a room code via the @input handler
+      const roomCodeInput = document.querySelector('#roomCode') as HTMLInputElement;
+      await fireEvent.input(roomCodeInput, { target: { value: 'ABC123' } });
       await nextTick();
 
-      const joinBtn = wrapper.findAll('button').find(b => b.text().includes('Join Room'));
-      expect(joinBtn!.element.disabled).toBe(false);
+      const joinBtn = screen.getByRole('button', { name: /Join Room/ });
+      expect(joinBtn).not.toBeDisabled();
     });
 
     it('sends join-room message on Join click', async () => {
       const s = useGameSocket() as any;
-      const { wrapper } = await mountLanding();
+      await renderLanding();
 
-      const nicknameInput = wrapper.find('#nickname');
-      await nicknameInput.setValue('Carol');
+      const nicknameInput = document.querySelector('#nickname') as HTMLInputElement;
+      await fireEvent.update(nicknameInput, 'Carol');
       await nextTick();
 
-      const roomCodeInput = wrapper.find('#roomCode');
-      // Manually set the value then trigger input so handleRoomCodeInput processes it
-      const inputEl = roomCodeInput.element as HTMLInputElement;
-      inputEl.value = 'XYZ789';
-      await roomCodeInput.trigger('input');
+      const roomCodeInput = document.querySelector('#roomCode') as HTMLInputElement;
+      // Manually set value then trigger input so handleRoomCodeInput processes it
+      roomCodeInput.value = 'XYZ789';
+      await fireEvent.input(roomCodeInput, { target: { value: 'XYZ789' } });
       await nextTick();
 
-      const joinBtn = wrapper.findAll('button').find(b => b.text().includes('Join Room'));
-      await joinBtn!.trigger('click');
+      const joinBtn = screen.getByRole('button', { name: /Join Room/ });
+      await fireEvent.click(joinBtn);
       expect(s.send).toHaveBeenCalledWith({ type: 'join-room', code: 'XYZ789', nickname: 'Carol' });
     });
   });
@@ -157,27 +153,23 @@ describe('Landing.vue', () => {
   // Room code input formatting
   describe('room code input formatting', () => {
     it('uppercases room code input', async () => {
-      const { wrapper } = await mountLanding();
-      const roomCodeInput = wrapper.find('#roomCode');
-      const inputEl = roomCodeInput.element as HTMLInputElement;
-      inputEl.value = 'abc123';
-      await roomCodeInput.trigger('input');
+      await renderLanding();
+      const roomCodeInput = document.querySelector('#roomCode') as HTMLInputElement;
+      await fireEvent.input(roomCodeInput, { target: { value: 'abc123' } });
       await nextTick();
       // After processing via handleRoomCodeInput, roomCode ref should be uppercase
       // The :value binding reflects the reactive roomCode ref
-      expect(inputEl.value.toUpperCase()).toBe(inputEl.value);
+      expect(roomCodeInput.value.toUpperCase()).toBe(roomCodeInput.value);
     });
 
     it('strips non-alphanumeric characters from room code', async () => {
-      const { wrapper } = await mountLanding();
-      const roomCodeInput = wrapper.find('#roomCode');
-      const inputEl = roomCodeInput.element as HTMLInputElement;
-      inputEl.value = 'ab-12!';
-      await roomCodeInput.trigger('input');
+      await renderLanding();
+      const roomCodeInput = document.querySelector('#roomCode') as HTMLInputElement;
+      await fireEvent.input(roomCodeInput, { target: { value: 'ab-12!' } });
       await nextTick();
       // The :value binding is controlled by roomCode ref which strips non-alphanumeric
       // After nextTick re-render the :value attribute reflects the processed value
-      const displayedValue = roomCodeInput.attributes('value') ?? inputEl.value;
+      const displayedValue = roomCodeInput.getAttribute('value') ?? roomCodeInput.value;
       expect(displayedValue).not.toContain('-');
       expect(displayedValue).not.toContain('!');
     });

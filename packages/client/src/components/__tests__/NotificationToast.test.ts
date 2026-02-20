@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ref } from 'vue';
-import { mount } from '@vue/test-utils';
+import { render, screen, fireEvent } from '@testing-library/vue';
 
 vi.mock('../../composables/useGameSocket', () => {
   let _cache: any = null;
@@ -23,9 +23,8 @@ describe('NotificationToast.vue', () => {
   });
 
   it('renders nothing when no notifications', () => {
-    const wrapper = mount(NotificationToast);
-    expect(wrapper.findAll('[class*="rounded-lg"]')).toHaveLength(0);
-    expect(wrapper.text()).toBe('');
+    const { container } = render(NotificationToast);
+    expect(container.textContent).toBe('');
   });
 
   it('renders notification messages', () => {
@@ -33,8 +32,8 @@ describe('NotificationToast.vue', () => {
     s.notifications.value = [
       { id: 1, message: 'Player disconnected', severity: 'warning', timestamp: Date.now() },
     ];
-    const wrapper = mount(NotificationToast);
-    expect(wrapper.text()).toContain('Player disconnected');
+    render(NotificationToast);
+    expect(screen.getByText('Player disconnected')).toBeInTheDocument();
   });
 
   it('renders multiple notifications', () => {
@@ -43,9 +42,9 @@ describe('NotificationToast.vue', () => {
       { id: 1, message: 'Player disconnected', severity: 'warning', timestamp: Date.now() },
       { id: 2, message: 'Game started', severity: 'success', timestamp: Date.now() },
     ];
-    const wrapper = mount(NotificationToast);
-    expect(wrapper.text()).toContain('Player disconnected');
-    expect(wrapper.text()).toContain('Game started');
+    render(NotificationToast);
+    expect(screen.getByText('Player disconnected')).toBeInTheDocument();
+    expect(screen.getByText('Game started')).toBeInTheDocument();
   });
 
   it('clicking a notification calls dismissNotification with correct id', async () => {
@@ -53,9 +52,8 @@ describe('NotificationToast.vue', () => {
     s.notifications.value = [
       { id: 42, message: 'Some notification', severity: 'info', timestamp: Date.now() },
     ];
-    const wrapper = mount(NotificationToast);
-    const notification = wrapper.find('[class*="rounded-lg"]');
-    await notification.trigger('click');
+    render(NotificationToast);
+    await fireEvent.click(screen.getByText('Some notification'));
     expect(s.dismissNotification).toHaveBeenCalledWith(42);
   });
 
@@ -65,9 +63,8 @@ describe('NotificationToast.vue', () => {
       { id: 1, message: 'Error occurred', severity: 'error', timestamp: Date.now() },
       { id: 2, message: 'All good', severity: 'success', timestamp: Date.now() },
     ];
-    const wrapper = mount(NotificationToast);
-    const notifications = wrapper.findAll('[class*="rounded-lg"]');
-    expect(notifications[0].classes()).toContain('bg-red-600');
-    expect(notifications[1].classes()).toContain('bg-green-600');
+    render(NotificationToast);
+    expect(screen.getByText('Error occurred').classList.contains('bg-red-600')).toBe(true);
+    expect(screen.getByText('All good').classList.contains('bg-green-600')).toBe(true);
   });
 });

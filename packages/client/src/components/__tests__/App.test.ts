@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { ref } from 'vue'
-import { mount } from '@vue/test-utils'
+import { render } from '@testing-library/vue'
 import { createRouter, createWebHashHistory } from 'vue-router'
 import App from '../../App.vue'
 
@@ -58,9 +58,6 @@ vi.mock('../../composables/useGameSocket', () => {
   }
 })
 
-// Use a real router plugin instead of global.stubs to avoid the Bun WeakMap error.
-// The WeakMap error occurs when vue-test-utils registers stubs with Bun's jsdom.
-// Providing a real router avoids the stub registration path entirely.
 function createTestRouter() {
   return createRouter({
     history: createWebHashHistory(),
@@ -73,22 +70,22 @@ function createTestRouter() {
 describe('App.vue', () => {
   it('renders the app shell root element', () => {
     const router = createTestRouter()
-    const wrapper = mount(App, {
+    const { container } = render(App, {
       global: { plugins: [router] },
     })
     // The App.vue root div has class="min-h-screen bg-green-900".
     // In the Docker/Bun environment, the @tailwindcss/vite plugin transforms min-h-screen
     // to an inline style (min-height: 100dvh) while preserving the bg-green-900 class.
     // We check for bg-green-900 which is reliably present, and verify the element exists.
-    expect(wrapper.classes()).toContain('bg-green-900')
-    expect(wrapper.element.tagName).toBe('DIV')
+    expect(container.firstElementChild?.classList.contains('bg-green-900')).toBe(true)
+    expect(container.firstElementChild?.tagName).toBe('DIV')
   })
 
   it('mounts without errors (no WebSocket connection)', () => {
     const router = createTestRouter()
-    const wrapper = mount(App, {
+    const { container } = render(App, {
       global: { plugins: [router] },
     })
-    expect(wrapper.exists()).toBe(true)
+    expect(container.innerHTML).not.toBe('')
   })
 })
