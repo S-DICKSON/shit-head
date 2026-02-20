@@ -99,6 +99,10 @@ Recent decisions affecting v2.0 work:
 - groupedCards excluded from PlayerCards destructuring — component uses activeGroups (display layer only) (22-01)
 - isGroupPlayable removed from carousel — new carousel uses isPowerGroup for gold styling, not playability ring (22-01)
 - confirmTimer as module-level let (not ref) — no reactivity needed, pure timeout management (22-01)
+- @testing-library/vue v8 accepts identical global: { plugins, stubs } options shape as @vue/test-utils — drop-in for render call (quick-025)
+- fireEvent.input(el, { target: { value: 'X' } }) for :value + @input handlers (not v-model) in Landing.vue room code input (quick-025)
+- waitFor() in Lobby tests replaces flushPromises() — handles async router readiness after render() (quick-025)
+- Docker image rebuild required after package.json changes — bun install runs at image build time, not container start (quick-025)
 
 ### Pending Todos
 
@@ -117,6 +121,7 @@ Recent decisions affecting v2.0 work:
 | 022 | Fix mobile screen overflow — timer causes scroll on iPhone 15 Pro | 2026-02-19 | 1edf5b8 | [022-fix-mobile-screen-overflow-timer-scroll](./quick/022-fix-mobile-screen-overflow-timer-scroll/) |
 | 023 | Fix Discord avatar showing in web mode (Guest XXX showing Discord default avatar) | 2026-02-20 | af839c3 | [023-fix-discord-avatar-showing-in-web-mode](./quick/023-fix-discord-avatar-showing-in-web-mode/) |
 | 024 | Update deployment — Infisical Discord secrets (Makefile deploy target, Dockerfile build arg, deploy.yml) | 2026-02-20 | 2cccf8c | [024-update-deployment-infisical-discord-secr](./quick/024-update-deployment-infisical-discord-secr/) |
+| 025 | Migrate client tests from @vue/test-utils to @testing-library/vue — 5 test files, resolve Bun WeakMap failures | 2026-02-20 | b70ed33 | [025-migrate-client-tests-from-vue-test-utils](./quick/025-migrate-client-tests-from-vue-test-utils/) |
 
 ### Blockers/Concerns
 
@@ -131,6 +136,6 @@ Web client UI fully updated: safe area, shithead marker, Discord avatars, specta
 ## Session Continuity
 
 Last session: 2026-02-20
-Stopped at: Completed quick task 024 — deployment Infisical Discord secrets (2cccf8c)
+Stopped at: Completed quick task 025 — migrate client tests from @vue/test-utils to @testing-library/vue (b70ed33)
 Resume file: None
 Next: Phase 23 (Frontend Testing)
