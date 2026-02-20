@@ -122,6 +122,7 @@ Recent decisions affecting v2.0 work:
 | 023 | Fix Discord avatar showing in web mode (Guest XXX showing Discord default avatar) | 2026-02-20 | af839c3 | [023-fix-discord-avatar-showing-in-web-mode](./quick/023-fix-discord-avatar-showing-in-web-mode/) |
 | 024 | Update deployment — Infisical Discord secrets (Makefile deploy target, Dockerfile build arg, deploy.yml) | 2026-02-20 | 2cccf8c | [024-update-deployment-infisical-discord-secr](./quick/024-update-deployment-infisical-discord-secr/) |
 | 025 | Migrate client tests from @vue/test-utils to @testing-library/vue — 5 test files, resolve Bun WeakMap failures | 2026-02-20 | b70ed33 | [025-migrate-client-tests-from-vue-test-utils](./quick/025-migrate-client-tests-from-vue-test-utils/) |
+| 026 | Add privacy policy and terms of service static pages for Discord app verification | 2026-02-20 | 5ec4245 | [026-add-privacy-policy-and-terms-of-service-](./quick/026-add-privacy-policy-and-terms-of-service-/) |
 
 ### Blockers/Concerns
 
@@ -136,6 +137,6 @@ Web client UI fully updated: safe area, shithead marker, Discord avatars, specta
 ## Session Continuity
 
 Last session: 2026-02-20
-Stopped at: Completed quick task 025 — migrate client tests from @vue/test-utils to @testing-library/vue (b70ed33)
+Stopped at: Completed quick task 026 — add privacy policy and terms of service static pages (5ec4245)
 Resume file: None
 Next: Phase 23 (Frontend Testing)
