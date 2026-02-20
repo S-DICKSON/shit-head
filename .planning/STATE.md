@@ -115,6 +115,7 @@ Recent decisions affecting v2.0 work:
 |---|-------------|------|--------|-----------|
 | 021 | Bug: mobile touch controls causing zoom on double-tap pile pickup | 2026-02-19 | 1f75ba5 | [021-bug-mobile-touch-controls-causing-zoom-o](./quick/021-bug-mobile-touch-controls-causing-zoom-o/) |
 | 022 | Fix mobile screen overflow — timer causes scroll on iPhone 15 Pro | 2026-02-19 | 1edf5b8 | [022-fix-mobile-screen-overflow-timer-scroll](./quick/022-fix-mobile-screen-overflow-timer-scroll/) |
+| 023 | Fix Discord avatar showing in web mode (Guest XXX showing Discord default avatar) | 2026-02-20 | af839c3 | [023-fix-discord-avatar-showing-in-web-mode](./quick/023-fix-discord-avatar-showing-in-web-mode/) |
 
 ### Blockers/Concerns
 
@@ -128,7 +129,7 @@ Web client UI fully updated: safe area, shithead marker, Discord avatars, specta
 
 ## Session Continuity
 
-Last session: 2026-02-19
-Stopped at: Completed quick task 022 — mobile viewport overflow fix (1edf5b8)
+Last session: 2026-02-20
+Stopped at: Completed quick task 023 — Discord avatar conditional fix (af839c3)
 Resume file: None
 Next: Phase 23 (Frontend Testing)
