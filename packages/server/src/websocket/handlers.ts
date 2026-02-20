@@ -317,13 +317,13 @@ export function handleMessage(
                 }
               }
             },
-            onPlayPhaseStart: (currentPlayerIndex) => {
+            onPlayPhaseStart: (currentPlayerIndex, firstTurn) => {
               // Notify all players when playing phase begins with first player
               const playerIds = room.getPlayerIds();
               for (const pid of playerIds) {
                 const pWs = playerSockets.get(pid);
                 if (pWs) {
-                  sendMessage(pWs, { type: 'turn-changed', currentPlayerIndex });
+                  sendMessage(pWs, { type: 'turn-changed', currentPlayerIndex, firstTurn });
                 }
               }
             },

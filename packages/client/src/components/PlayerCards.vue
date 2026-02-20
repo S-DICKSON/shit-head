@@ -221,7 +221,10 @@
           </button>
           <button
             class="px-6 py-2 bg-red-500 text-white font-bold rounded-lg disabled:opacity-50 hover:bg-red-400 transition-colors"
-            :class="{ 'ring-4 ring-yellow-400 animate-pulse': pickupConfirming }"
+            :class="{
+              'ring-4 ring-yellow-400 animate-pulse': pickupConfirming,
+              'ring-2 ring-red-300 shadow-lg shadow-red-500/50': mustPickUp && !pickupConfirming,
+            }"
             :disabled="!isMyTurn"
             @click="handlePickupTap"
           >
@@ -308,6 +311,11 @@ const {
 
 // Determine if we should show grouped view
 const shouldShowGrouped = computed(() => isMobile.value && props.hand.length > 5);
+
+// Hint: must pick up pile (no playable cards from active source)
+const mustPickUp = computed(() =>
+  props.isMyTurn && props.activeSource === 'hand' && props.playableHandIndices.size === 0
+);
 
 // Two-step play confirmation to prevent accidental mis-taps in grouped mode
 const playConfirming = ref(false);

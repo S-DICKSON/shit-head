@@ -244,6 +244,7 @@ function createGameSocket() {
             discardPile: message.discardPile,
             currentPlayerIndex: message.currentPlayerIndex,
             dealerIndex: message.dealerIndex,
+            firstTurn: message.firstTurn,
           };
           swapPhaseComplete.value = false;
           swapPhaseReason.value = null;
@@ -285,6 +286,7 @@ function createGameSocket() {
               currentPlayerIndex: message.currentPlayerIndex,
               drawPileCount: message.drawPileCount,
               discardPile: message.discardPile,
+              firstTurn: message.firstTurn,
               ...(message.hand ? { hand: message.hand } : {}),
               ...(message.faceUp ? { faceUp: message.faceUp } : {}),
               ...(message.faceDownCount !== undefined ? { faceDownCount: message.faceDownCount } : {}),
@@ -323,6 +325,7 @@ function createGameSocket() {
               ...gameView.value,
               phase: 'playing',
               currentPlayerIndex: message.currentPlayerIndex,
+              firstTurn: message.firstTurn,
             };
           }
           break;

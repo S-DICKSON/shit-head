@@ -41,7 +41,7 @@ export class Room {
   private onSwapTimerTick?: (timeRemaining: number) => void;
   private onPlayerReady?: (playerId: string, readyPlayers: string[]) => void;
   private onSwapPhaseComplete?: (reason: 'timer-expired' | 'all-ready') => void;
-  private onPlayPhaseStart?: (currentPlayerIndex: number) => void;
+  private onPlayPhaseStart?: (currentPlayerIndex: number, firstTurn: boolean) => void;
   private onPlayerEliminated?: (playerId: string, nickname: string, currentPlayerIndex: number) => void;
   private onGameOver?: (shitheadId: string, shitheadNickname: string) => void;
   private onTurnTimerTick?: (timeRemaining: number, currentPlayerIndex: number) => void;
@@ -320,7 +320,7 @@ export class Room {
     onTick: (timeRemaining: number) => void;
     onReady: (playerId: string, readyPlayers: string[]) => void;
     onComplete: (reason: 'timer-expired' | 'all-ready') => void;
-    onPlayPhaseStart: (currentPlayerIndex: number) => void;
+    onPlayPhaseStart: (currentPlayerIndex: number, firstTurn: boolean) => void;
   }): void {
     this.onSwapTimerTick = callbacks.onTick;
     this.onPlayerReady = callbacks.onReady;
@@ -613,7 +613,7 @@ export class Room {
           firstTurn: true,
         };
         // Notify that playing phase has started with first player
-        this.onPlayPhaseStart?.(this.gameState.currentPlayerIndex);
+        this.onPlayPhaseStart?.(this.gameState.currentPlayerIndex, this.gameState.firstTurn);
         // Start turn timer for first player
         this.startTurnTimer(this.gameState.currentPlayerIndex);
       }
@@ -921,7 +921,7 @@ export class Room {
           );
           this.clearTurnTimer();
           this.startTurnTimer(this.gameState.currentPlayerIndex);
-          this.onPlayPhaseStart?.(this.gameState.currentPlayerIndex);
+          this.onPlayPhaseStart?.(this.gameState.currentPlayerIndex, this.gameState.firstTurn);
         }
       }
 
@@ -1014,7 +1014,7 @@ export class Room {
           this.startTurnTimer(this.gameState.currentPlayerIndex);
 
           // Notify play phase start for new current player
-          this.onPlayPhaseStart?.(this.gameState.currentPlayerIndex);
+          this.onPlayPhaseStart?.(this.gameState.currentPlayerIndex, this.gameState.firstTurn);
         }
       }
 

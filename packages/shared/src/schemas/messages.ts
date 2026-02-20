@@ -241,6 +241,7 @@ export const pilePickupSchema = z.object({
 export const turnChangedSchema = z.object({
   type: z.literal('turn-changed'),
   currentPlayerIndex: z.number(),
+  firstTurn: z.boolean(),
 });
 
 export const faceDownResultSchema = z.object({
