@@ -42,8 +42,7 @@ COPY packages/client/ ./packages/client/
 COPY packages/shared/ ./packages/shared/
 # Build client assets
 WORKDIR /app/packages/client
-ARG VITE_DISCORD_CLIENT_ID
-ENV VITE_DISCORD_CLIENT_ID=$VITE_DISCORD_CLIENT_ID
+ENV VITE_DISCORD_CLIENT_ID=1473070068190679163
 RUN bunx vite build
 # Result: client assets in /app/packages/client/dist/
 

@@ -4,13 +4,13 @@ set -euo pipefail
 # Deploy script for shithead-game production server.
 # Expected env vars (injected by `infisical run --env=prod`):
 #   VPS_SSH_PRIVATE_KEY    - PEM-encoded SSH private key
-#   DISCORD_CLIENT_ID      - Discord application client ID
 #   DISCORD_CLIENT_SECRET  - Discord application client secret
 #   GHCR_PAT               - GitHub Personal Access Token with packages:read
 #   GHCR_USERNAME          - GitHub username for GHCR login
 
 IMAGE="ghcr.io/stevedsimkins/shithead-server:latest"
 VPS_HOST="root@46.225.52.135"
+DISCORD_CLIENT_ID="1473070068190679163"
 
 echo "==> Writing SSH key..."
 echo "$VPS_SSH_PRIVATE_KEY" > /tmp/vps_key
@@ -30,7 +30,7 @@ set -euo pipefail
 GHCR_PAT="$1"
 GHCR_USERNAME="$2"
 IMAGE="$3"
-DISCORD_CLIENT_ID="$4"
+DISCORD_CLIENT_ID="$4"  # hardcoded in script, not a secret
 DISCORD_CLIENT_SECRET="$5"
 
 echo "==> Logging in to GHCR..."
