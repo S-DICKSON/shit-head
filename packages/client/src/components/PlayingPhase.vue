@@ -68,7 +68,7 @@ watch(
 <template>
   <div
     class="flex flex-col bg-green-900 text-white overflow-hidden"
-    style="height: calc(100dvh - var(--safe-top) - var(--safe-bottom));"
+    style="height: calc(100vh - var(--safe-top) - var(--safe-bottom)); height: calc(100dvh - var(--safe-top) - var(--safe-bottom));"
   >
     <!-- Leave button -->
     <button
