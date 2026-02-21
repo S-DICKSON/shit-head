@@ -25,13 +25,15 @@ key-files:
   created:
     - packages/e2e/tests/home.spec.ts
     - packages/e2e/tests/lobby.spec.ts
-  modified: []
+  modified:
+    - packages/e2e/playwright.config.ts
 
 key-decisions:
   - "WebKit browser installed locally for mobile-375/mobile-390 viewport projects"
   - "hash-based routing detection via page.waitForURL(/\\/#\\/room\\//)"
   - "Room code regex validated as ^[A-Z0-9]{6}$ from [data-testid=room-code]"
   - "Host-alone lobby shows 'Waiting for players...' (disabled start game)"
+  - "playwright.config.ts webServer url changed from / (404) to /health (200) for reuseExistingServer to work with Docker server"
 
 patterns-established:
   - "Lobby test pattern: goto → waitForConnected → createRoom → waitForURL → assert"
@@ -71,6 +73,7 @@ Each task was committed atomically:
 
 - `packages/e2e/tests/home.spec.ts` - 6 home screen tests using LandingPage POM
 - `packages/e2e/tests/lobby.spec.ts` - 6 lobby screen tests using LandingPage + LobbyPage POMs
+- `packages/e2e/playwright.config.ts` - Updated webServer.url to /health endpoint for reuseExistingServer
 
 ## Decisions Made
 
@@ -83,7 +86,16 @@ Each task was committed atomically:
 
 ### Auto-fixed Issues
 
-**1. [Rule 3 - Blocking] Installed missing WebKit browser for mobile viewport projects**
+**1. [Rule 3 - Blocking] Fixed playwright.config.ts webServer url to use /health endpoint**
+
+- **Found during:** Task 1 verification (first run attempt)
+- **Issue:** `webServer.url: 'http://localhost:3000'` returns 404; Playwright treats non-2xx as "not ready" and attempts to start a new server process, which fails with EADDRINUSE because Docker server is already running
+- **Fix:** Changed url to `http://localhost:3000/health` which returns 200
+- **Files modified:** `packages/e2e/playwright.config.ts`
+- **Verification:** Tests run successfully with reuseExistingServer picking up Docker server
+- **Committed in:** `6e0547c` (Task 1 commit)
+
+**2. [Rule 3 - Blocking] Installed missing WebKit browser for mobile viewport projects**
 
 - **Found during:** Task 1 verification (running all 6 viewports)
 - **Issue:** mobile-375 and mobile-390 projects use `devices['iPhone SE']` and `devices['iPhone 14']` which default to WebKit; WebKit executable missing at `/Users/stephendickson/Library/Caches/ms-playwright/webkit-2248/pw_run.sh`
@@ -94,8 +106,8 @@ Each task was committed atomically:
 
 ---
 
-**Total deviations:** 1 auto-fixed (1 blocking)
-**Impact on plan:** WebKit install required to unblock mobile viewport tests. No scope creep.
+**Total deviations:** 2 auto-fixed (2 blocking)
+**Impact on plan:** Both fixes required to unblock test execution. No scope creep.
 
 ## Issues Encountered
 

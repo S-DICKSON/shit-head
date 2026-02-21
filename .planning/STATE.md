@@ -53,6 +53,7 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - Hash-based routing detected via `page.waitForURL(/\/#\/room\//)` pattern
 - Room code validated as `/^[A-Z0-9]{6}$/` from `[data-testid="room-code"]`
 - Lobby tests: each test creates fresh room, server cleans up on WS close
+- playwright.config.ts webServer url uses `/health` not `/` (root returns 404; Playwright needs 2xx to detect server ready for reuseExistingServer)
 
 ### Pending Todos
 
