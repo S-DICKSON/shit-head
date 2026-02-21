@@ -10,6 +10,12 @@
   <!-- Mute button -->
   <MuteButton />
 
+  <!-- Turn Timer (fixed overlay in bottom-right) -->
+  <TurnTimer
+    :time-remaining="swapTimeRemaining"
+    :total-time="30"
+  />
+
   <!-- Transition overlay -->
   <div
     v-if="isTransitioning"
@@ -24,11 +30,6 @@
     class="flex flex-col bg-green-900 text-white p-4 overflow-hidden"
     style="height: calc(100vh - var(--safe-top) - var(--safe-bottom)); height: calc(100dvh - var(--safe-top) - var(--safe-bottom));"
   >
-    <!-- Timer -->
-    <div class="text-center text-4xl font-mono mb-4">
-      {{ timerDisplay }}
-    </div>
-
     <!-- Opponents -->
     <div class="flex flex-wrap justify-center gap-4 mb-6">
       <div
@@ -132,6 +133,7 @@
 <script setup lang="ts">
 import { useSwapPhase } from '../composables/useSwapPhase';
 import MuteButton from './MuteButton.vue';
+import TurnTimer from './TurnTimer.vue';
 
 const emit = defineEmits<{
   leave: [];
@@ -146,7 +148,7 @@ const {
   toggleReady,
   isReady,
   readyPlayers,
-  timerDisplay,
+  swapTimeRemaining,
   isTransitioning,
   transitionMessage,
 } = useSwapPhase();
