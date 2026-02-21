@@ -22,7 +22,6 @@ const {
   selectedFaceUpIndex,
   isMyTurn,
   isFirstTurn,
-  forcedCardIndices,
   activeSource,
   hasSelection,
   playableHandIndices,
@@ -34,18 +33,13 @@ const {
   pickupPile,
 } = usePlayingPhase();
 
-// Get send, burnTriggered and spectatorCount from useGameSocket
-const { send, burnTriggered, spectatorCount } = useGameSocket();
+// Get burnTriggered and spectatorCount from useGameSocket
+const { burnTriggered, spectatorCount } = useGameSocket();
 
 function isOpponentCurrentTurn(opponentPlayerId: string): boolean {
   if (!roomState.value || gameView.value?.currentPlayerIndex === undefined) return false;
   const opponentIndex = roomState.value.players.findIndex(p => p.id === opponentPlayerId);
   return opponentIndex === gameView.value.currentPlayerIndex;
-}
-
-// Handle grouped card play from mobile view
-function handleGroupedPlay(indices: number[]): void {
-  send({ type: 'play-cards', cardIndices: indices });
 }
 
 // ARIA live region for turn announcements
@@ -129,7 +123,6 @@ watch(
         :face-down-count="gameView?.faceDownCount ?? 0"
         :selected-hand-indices="selectedHandIndices"
         :selected-face-up-index="selectedFaceUpIndex"
-        :forced-indices="forcedCardIndices"
         :is-my-turn="isMyTurn"
         :active-source="activeSource"
         :has-selection="hasSelection"
@@ -140,7 +133,6 @@ watch(
         @select-face-down="selectFaceDownCard"
         @play-cards="playSelectedCards"
         @pickup-pile="pickupPile"
-        @play-grouped-cards="handleGroupedPlay"
       />
     </div>
 
