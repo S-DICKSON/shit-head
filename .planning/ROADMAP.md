@@ -9,9 +9,11 @@
 **Plans:** 3 plans
 
 Plans:
-- [ ] 24-01-PLAN.md — Scaffold packages/e2e with Playwright config and Page Object Models
-- [ ] 24-02-PLAN.md — Home screen and lobby screen E2E tests (real WS)
-- [ ] 24-03-PLAN.md — Swap phase and game screen E2E tests (WS mocked) + CI integration
+- [x] 24-01-PLAN.md — Scaffold packages/e2e with Playwright config and Page Object Models
+- [x] 24-02-PLAN.md — Home screen and lobby screen E2E tests (real WS)
+- [x] 24-03-PLAN.md — Swap phase and game screen E2E tests (WS mocked) + CI integration
+
+**Status:** ✓ Complete (2026-02-21) — 150 E2E tests across 6 viewports, CI integrated
 
 **Details:**
 Enable quicker workflows for Claude to verify the interface renders and functions correctly at multiple viewport breakpoints:
