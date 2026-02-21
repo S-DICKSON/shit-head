@@ -67,7 +67,7 @@
         v-for="(card, i) in gameView?.faceUp"
         :key="'fu-' + i"
         class="w-16 h-24 bg-white text-black rounded border-2 flex flex-col items-center justify-center text-sm cursor-pointer transition-all"
-        :class="selectedFaceUpIndex === i ? 'ring-2 ring-blue-500 scale-105 border-blue-500' : 'border-gray-300 hover:border-gray-400'"
+        :class="selectedFaceUpIndices.has(i) ? 'ring-2 ring-blue-500 scale-105 border-blue-500' : 'border-gray-300 hover:border-gray-400'"
         @click="selectFaceUpCard(i)"
       >
         <span class="font-bold">{{ card.kind === 'standard' ? card.rank : 'JKR' }}</span>
@@ -100,7 +100,7 @@
         v-for="(card, i) in gameView?.hand"
         :key="'h-' + i"
         class="w-16 h-24 bg-white text-black rounded border-2 flex flex-col items-center justify-center text-sm cursor-pointer transition-all"
-        :class="selectedHandIndex === i ? 'ring-2 ring-blue-500 scale-105 border-blue-500' : 'border-gray-300 hover:border-gray-400'"
+        :class="selectedHandIndices.has(i) ? 'ring-2 ring-blue-500 scale-105 border-blue-500' : 'border-gray-300 hover:border-gray-400'"
         @click="selectHandCard(i)"
       >
         <span class="font-bold">{{ card.kind === 'standard' ? card.rank : 'JKR' }}</span>
@@ -136,8 +136,8 @@ const emit = defineEmits<{
 
 const {
   gameView,
-  selectedHandIndex,
-  selectedFaceUpIndex,
+  selectedHandIndices,
+  selectedFaceUpIndices,
   selectHandCard,
   selectFaceUpCard,
   toggleReady,
