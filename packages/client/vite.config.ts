@@ -6,7 +6,10 @@ export default defineConfig({
   plugins: [vue(), tailwindcss()],
   build: {
     outDir: 'dist',  // Output for CF Pages deployment
-    target: 'esnext',  // Required for top-level await (Discord SDK lazy imports)
+    // es2020 + chrome89 + safari15: baseline that covers Edge 89+ (Chromium-based).
+    // main.ts uses an async IIFE (not bare top-level await) so no TLA downleveling needed.
+    // Using named browser targets lets esbuild apply precise feature tables.
+    target: ['es2020', 'chrome89', 'safari15'],
   },
   server: {
     host: '0.0.0.0',  // Required for Docker
