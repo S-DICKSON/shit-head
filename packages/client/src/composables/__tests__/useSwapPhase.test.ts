@@ -6,16 +6,19 @@ import { ref } from 'vue';
 // even though useGameSocket is mocked separately, Vitest validates all named exports
 // referenced by the module graph. In Docker/Bun single-thread mode the shared mock
 // must export everything that may be needed.
-vi.mock('@vueuse/core', () => ({
-  useDebounceFn: (fn: (...args: unknown[]) => unknown) => fn,
-  useWebSocket: vi.fn(() => ({
-    status: { value: 'OPEN' },
-    data: { value: null },
-    send: vi.fn(),
-    close: vi.fn(),
-    open: vi.fn(),
-  })),
-}));
+vi.mock('@vueuse/core', async () => {
+  const { ref: vueRef } = await import('vue');
+  return {
+    useDebounceFn: (fn: (...args: unknown[]) => unknown) => fn,
+    useWebSocket: vi.fn(() => ({
+      status: vueRef('OPEN'),
+      data: vueRef(null),
+      send: vi.fn(),
+      close: vi.fn(),
+      open: vi.fn(),
+    })),
+  };
+});
 
 // vi.mock is hoisted before all imports — must be declared before any import of the mocked module
 vi.mock('../useGameSocket', () => {

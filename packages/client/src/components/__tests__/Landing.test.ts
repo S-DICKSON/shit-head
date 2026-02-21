@@ -121,9 +121,10 @@ describe('Landing.vue', () => {
       await fireEvent.update(nicknameInput, 'Alice');
       await nextTick();
 
-      // Simulate entering a room code via the @input handler
+      // Room code uses :value + @input (not v-model) — set value then dispatch native event
       const roomCodeInput = document.querySelector('#roomCode') as HTMLInputElement;
-      await fireEvent.input(roomCodeInput, { target: { value: 'ABC123' } });
+      roomCodeInput.value = 'ABC123';
+      await roomCodeInput.dispatchEvent(new Event('input', { bubbles: true }));
       await nextTick();
 
       const joinBtn = screen.getByRole('button', { name: /Join Room/ });
@@ -138,10 +139,10 @@ describe('Landing.vue', () => {
       await fireEvent.update(nicknameInput, 'Carol');
       await nextTick();
 
+      // Room code uses :value + @input (not v-model) — set value then dispatch native event
       const roomCodeInput = document.querySelector('#roomCode') as HTMLInputElement;
-      // Manually set value then trigger input so handleRoomCodeInput processes it
       roomCodeInput.value = 'XYZ789';
-      await fireEvent.input(roomCodeInput, { target: { value: 'XYZ789' } });
+      await roomCodeInput.dispatchEvent(new Event('input', { bubbles: true }));
       await nextTick();
 
       const joinBtn = screen.getByRole('button', { name: /Join Room/ });
@@ -155,7 +156,8 @@ describe('Landing.vue', () => {
     it('uppercases room code input', async () => {
       await renderLanding();
       const roomCodeInput = document.querySelector('#roomCode') as HTMLInputElement;
-      await fireEvent.input(roomCodeInput, { target: { value: 'abc123' } });
+      roomCodeInput.value = 'abc123';
+      await roomCodeInput.dispatchEvent(new Event('input', { bubbles: true }));
       await nextTick();
       // After processing via handleRoomCodeInput, roomCode ref should be uppercase
       // The :value binding reflects the reactive roomCode ref
@@ -165,7 +167,8 @@ describe('Landing.vue', () => {
     it('strips non-alphanumeric characters from room code', async () => {
       await renderLanding();
       const roomCodeInput = document.querySelector('#roomCode') as HTMLInputElement;
-      await fireEvent.input(roomCodeInput, { target: { value: 'ab-12!' } });
+      roomCodeInput.value = 'ab-12!';
+      await roomCodeInput.dispatchEvent(new Event('input', { bubbles: true }));
       await nextTick();
       // The :value binding is controlled by roomCode ref which strips non-alphanumeric
       // After nextTick re-render the :value attribute reflects the processed value
