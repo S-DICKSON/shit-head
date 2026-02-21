@@ -54,7 +54,7 @@ COPY package.json bun.lock* tsconfig.json ./
 COPY packages/server/package.json ./packages/server/
 COPY packages/shared/package.json ./packages/shared/
 # Install production dependencies only
-RUN bun install --frozen-lockfile --production
+RUN bun install --production
 # Copy server and shared source
 COPY packages/server/ ./packages/server/
 COPY packages/shared/ ./packages/shared/
