@@ -100,6 +100,10 @@ Recent decisions affecting v2.0 work:
 - isGroupPlayable removed from carousel — new carousel uses isPowerGroup for gold styling, not playability ring (22-01)
 - confirmTimer as module-level let (not ref) — no reactivity needed, pure timeout management (22-01)
 - @testing-library/vue v8 accepts identical global: { plugins, stubs } options shape as @vue/test-utils — drop-in for render call (quick-025)
+- Async IIFE in main.ts: esbuild target es2020+edge89 hard-errors on TLA; only fix is removing TLA from source with void (async()=>{})() (quick-027b)
+- Vite build target ['es2020', 'chrome89', 'safari15'] not 'esnext': named browser targets provide Edge 89+ compatible output without TLA (quick-027b)
+- CSS dvh fallback: declare 100vh before 100dvh in inline style; cascade ensures dvh wins in Edge 108+, vh used in older Edge (quick-027b)
+- useSwapPhase tryPerformSwaps: cycle face-up indices (i % faceUpArr.length) not Math.min pairing — N hand cards can target same face-up slot (quick-027b)
 - fireEvent.input(el, { target: { value: 'X' } }) for :value + @input handlers (not v-model) in Landing.vue room code input (quick-025)
 - waitFor() in Lobby tests replaces flushPromises() — handles async router readiness after render() (quick-025)
 - Docker image rebuild required after package.json changes — bun install runs at image build time, not container start (quick-025)
@@ -125,7 +129,8 @@ Recent decisions affecting v2.0 work:
 | 024 | Update deployment — Infisical Discord secrets (Makefile deploy target, Dockerfile build arg, deploy.yml) | 2026-02-20 | 2cccf8c | [024-update-deployment-infisical-discord-secr](./quick/024-update-deployment-infisical-discord-secr/) |
 | 025 | Migrate client tests from @vue/test-utils to @testing-library/vue — 5 test files, resolve Bun WeakMap failures | 2026-02-20 | b70ed33 | [025-migrate-client-tests-from-vue-test-utils](./quick/025-migrate-client-tests-from-vue-test-utils/) |
 | 026 | Add privacy policy and terms of service static pages for Discord app verification | 2026-02-20 | 5ec4245 | [026-add-privacy-policy-and-terms-of-service-](./quick/026-add-privacy-policy-and-terms-of-service-/) |
-| 027 | Card swap selection improvement — rank-aware multi-select with Set-based reactive refs | 2026-02-21 | 85e502a | [027-card-swap-selection-improvement-switch-t](./quick/027-card-swap-selection-improvement-switch-t/) |
+| 027a | Card swap selection improvement — rank-aware multi-select with Set-based reactive refs | 2026-02-21 | 85e502a | [027-card-swap-selection-improvement-switch-t](./quick/027-card-swap-selection-improvement-switch-t/) |
+| 027b | Fix game not working on Microsoft Edge — async IIFE in main.ts, es2020 build target, vh/dvh CSS fallbacks | 2026-02-21 | 9d13f51 | [027-game-doesn-t-work-on-microsoft-edge-plea](./quick/027-game-doesn-t-work-on-microsoft-edge-plea/) |
 
 ### Blockers/Concerns
 
@@ -140,6 +145,6 @@ Web client UI fully updated: safe area, shithead marker, Discord avatars, specta
 ## Session Continuity
 
 Last session: 2026-02-21
-Stopped at: Completed quick task 027 — card swap selection improvement (85e502a)
+Stopped at: Completed quick task 027b — Edge browser compatibility fix (9d13f51)
 Resume file: None
 Next: Phase 23 (Frontend Testing)
