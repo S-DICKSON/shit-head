@@ -103,6 +103,8 @@ Recent decisions affecting v2.0 work:
 - fireEvent.input(el, { target: { value: 'X' } }) for :value + @input handlers (not v-model) in Landing.vue room code input (quick-025)
 - waitFor() in Lobby tests replaces flushPromises() — handles async router readiness after render() (quick-025)
 - Docker image rebuild required after package.json changes — bun install runs at image build time, not container start (quick-025)
+- useSwapPhase Set-based reactivity: always assign new Set (new Set([...old, idx])) never mutate in place — Vue doesn't track Set.add/delete (quick-027)
+- Swap rank-aware multi-select: same rank tap accumulates, different rank tap replaces; cycling pairing handArr[i % faceUpArr.length] for N-to-1 swaps (quick-027)
 
 ### Pending Todos
 
@@ -123,6 +125,7 @@ Recent decisions affecting v2.0 work:
 | 024 | Update deployment — Infisical Discord secrets (Makefile deploy target, Dockerfile build arg, deploy.yml) | 2026-02-20 | 2cccf8c | [024-update-deployment-infisical-discord-secr](./quick/024-update-deployment-infisical-discord-secr/) |
 | 025 | Migrate client tests from @vue/test-utils to @testing-library/vue — 5 test files, resolve Bun WeakMap failures | 2026-02-20 | b70ed33 | [025-migrate-client-tests-from-vue-test-utils](./quick/025-migrate-client-tests-from-vue-test-utils/) |
 | 026 | Add privacy policy and terms of service static pages for Discord app verification | 2026-02-20 | 5ec4245 | [026-add-privacy-policy-and-terms-of-service-](./quick/026-add-privacy-policy-and-terms-of-service-/) |
+| 027 | Card swap selection improvement — rank-aware multi-select with Set-based reactive refs | 2026-02-21 | 85e502a | [027-card-swap-selection-improvement-switch-t](./quick/027-card-swap-selection-improvement-switch-t/) |
 
 ### Blockers/Concerns
 
@@ -136,7 +139,7 @@ Web client UI fully updated: safe area, shithead marker, Discord avatars, specta
 
 ## Session Continuity
 
-Last session: 2026-02-20
-Stopped at: Completed quick task 026 — add privacy policy and terms of service static pages (5ec4245)
+Last session: 2026-02-21
+Stopped at: Completed quick task 027 — card swap selection improvement (85e502a)
 Resume file: None
 Next: Phase 23 (Frontend Testing)
