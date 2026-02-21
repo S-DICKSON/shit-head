@@ -11,8 +11,9 @@ const shareLinkButtonText = ref('Copy Link');
 // Generate shareable URL
 const shareUrl = `${window.location.origin}/#/room/${props.code}`;
 
-// Check if native share is available (mobile browsers)
-const canNativeShare = typeof navigator.share === 'function';
+// Only use native share on mobile (desktop Safari/Chrome also has navigator.share but opens a clunky dialog)
+const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+const canNativeShare = isMobile && typeof navigator.share === 'function';
 
 // Copy code to clipboard
 const copyCode = async () => {
@@ -33,7 +34,6 @@ const shareOrCopyLink = async () => {
     try {
       await navigator.share({
         title: 'Join my Shithead game!',
-        text: `Join room ${props.code}`,
         url: shareUrl,
       });
       return;
