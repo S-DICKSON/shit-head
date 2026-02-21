@@ -62,42 +62,141 @@ describe('useSwapPhase', () => {
   });
 
   describe('card selection', () => {
-    it('selectHandCard sets selectedHandIndex', () => {
-      const { selectHandCard, selectedHandIndex } = useSwapPhase();
+    it('selectHandCard adds index to selectedHandIndices', () => {
+      const { selectHandCard, selectedHandIndices } = useSwapPhase();
       selectHandCard(1);
-      expect(selectedHandIndex.value).toBe(1);
+      expect(selectedHandIndices.value.has(1)).toBe(true);
+      expect(selectedHandIndices.value.size).toBe(1);
     });
 
     it('selectHandCard deselects on second tap of same index', () => {
-      const { selectHandCard, selectedHandIndex } = useSwapPhase();
+      const { selectHandCard, selectedHandIndices } = useSwapPhase();
       selectHandCard(1);
       selectHandCard(1);
-      expect(selectedHandIndex.value).toBeNull();
+      expect(selectedHandIndices.value.size).toBe(0);
     });
 
-    it('selectFaceUpCard sets selectedFaceUpIndex', () => {
-      const { selectFaceUpCard, selectedFaceUpIndex } = useSwapPhase();
+    it('selectFaceUpCard adds index to selectedFaceUpIndices', () => {
+      const { selectFaceUpCard, selectedFaceUpIndices } = useSwapPhase();
       selectFaceUpCard(0);
-      expect(selectedFaceUpIndex.value).toBe(0);
+      expect(selectedFaceUpIndices.value.has(0)).toBe(true);
+      expect(selectedFaceUpIndices.value.size).toBe(1);
     });
 
     it('selectFaceUpCard deselects on second tap of same index', () => {
-      const { selectFaceUpCard, selectedFaceUpIndex } = useSwapPhase();
+      const { selectFaceUpCard, selectedFaceUpIndices } = useSwapPhase();
       selectFaceUpCard(0);
       selectFaceUpCard(0);
-      expect(selectedFaceUpIndex.value).toBeNull();
+      expect(selectedFaceUpIndices.value.size).toBe(0);
+    });
+
+    it('selectHandCard switches selection when different rank tapped', () => {
+      // hand: [rank:'3', rank:'7', rank:'K']
+      const { selectHandCard, selectedHandIndices } = useSwapPhase();
+      selectHandCard(0); // rank '3'
+      selectHandCard(1); // rank '7' — different, should switch
+      expect(selectedHandIndices.value.has(1)).toBe(true);
+      expect(selectedHandIndices.value.size).toBe(1);
+    });
+
+    it('selectHandCard accumulates when same rank tapped', () => {
+      const s = useGameSocket() as any;
+      s.gameView.value = {
+        ...s.gameView.value,
+        hand: [
+          { kind: 'standard', rank: '7', suit: 'H' },
+          { kind: 'standard', rank: '7', suit: 'D' },
+          { kind: 'standard', rank: 'K', suit: 'S' },
+        ],
+      };
+      const { selectHandCard, selectedHandIndices } = useSwapPhase();
+      selectHandCard(0); // rank '7'
+      selectHandCard(1); // rank '7' — same, accumulate
+      expect(selectedHandIndices.value.has(0)).toBe(true);
+      expect(selectedHandIndices.value.has(1)).toBe(true);
+      expect(selectedHandIndices.value.size).toBe(2);
+    });
+
+    it('selectHandCard switches from accumulated to different rank', () => {
+      const s = useGameSocket() as any;
+      s.gameView.value = {
+        ...s.gameView.value,
+        hand: [
+          { kind: 'standard', rank: '7', suit: 'H' },
+          { kind: 'standard', rank: '7', suit: 'D' },
+          { kind: 'standard', rank: 'K', suit: 'S' },
+        ],
+      };
+      const { selectHandCard, selectedHandIndices } = useSwapPhase();
+      selectHandCard(0); // rank '7'
+      selectHandCard(1); // rank '7' — accumulate
+      selectHandCard(2); // rank 'K' — different, switch
+      expect(selectedHandIndices.value.has(2)).toBe(true);
+      expect(selectedHandIndices.value.size).toBe(1);
+    });
+
+    it('deselecting one card from accumulated set keeps others', () => {
+      const s = useGameSocket() as any;
+      s.gameView.value = {
+        ...s.gameView.value,
+        hand: [
+          { kind: 'standard', rank: '7', suit: 'H' },
+          { kind: 'standard', rank: '7', suit: 'D' },
+          { kind: 'standard', rank: 'K', suit: 'S' },
+        ],
+      };
+      const { selectHandCard, selectedHandIndices } = useSwapPhase();
+      selectHandCard(0); // rank '7'
+      selectHandCard(1); // rank '7' — accumulate
+      selectHandCard(0); // deselect index 0
+      expect(selectedHandIndices.value.has(1)).toBe(true);
+      expect(selectedHandIndices.value.size).toBe(1);
+    });
+
+    it('selectFaceUpCard same-rank accumulation works', () => {
+      const s = useGameSocket() as any;
+      s.gameView.value = {
+        ...s.gameView.value,
+        faceUp: [
+          { kind: 'standard', rank: 'A', suit: 'H' },
+          { kind: 'standard', rank: 'A', suit: 'D' },
+          { kind: 'standard', rank: '10', suit: 'S' },
+        ],
+      };
+      const { selectFaceUpCard, selectedFaceUpIndices } = useSwapPhase();
+      selectFaceUpCard(0); // rank 'A'
+      selectFaceUpCard(1); // rank 'A' — same, accumulate
+      expect(selectedFaceUpIndices.value.has(0)).toBe(true);
+      expect(selectedFaceUpIndices.value.has(1)).toBe(true);
+      expect(selectedFaceUpIndices.value.size).toBe(2);
+    });
+
+    it('joker cards accumulate with other jokers', () => {
+      const s = useGameSocket() as any;
+      s.gameView.value = {
+        ...s.gameView.value,
+        hand: [
+          { kind: 'joker', id: 1 },
+          { kind: 'joker', id: 2 },
+          { kind: 'standard', rank: 'K', suit: 'S' },
+        ],
+      };
+      const { selectHandCard, selectedHandIndices } = useSwapPhase();
+      selectHandCard(0); // joker -> 'JKR'
+      selectHandCard(1); // joker -> 'JKR' — same rank, accumulate
+      expect(selectedHandIndices.value.size).toBe(2);
     });
   });
 
   describe('swap trigger', () => {
     it('selecting hand then face-up triggers swap and clears selection', () => {
       const s = useGameSocket() as any;
-      const { selectHandCard, selectFaceUpCard, selectedHandIndex, selectedFaceUpIndex } = useSwapPhase();
+      const { selectHandCard, selectFaceUpCard, selectedHandIndices, selectedFaceUpIndices } = useSwapPhase();
       selectHandCard(0);
       selectFaceUpCard(2);
       expect(s.send).toHaveBeenCalledWith({ type: 'swap-cards', handIndex: 0, faceUpIndex: 2 });
-      expect(selectedHandIndex.value).toBeNull();
-      expect(selectedFaceUpIndex.value).toBeNull();
+      expect(selectedHandIndices.value.size).toBe(0);
+      expect(selectedFaceUpIndices.value.size).toBe(0);
     });
 
     it('selecting face-up then hand triggers swap', () => {
@@ -107,23 +206,44 @@ describe('useSwapPhase', () => {
       selectHandCard(2);
       expect(s.send).toHaveBeenCalledWith({ type: 'swap-cards', handIndex: 2, faceUpIndex: 1 });
     });
+
+    it('multi-select hand + single face-up triggers multiple swaps', () => {
+      const s = useGameSocket() as any;
+      s.gameView.value = {
+        ...s.gameView.value,
+        hand: [
+          { kind: 'standard', rank: '7', suit: 'H' },
+          { kind: 'standard', rank: '7', suit: 'D' },
+          { kind: 'standard', rank: 'K', suit: 'S' },
+        ],
+      };
+      const { selectHandCard, selectFaceUpCard, selectedHandIndices, selectedFaceUpIndices } = useSwapPhase();
+      selectHandCard(0); // rank '7'
+      selectHandCard(1); // rank '7' — accumulate, now 2 hand cards selected
+      selectFaceUpCard(0); // triggers swap: pairs (0,0) and (1,0)
+      expect(s.send).toHaveBeenCalledTimes(2);
+      expect(s.send).toHaveBeenCalledWith({ type: 'swap-cards', handIndex: 0, faceUpIndex: 0 });
+      expect(s.send).toHaveBeenCalledWith({ type: 'swap-cards', handIndex: 1, faceUpIndex: 0 });
+      expect(selectedHandIndices.value.size).toBe(0);
+      expect(selectedFaceUpIndices.value.size).toBe(0);
+    });
   });
 
   describe('swap phase complete blocking', () => {
     it('selectHandCard does nothing when swapPhaseComplete is true', () => {
       const s = useGameSocket() as any;
       s.swapPhaseComplete.value = true;
-      const { selectHandCard, selectedHandIndex } = useSwapPhase();
+      const { selectHandCard, selectedHandIndices } = useSwapPhase();
       selectHandCard(0);
-      expect(selectedHandIndex.value).toBeNull();
+      expect(selectedHandIndices.value.size).toBe(0);
     });
 
     it('selectFaceUpCard does nothing when swapPhaseComplete is true', () => {
       const s = useGameSocket() as any;
       s.swapPhaseComplete.value = true;
-      const { selectFaceUpCard, selectedFaceUpIndex } = useSwapPhase();
+      const { selectFaceUpCard, selectedFaceUpIndices } = useSwapPhase();
       selectFaceUpCard(0);
-      expect(selectedFaceUpIndex.value).toBeNull();
+      expect(selectedFaceUpIndices.value.size).toBe(0);
     });
 
     it('toggleReady does nothing when swapPhaseComplete is true', () => {
