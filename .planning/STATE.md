@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 Phase: 22 of 23 (Mobile Card Categories) — COMPLETE
 Plan: 1 of 1 complete in phase 22
 Status: Phase 22 complete — category tabs + carousel + two-step play confirmation for mobile hand navigation
-Last activity: 2026-02-19 — Completed 22-01-PLAN.md (useCardCategories composable + PlayerCards.vue category UI)
+Last activity: 2026-02-21 — Completed quick task 027: Edge browser compatibility fix
 
 Progress: [██████████] 22/23 phases complete (96% overall — Phase 23 remaining)
 
