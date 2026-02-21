@@ -31,13 +31,14 @@ export function useSwapPhase() {
 
     if (handSet.size === 0 || faceUpSet.size === 0) return;
 
-    // Pair selections 1-to-1 by iteration order
+    // Pair selections: hand drives the count, face-up cycles if fewer selections.
+    // This supports the common case of selecting N same-rank hand cards and 1 face-up
+    // slot, resulting in N swap messages all targeting the same face-up index.
     const handArr = [...handSet];
     const faceUpArr = [...faceUpSet];
-    const pairCount = Math.min(handArr.length, faceUpArr.length);
 
-    for (let i = 0; i < pairCount; i++) {
-      sendSwap(handArr[i], faceUpArr[i]);
+    for (let i = 0; i < handArr.length; i++) {
+      sendSwap(handArr[i], faceUpArr[i % faceUpArr.length]);
     }
 
     // Clear all selections
