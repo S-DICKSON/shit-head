@@ -10,12 +10,12 @@ See: .planning/PROJECT.md (updated 2026-02-21)
 ## Current Position
 
 Phase: 24 of 24 (24-playwright-responsive-e2e-testing)
-Plan: 1 of 3 complete
+Plan: 2 of 3 complete
 Status: In progress
-Last activity: 2026-02-21 - Completed 24-01-PLAN.md (E2E infrastructure scaffold)
+Last activity: 2026-02-21 - Completed 24-02-PLAN.md (home + lobby E2E tests)
 
-Progress: [##########] v1.0 (15 phases) + v2.0 (8 phases) = 23 phases shipped + Phase 24 in progress
-Next: Execute Plan 02 (smoke tests) and Plan 03 (responsive layout tests)
+Progress: [##########] v1.0 (15 phases) + v2.0 (8 phases) = 23 phases shipped + Phase 24 in progress (2/3 plans done)
+Next: Execute Plan 03 (responsive layout tests — game screen, swap phase, opponent cards)
 
 ## Performance Metrics
 
@@ -32,8 +32,8 @@ Next: Execute Plan 02 (smoke tests) and Plan 03 (responsive layout tests)
 - Quick tasks completed: 10
 
 **v3.0 Velocity (so far):**
-- Plans completed: 1
-- Duration: ~3 minutes
+- Plans completed: 2
+- Duration: ~3 minutes each
 
 ## Accumulated Context
 
@@ -48,6 +48,12 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - POM locator strategy: getByRole > getByLabel > getByPlaceholder > getByText > data-testid
 - data-testid="room-code" added to RoomCode.vue for stable E2E anchor
 
+**Phase 24 Plan 02 decisions:**
+- WebKit installed locally for mobile-375/mobile-390 viewport projects (iPhone SE/14 use WebKit by default)
+- Hash-based routing detected via `page.waitForURL(/\/#\/room\//)` pattern
+- Room code validated as `/^[A-Z0-9]{6}$/` from `[data-testid="room-code"]`
+- Lobby tests: each test creates fresh room, server cleans up on WS close
+
 ### Pending Todos
 
 1 pending — `/gsd:check-todos` to review
@@ -59,11 +65,11 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 ### Blockers/Concerns
 
-- CI will need `bunx playwright install chromium` step (Chromium installed locally but not committed)
+- CI will need `bunx playwright install chromium` AND `bunx playwright install webkit` for full viewport coverage (mobile projects use WebKit)
 
 ## Session Continuity
 
 Last session: 2026-02-21
-Stopped at: Completed 24-01-PLAN.md (Playwright E2E infrastructure)
+Stopped at: Completed 24-02-PLAN.md (home + lobby E2E tests, 72 tests passing)
 Resume file: None
-Next: Execute 24-02-PLAN.md (smoke tests) and 24-03-PLAN.md (responsive layout tests)
+Next: Execute 24-03-PLAN.md (responsive layout tests — game, swap phase, opponent cards)
