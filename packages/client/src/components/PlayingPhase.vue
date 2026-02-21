@@ -61,8 +61,7 @@ watch(
 
 <template>
   <div
-    class="flex flex-col bg-green-900 text-white overflow-hidden"
-    style="height: calc(100vh - var(--safe-top) - var(--safe-bottom)); height: calc(100dvh - var(--safe-top) - var(--safe-bottom));"
+    class="flex flex-col bg-green-900 text-white overflow-hidden h-full"
   >
     <!-- Leave button -->
     <button
@@ -93,7 +92,7 @@ watch(
     </div>
 
     <!-- Center game area: Draw/Discard Piles + Turn Banner below -->
-    <div class="flex-shrink-0 sm:flex-1 flex flex-col items-center justify-center px-4 py-2">
+    <div class="flex-shrink-0 flex flex-col items-center justify-center px-4 py-2 sm:py-4">
       <div class="flex items-center justify-center gap-6 sm:gap-8">
         <DrawPile :count="gameView?.drawPileCount ?? 0" />
         <DiscardPile

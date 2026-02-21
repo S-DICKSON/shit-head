@@ -27,8 +27,7 @@
   </div>
 
   <div
-    class="flex flex-col bg-green-900 text-white p-4 overflow-hidden"
-    style="height: calc(100vh - var(--safe-top) - var(--safe-bottom)); height: calc(100dvh - var(--safe-top) - var(--safe-bottom));"
+    class="flex flex-col bg-green-900 text-white p-4 overflow-hidden h-full"
   >
     <!-- Opponents -->
     <div class="flex flex-wrap justify-center gap-4 mb-6">
