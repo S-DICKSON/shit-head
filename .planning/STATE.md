@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 Phase: 22 of 23 (Mobile Card Categories) — COMPLETE
 Plan: 1 of 1 complete in phase 22
 Status: Phase 22 complete — category tabs + carousel + two-step play confirmation for mobile hand navigation
-Last activity: 2026-02-21 — Completed quick task 027: Edge browser compatibility fix
+Last activity: 2026-02-21 — Completed quick task 028: Fix leave-room not returning to home screen
 
 Progress: [██████████] 22/23 phases complete (96% overall — Phase 23 remaining)
 
@@ -109,6 +109,8 @@ Recent decisions affecting v2.0 work:
 - Docker image rebuild required after package.json changes — bun install runs at image build time, not container start (quick-025)
 - useSwapPhase Set-based reactivity: always assign new Set (new Set([...old, idx])) never mutate in place — Vue doesn't track Set.add/delete (quick-027)
 - Swap rank-aware multi-select: same rank tap accumulates, different rank tap replaces; cycling pairing handArr[i % faceUpArr.length] for N-to-1 swaps (quick-027)
+- leave-room in send(): clear roomState/gameView/playerId/spectator refs + both localStorage keys synchronously before wsSend() — router guard sees null state and permits / navigation (quick-028)
+- shithead-player-id removed on deliberate leave (not just room code): prevents stale reconnect on next visit; playerId watch re-persists fresh id on rejoin (quick-028)
 
 ### Pending Todos
 
@@ -131,6 +133,7 @@ Recent decisions affecting v2.0 work:
 | 026 | Add privacy policy and terms of service static pages for Discord app verification | 2026-02-20 | 5ec4245 | [026-add-privacy-policy-and-terms-of-service-](./quick/026-add-privacy-policy-and-terms-of-service-/) |
 | 027a | Card swap selection improvement — rank-aware multi-select with Set-based reactive refs | 2026-02-21 | 85e502a | [027-card-swap-selection-improvement-switch-t](./quick/027-card-swap-selection-improvement-switch-t/) |
 | 027b | Fix game not working on Microsoft Edge — async IIFE in main.ts, es2020 build target, vh/dvh CSS fallbacks | 2026-02-21 | 9d13f51 | [027-game-doesn-t-work-on-microsoft-edge-plea](./quick/027-game-doesn-t-work-on-microsoft-edge-plea/) |
+| 028 | Fix Leave Room not returning to home screen — clear roomState/gameView/playerId synchronously in send() on leave-room | 2026-02-21 | 3cc8255 | [028-fix-leave-room-not-returning-to-home-scr](./quick/028-fix-leave-room-not-returning-to-home-scr/) |
 
 ### Blockers/Concerns
 
@@ -145,6 +148,6 @@ Web client UI fully updated: safe area, shithead marker, Discord avatars, specta
 ## Session Continuity
 
 Last session: 2026-02-21
-Stopped at: Completed quick task 027b — Edge browser compatibility fix (9d13f51)
+Stopped at: Completed quick task 028 — Fix leave-room not returning to home screen (3cc8255)
 Resume file: None
 Next: Phase 23 (Frontend Testing)
