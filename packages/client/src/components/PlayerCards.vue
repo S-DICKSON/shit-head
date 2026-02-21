@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col h-full">
     <!-- Card area -->
-    <div class="overflow-hidden flex-1">
+    <div class="overflow-y-auto min-h-0">
       <!-- Table cards: face-down underneath face-up (stacked) -->
       <div
         v-if="faceUp.length > 0 || faceDownCount > 0"
@@ -36,7 +36,7 @@
               class="absolute inset-0 w-14 h-21 sm:w-16 sm:h-24 bg-white text-black rounded border-2 flex flex-col items-center justify-center text-xs sm:text-sm transition-all"
               :class="[
                 selectedFaceUpIndex === (i - 1)
-                  ? 'ring-2 ring-yellow-400 -translate-y-2 border-yellow-400 shadow-lg'
+                  ? 'ring-2 ring-yellow-400 scale-105 border-yellow-400 shadow-lg'
                   : playableFaceUpIndices.size > 0 && playableFaceUpIndices.has(i - 1)
                     ? 'border-green-400 shadow-md shadow-green-400/40'
                     : playableFaceUpIndices.size > 0
@@ -67,19 +67,23 @@
           <span class="text-xs text-green-300 uppercase tracking-wide">Hand ({{ hand.length }})</span>
         </div>
 
-        <!-- Card buttons — horizontally scrollable on mobile, wrapping on desktop -->
+        <!-- Card buttons — centered when few cards, horizontal scroll when many -->
         <TransitionGroup
           name="card-list"
           tag="div"
-          class="flex gap-1 sm:gap-2 flex-nowrap overflow-x-auto snap-x snap-mandatory sm:flex-wrap sm:overflow-visible sm:justify-center pb-2 sm:pb-0"
+          class="flex gap-1 sm:gap-2 pt-2 pb-2 sm:flex-wrap sm:justify-center sm:overflow-x-visible sm:snap-none sm:px-3"
+          :class="needsScroll
+            ? 'flex-nowrap overflow-x-auto snap-x snap-mandatory px-3 scroll-px-3'
+            : 'flex-wrap justify-center px-1'"
         >
           <button
             v-for="(card, i) in hand"
             :key="cardKey(card)"
-            class="w-14 h-21 sm:w-16 sm:h-24 bg-white text-black rounded border-2 flex flex-col items-center justify-center text-xs sm:text-sm transition-all snap-start flex-shrink-0"
+            class="w-14 h-21 sm:w-16 sm:h-24 bg-white text-black rounded border-2 flex flex-col items-center justify-center text-xs sm:text-sm transition-all flex-shrink-0"
             :class="[
+              needsScroll ? 'snap-start' : '',
               selectedHandIndices.has(i)
-                ? 'ring-2 ring-yellow-400 -translate-y-2 border-yellow-400 shadow-lg'
+                ? 'ring-2 ring-yellow-400 scale-105 border-yellow-400 shadow-lg'
                 : playableHandIndices.size > 0 && playableHandIndices.has(i)
                   ? 'border-green-400 shadow-md shadow-green-400/40'
                   : playableHandIndices.size > 0
@@ -124,12 +128,6 @@
             {{ pickupConfirming ? 'Tap Again to Pick Up' : 'Pick Up Pile' }}
           </button>
         </div>
-        <p
-          v-if="isMyTurn"
-          class="text-center text-xs text-green-400 mt-1"
-        >
-          Double-tap to pick up pile
-        </p>
       </div>
     </div>
   </div>
@@ -166,6 +164,9 @@ const { handleTap: handlePickupTap, isWaitingForSecondTap: pickupConfirming } = 
   () => emit('pickup-pile'),
   300
 );
+
+// Use horizontal scroll only when cards would overflow (~6+ cards on mobile)
+const needsScroll = computed(() => props.hand.length > 5);
 
 // Hint: must pick up pile (no playable cards from active source)
 const mustPickUp = computed(() =>
@@ -210,14 +211,5 @@ function cardKey(card: Card): string {
 }
 .card-list-leave-active {
   position: absolute;
-}
-
-/* Hide scrollbar on horizontal card scroll */
-.snap-x::-webkit-scrollbar {
-  display: none;
-}
-.snap-x {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
 }
 </style>

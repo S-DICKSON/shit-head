@@ -92,31 +92,28 @@ watch(
       </div>
     </div>
 
-    <!-- Center game area: Turn Banner + Draw/Discard Piles -->
-    <div class="flex-1 flex flex-col items-center justify-center px-4">
-      <!-- Turn Banner (inline within center area) -->
-      <TurnBanner :visible="isMyTurn" />
-
-      <!-- First Turn Banner -->
-      <p
-        v-if="isFirstTurn && isMyTurn"
-        class="text-yellow-300 text-sm text-center mb-1 animate-pulse"
-      >
-        You must play your lowest card(s)!
-      </p>
-
-      <!-- Draw Pile + Discard Pile -->
-      <div class="flex items-center justify-center gap-6 sm:gap-8 mb-2">
+    <!-- Center game area: Draw/Discard Piles + Turn Banner below -->
+    <div class="flex-shrink-0 sm:flex-1 flex flex-col items-center justify-center px-4 py-2">
+      <div class="flex items-center justify-center gap-6 sm:gap-8">
         <DrawPile :count="gameView?.drawPileCount ?? 0" />
         <DiscardPile
           :cards="gameView?.discardPile ?? []"
           :burn-animation="burnTriggered"
         />
       </div>
+      <div class="mt-1">
+        <TurnBanner :visible="isMyTurn" />
+        <p
+          v-if="isFirstTurn && isMyTurn"
+          class="text-yellow-300 text-xs text-center animate-pulse mt-1"
+        >
+          You must play your lowest card(s)!
+        </p>
+      </div>
     </div>
 
-    <!-- Player's cards area (scrollable on mobile with many cards) -->
-    <div class="flex-shrink-0 px-2 pb-3 flex flex-col max-h-[45vh]">
+    <!-- Player's cards area (takes remaining space) -->
+    <div class="flex-1 min-h-0 px-2 pb-3 flex flex-col">
       <PlayerCards
         :hand="gameView?.hand ?? []"
         :face-up="gameView?.faceUp ?? []"
