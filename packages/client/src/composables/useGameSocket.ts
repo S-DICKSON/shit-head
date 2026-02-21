@@ -173,6 +173,15 @@ function createGameSocket() {
     }
   }));
 
+  // Reopen WebSocket when tab becomes visible again (mobile tab-out fix)
+  const handleVisibilityChange = () => {
+    if (document.visibilityState === 'visible' && status.value === 'CLOSED') {
+      connectionState.value = 'reconnecting';
+      open();
+    }
+  };
+  document.addEventListener('visibilitychange', handleVisibilityChange);
+
   // Auto-reconnect to room when WebSocket reopens
   scope.run(() => watch(status, (newStatus) => {
     if (newStatus === 'OPEN') {
