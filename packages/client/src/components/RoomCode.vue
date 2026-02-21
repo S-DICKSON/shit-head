@@ -60,7 +60,7 @@ const shareOrCopyLink = async () => {
     <div class="mb-4">
       <label class="block text-sm font-medium text-gray-600 mb-2">Room Code</label>
       <div class="flex items-center gap-3">
-        <div class="flex-1 font-mono text-3xl md:text-4xl font-bold text-gray-900 tracking-widest text-center py-2">
+        <div data-testid="room-code" class="flex-1 font-mono text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 tracking-widest text-center py-2">
           {{ code }}
         </div>
         <button
