@@ -155,7 +155,7 @@ describe('usePlayingPhase', () => {
       expect(selectedHandIndices.value.has(1)).toBe(true);
     });
 
-    it('ignores selection of different rank when cards already selected', () => {
+    it('switches selection to different rank when cards already selected', () => {
       const s = useGameSocket() as any;
       s.roomState.value = createRoomState();
       // hand[0] = 7H, hand[2] = KS — different rank
@@ -163,8 +163,9 @@ describe('usePlayingPhase', () => {
       const { toggleHandCard, selectedHandIndices } = usePlayingPhase();
       toggleHandCard(0);
       toggleHandCard(2);
-      expect(selectedHandIndices.value.has(0)).toBe(true);
-      expect(selectedHandIndices.value.has(2)).toBe(false);
+      expect(selectedHandIndices.value.has(0)).toBe(false);
+      expect(selectedHandIndices.value.has(2)).toBe(true);
+      expect(selectedHandIndices.value.size).toBe(1);
     });
   });
 

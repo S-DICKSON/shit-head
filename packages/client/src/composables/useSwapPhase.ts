@@ -1,5 +1,4 @@
 import { ref, computed } from 'vue';
-import { useDebounceFn } from '@vueuse/core';
 import type { Card } from '@shithead/shared';
 import { useGameSocket } from './useGameSocket';
 
@@ -9,15 +8,6 @@ export function useSwapPhase() {
   // Card selection state: Set-based for multi-select
   const selectedHandIndices = ref<Set<number>>(new Set());
   const selectedFaceUpIndices = ref<Set<number>>(new Set());
-
-  // Debounced swap send (150ms debounce, 500ms maxWait)
-  const sendSwap = useDebounceFn(
-    (handIndex: number, faceUpIndex: number) => {
-      send({ type: 'swap-cards', handIndex, faceUpIndex });
-    },
-    150,
-    { maxWait: 500 }
-  );
 
   // Helper: get rank string for a card (standard uses card.rank, joker uses 'JKR')
   function getRank(card: Card): string {
@@ -31,14 +21,12 @@ export function useSwapPhase() {
 
     if (handSet.size === 0 || faceUpSet.size === 0) return;
 
-    // Pair selections: hand drives the count, face-up cycles if fewer selections.
-    // This supports the common case of selecting N same-rank hand cards and 1 face-up
-    // slot, resulting in N swap messages all targeting the same face-up index.
     const handArr = [...handSet];
     const faceUpArr = [...faceUpSet];
 
+    // Send swaps directly (not debounced) — debounce would eat all but the last
     for (let i = 0; i < handArr.length; i++) {
-      sendSwap(handArr[i], faceUpArr[i % faceUpArr.length]);
+      send({ type: 'swap-cards', handIndex: handArr[i], faceUpIndex: faceUpArr[i % faceUpArr.length] });
     }
 
     // Clear all selections

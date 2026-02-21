@@ -137,10 +137,13 @@ export function usePlayingPhase() {
     const thisCard = gameView.value.hand[index];
 
     if (cardRank(firstCard) === cardRank(thisCard)) {
+      // Same rank: accumulate
       selectedHandIndices.value.add(index);
       selectedHandIndices.value = new Set(selectedHandIndices.value);
+    } else {
+      // Different rank: switch selection to this card
+      selectedHandIndices.value = new Set([index]);
     }
-    // Else: ignore different rank (don't add)
   };
 
   // Actions: select face-up card (single selection, then play immediately)
