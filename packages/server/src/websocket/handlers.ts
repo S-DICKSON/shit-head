@@ -1,5 +1,6 @@
 // WebSocket message handlers - route client messages to RoomManager
 import { RoomManager } from '../rooms/RoomManager';
+import type { Room } from '../rooms/Room';
 import { clientMessageSchema } from '@shit-head/shared';
 import type { ServerMessage } from '@shit-head/shared';
 import type { ServerWebSocket } from 'bun';
@@ -23,6 +24,23 @@ function sendMessage(ws: ServerWebSocket<WebSocketData>, message: ServerMessage)
 // Helper to publish message to room topic
 function publishToRoom(ws: ServerWebSocket<WebSocketData>, topic: string, message: ServerMessage): void {
   ws.publish(topic, JSON.stringify(message));
+}
+
+/** Send a message to all players in a room */
+function broadcastToRoom(room: Room, message: ServerMessage, excludeId?: string): void {
+  for (const pid of room.getPlayerIds()) {
+    if (pid === excludeId) continue;
+    const pWs = playerSockets.get(pid);
+    if (pWs) sendMessage(pWs, message);
+  }
+}
+
+/** Send a message to all spectators in a room */
+function broadcastToSpectators(room: Room, message: ServerMessage): void {
+  for (const sid of room.getSpectatorIds()) {
+    const sWs = playerSockets.get(sid);
+    if (sWs) sendMessage(sWs, message);
+  }
 }
 
 export function handleOpen(ws: ServerWebSocket<WebSocketData>): void {
@@ -123,6 +141,93 @@ export function handleMessage(
       break;
     }
 
+    case 'join-or-create': {
+      // SECURITY: discordUserId comes from the client and is not cryptographically verified.
+      // The Discord Embedded App SDK authenticates users client-side, but the server cannot
+      // re-verify the identity without storing the access token. This ID is only used for
+      // avatar display, so the impact of spoofing is cosmetic.
+      const discordUserId = message.discordUserId ?? null;
+      if (discordUserId && !/^\d{17,20}$/.test(discordUserId)) {
+        sendMessage(ws, { type: 'error', message: 'Invalid Discord user ID format', code: 'INVALID_MESSAGE' });
+        return;
+      }
+
+      const result = manager.joinRoomOrSpectate(
+        message.instanceId,
+        ws.data.playerId,
+        message.nickname,
+        message.avatarHash ?? null,
+        discordUserId,
+      );
+
+      // If room doesn't exist, create it with instanceId as code
+      if (!result.success && result.code === 'ROOM_NOT_FOUND') {
+        const createResult = manager.createRoomWithCode(
+          message.instanceId,
+          ws.data.playerId,
+          message.nickname,
+          message.avatarHash ?? null,
+          discordUserId,
+        );
+        if (!createResult.success) {
+          sendMessage(ws, { type: 'error', message: createResult.error, code: createResult.code });
+          return;
+        }
+        ws.data.roomCode = message.instanceId;
+        ws.subscribe(message.instanceId);
+        sendMessage(ws, {
+          type: 'room-created',
+          room: createResult.data,
+          playerId: ws.data.playerId,
+        });
+        break;
+      }
+
+      if (!result.success) {
+        sendMessage(ws, { type: 'error', message: result.error, code: result.code });
+        return;
+      }
+
+      ws.data.roomCode = message.instanceId;
+      ws.subscribe(message.instanceId);
+
+      if (result.data.isSpectator) {
+        // Spectator: send spectator-state with public game view
+        const room = manager.getRoom(message.instanceId);
+        if (room) {
+          const spectatorView = room.getSpectatorView();
+          sendMessage(ws, {
+            type: 'spectator-state',
+            room: result.data.state,
+            playerId: ws.data.playerId,
+            discardPile: spectatorView?.discardPile ?? [],
+            opponents: spectatorView?.opponents ?? [],
+            drawPileCount: spectatorView?.drawPileCount ?? 0,
+            currentPlayerIndex: spectatorView?.currentPlayerIndex ?? 0,
+          });
+
+          // Notify active players of spectator count update
+          broadcastToRoom(room, {
+            type: 'spectator-count',
+            count: room.getSpectatorCount(),
+          });
+        }
+      } else {
+        // Normal join (lobby)
+        sendMessage(ws, {
+          type: 'room-joined',
+          room: result.data.state,
+          playerId: ws.data.playerId,
+        });
+        // Notify others
+        publishToRoom(ws, message.instanceId, {
+          type: 'room-updated',
+          room: result.data.state,
+        });
+      }
+      break;
+    }
+
     case 'leave-room': {
       const roomCode = ws.data.roomCode;
 
@@ -133,19 +238,6 @@ export function handleMessage(
           code: 'ROOM_NOT_FOUND',
         });
         return;
-      }
-
-      // Check if leaving player is the host (room will be destroyed)
-      const room = manager.getRoomByPlayerId(ws.data.playerId);
-      const isHost = room?.getState().hostId === ws.data.playerId;
-
-      // If host is leaving, notify others before destroying room
-      if (isHost) {
-        publishToRoom(ws, roomCode, {
-          type: 'error',
-          message: 'Host left — room closed',
-          code: 'ROOM_NOT_FOUND',
-        });
       }
 
       const result = manager.leaveRoom(ws.data.playerId);
@@ -159,15 +251,11 @@ export function handleMessage(
         return;
       }
 
-      // Notify remaining players (non-host leave — room still exists)
-      if (!isHost) {
-        const updatedRoom = manager.getRoom(roomCode);
-        if (updatedRoom) {
-          publishToRoom(ws, roomCode, {
-            type: 'room-updated',
-            room: updatedRoom.getState(),
-          });
-        }
+      // Check if room still exists (host migration keeps it alive)
+      const updatedRoom = manager.getRoom(roomCode);
+      if (updatedRoom) {
+        // Room still active — broadcast updated state to remaining players
+        broadcastToRoom(updatedRoom, { type: 'room-updated', room: updatedRoom.getState() });
       }
 
       ws.unsubscribe(roomCode);
@@ -217,95 +305,47 @@ export function handleMessage(
           room.setSwapCallbacks({
             onTick: (timeRemaining) => {
               // Broadcast timer tick to all players in room
-              const playerIds = room.getPlayerIds();
-              for (const pid of playerIds) {
-                const pWs = playerSockets.get(pid);
-                if (pWs) {
-                  sendMessage(pWs, { type: 'swap-timer-tick', timeRemaining });
-                }
-              }
+              broadcastToRoom(room, { type: 'swap-timer-tick', timeRemaining });
             },
             onReady: (playerId, readyPlayers) => {
               // Broadcast ready state to all players
-              const playerIds = room.getPlayerIds();
-              for (const pid of playerIds) {
-                const pWs = playerSockets.get(pid);
-                if (pWs) {
-                  sendMessage(pWs, { type: 'player-ready', playerId, readyPlayers });
-                }
-              }
+              broadcastToRoom(room, { type: 'player-ready', playerId, readyPlayers });
             },
             onComplete: (reason) => {
               // Broadcast swap phase complete to all players
-              const playerIds = room.getPlayerIds();
-              for (const pid of playerIds) {
-                const pWs = playerSockets.get(pid);
-                if (pWs) {
-                  sendMessage(pWs, { type: 'swap-phase-complete', reason });
-                }
-              }
+              broadcastToRoom(room, { type: 'swap-phase-complete', reason });
             },
-            onPlayPhaseStart: (currentPlayerIndex) => {
+            onPlayPhaseStart: (currentPlayerIndex, firstTurn) => {
               // Notify all players when playing phase begins with first player
-              const playerIds = room.getPlayerIds();
-              for (const pid of playerIds) {
-                const pWs = playerSockets.get(pid);
-                if (pWs) {
-                  sendMessage(pWs, { type: 'turn-changed', currentPlayerIndex });
-                }
-              }
+              broadcastToRoom(room, { type: 'turn-changed', currentPlayerIndex, firstTurn });
             },
           });
 
           room.setGameCallbacks({
             onPlayerEliminated: (eliminatedPlayerId, nickname, currentPlayerIndex) => {
-              const playerIds = room.getPlayerIds();
-              for (const pid of playerIds) {
-                const pWs = playerSockets.get(pid);
-                if (pWs) {
-                  sendMessage(pWs, {
-                    type: 'player-eliminated',
-                    playerId: eliminatedPlayerId,
-                    nickname,
-                    currentPlayerIndex,
-                  });
-                }
-              }
+              broadcastToRoom(room, {
+                type: 'player-eliminated',
+                playerId: eliminatedPlayerId,
+                nickname,
+                currentPlayerIndex,
+              });
             },
             onGameOver: (shitheadId, shitheadNickname) => {
-              const playerIds = room.getPlayerIds();
-              for (const pid of playerIds) {
-                const pWs = playerSockets.get(pid);
-                if (pWs) {
-                  sendMessage(pWs, {
-                    type: 'game-over',
-                    shitheadId,
-                    shitheadNickname,
-                  });
-                }
-              }
+              const gameOverMsg: ServerMessage = { type: 'game-over', shitheadId, shitheadNickname };
+              // Send game-over to players and spectators
+              broadcastToRoom(room, gameOverMsg);
+              broadcastToSpectators(room, gameOverMsg);
 
-              // Set play-again callbacks after game-over
+              // Set up return-to-lobby callback (auto-return triggers after 5s in Room.ts)
               room.setPlayAgainCallbacks({
                 onReturnToLobby: (removedPlayerIds) => {
                   const roomState = room.getState();
-                  const remainingPlayerIds = room.getPlayerIds();
-
-                  // Clean up removed players' indices
+                  // Clean up removed players' indices (should be empty for auto-return)
                   for (const pid of removedPlayerIds) {
                     manager.removePlayerIndex(pid);
                   }
-
-                  // Send return-to-lobby to remaining players
-                  for (const pid of remainingPlayerIds) {
-                    const pWs = playerSockets.get(pid);
-                    if (pWs) {
-                      sendMessage(pWs, {
-                        type: 'return-to-lobby',
-                        room: roomState,
-                      });
-                    }
-                  }
+                  // Send return-to-lobby to ALL (players + newly promoted spectators)
+                  broadcastToRoom(room, { type: 'return-to-lobby', room: roomState });
                 },
               });
             },
@@ -314,17 +354,11 @@ export function handleMessage(
           room.setTurnTimerCallbacks({
             onTick: (timeRemaining, currentPlayerIndex) => {
               // Broadcast turn timer tick to ALL players
-              const playerIds = room.getPlayerIds();
-              for (const pid of playerIds) {
-                const pWs = playerSockets.get(pid);
-                if (pWs) {
-                  sendMessage(pWs, {
-                    type: 'turn-timer-tick',
-                    timeRemaining,
-                    currentPlayerIndex,
-                  });
-                }
-              }
+              broadcastToRoom(room, {
+                type: 'turn-timer-tick',
+                timeRemaining,
+                currentPlayerIndex,
+              });
             },
             onTimeout: (timedOutPlayerId) => {
               // Execute auto-play for the timed-out player
@@ -337,7 +371,7 @@ export function handleMessage(
               if (autoPlayData.wasBlindPlay) {
                 // Face-down auto-play: broadcast face-down-result to all players
                 for (const pid of playerIds) {
-                  const view = room.getPlayerView(pid);
+                  const view = room.getAugmentedPlayerView(pid);
                   const pWs = playerSockets.get(pid);
                   if (view && pWs) {
                     sendMessage(pWs, {
@@ -356,7 +390,7 @@ export function handleMessage(
               } else {
                 // Hand or face-up auto-play: broadcast card-played with updated state
                 for (const pid of playerIds) {
-                  const view = room.getPlayerView(pid);
+                  const view = room.getAugmentedPlayerView(pid);
                   const pWs = playerSockets.get(pid);
                   if (view && pWs) {
                     sendMessage(pWs, {
@@ -380,67 +414,53 @@ export function handleMessage(
 
           room.setDisconnectCallbacks({
             onDisconnected: (disconnectedPlayerId, nickname) => {
-              const playerIds = room.getPlayerIds();
-              const graceTime = room.getDisconnectGraceRemaining(disconnectedPlayerId);
-              for (const pid of playerIds) {
-                if (pid === disconnectedPlayerId) continue;
-                const pWs = playerSockets.get(pid);
-                if (pWs) {
-                  sendMessage(pWs, {
-                    type: 'player-disconnected',
-                    playerId: disconnectedPlayerId,
-                    nickname,
-                    graceTimeRemaining: graceTime,
-                  });
-                }
-              }
+              broadcastToRoom(room, {
+                type: 'player-disconnected',
+                playerId: disconnectedPlayerId,
+                nickname,
+                graceTimeRemaining: room.getDisconnectGraceRemaining(disconnectedPlayerId),
+              }, disconnectedPlayerId);
             },
             onReconnected: (reconnectedPlayerId, nickname) => {
-              const playerIds = room.getPlayerIds();
-              for (const pid of playerIds) {
-                if (pid === reconnectedPlayerId) continue;
-                const pWs = playerSockets.get(pid);
-                if (pWs) {
-                  sendMessage(pWs, {
-                    type: 'player-reconnected',
-                    playerId: reconnectedPlayerId,
-                    nickname,
-                  });
-                }
-              }
+              broadcastToRoom(room, {
+                type: 'player-reconnected',
+                playerId: reconnectedPlayerId,
+                nickname,
+              }, reconnectedPlayerId);
             },
             onRemoved: (removedPlayerId, nickname, reason) => {
               if (reason === 'host-left') {
-                const playerIds = room.getPlayerIds();
-                for (const pid of playerIds) {
-                  if (pid === removedPlayerId) continue;
-                  const pWs = playerSockets.get(pid);
-                  if (pWs) {
-                    sendMessage(pWs, {
-                      type: 'player-removed',
-                      playerId: removedPlayerId,
-                      nickname,
-                      reason: 'host-left',
-                    });
-                  }
-                }
+                broadcastToRoom(room, {
+                  type: 'player-removed',
+                  playerId: removedPlayerId,
+                  nickname,
+                  reason: 'host-left',
+                }, removedPlayerId);
                 manager.destroyRoom(room.code);
               } else {
-                const playerIds = room.getPlayerIds();
-                for (const pid of playerIds) {
-                  if (pid === removedPlayerId) continue;
-                  const pWs = playerSockets.get(pid);
-                  if (pWs) {
-                    sendMessage(pWs, {
-                      type: 'player-removed',
-                      playerId: removedPlayerId,
-                      nickname,
-                      reason: 'timeout',
-                    });
-                  }
-                }
+                broadcastToRoom(room, {
+                  type: 'player-removed',
+                  playerId: removedPlayerId,
+                  nickname,
+                  reason: 'timeout',
+                }, removedPlayerId);
                 manager.removePlayerIndex(removedPlayerId);
               }
+            },
+          });
+
+          // Set host migration callback for in-game host migration
+          room.setHostMigrationCallback((oldHostId, _newHostId) => {
+            manager.removePlayerIndex(oldHostId);
+            // Broadcast room-updated with new host to all remaining players
+            broadcastToRoom(room, { type: 'room-updated', room: room.getState() });
+          });
+
+          // Set spectator callbacks for in-game spectator joins
+          room.setSpectatorCallbacks({
+            onSpectatorJoined: (_spectatorId, _nickname) => {
+              // Broadcast spectator count to all active players
+              broadcastToRoom(room, { type: 'spectator-count', count: room.getSpectatorCount() });
             },
           });
 
@@ -449,7 +469,7 @@ export function handleMessage(
           // Send player-specific game-dealt messages to each player
           const playerIds = room.getPlayerIds();
           for (const playerId of playerIds) {
-            const view = room.getPlayerView(playerId);
+            const view = room.getAugmentedPlayerView(playerId);
             const playerWs = playerSockets.get(playerId);
 
             if (view && playerWs) {
@@ -510,7 +530,7 @@ export function handleMessage(
       // Send per-player swap-cards-updated to ALL players
       const playerIds = room.getPlayerIds();
       for (const playerId of playerIds) {
-        const view = room.getPlayerView(playerId);
+        const view = room.getAugmentedPlayerView(playerId);
         const playerWs = playerSockets.get(playerId);
         if (view && playerWs) {
           sendMessage(playerWs, {
@@ -588,7 +608,7 @@ export function handleMessage(
       // Send per-player views to ALL players in the room
       const playerIds = room.getPlayerIds();
       for (const playerId of playerIds) {
-        const view = room.getPlayerView(playerId);
+        const view = room.getAugmentedPlayerView(playerId);
         const playerWs = playerSockets.get(playerId);
         if (view && playerWs) {
           sendMessage(playerWs, {
@@ -630,7 +650,7 @@ export function handleMessage(
       // Send per-player views to ALL players
       const playerIds = room.getPlayerIds();
       for (const playerId of playerIds) {
-        const view = room.getPlayerView(playerId);
+        const view = room.getAugmentedPlayerView(playerId);
         const playerWs = playerSockets.get(playerId);
         if (view && playerWs) {
           sendMessage(playerWs, {
@@ -674,7 +694,7 @@ export function handleMessage(
       if (result.data) {
         const playerIds = room.getPlayerIds();
         for (const pid of playerIds) {
-          const view = room.getPlayerView(pid);
+          const view = room.getAugmentedPlayerView(pid);
           const pWs = playerSockets.get(pid);
           if (view && pWs) {
             sendMessage(pWs, {
@@ -707,11 +727,12 @@ export function handleMessage(
         return;
       }
 
-      // Check if this player was in this room
+      // Check if this player was in this room (as player or spectator)
       const roomState = room.getState();
       const playerInRoom = roomState.players.some(p => p.id === ws.data.playerId);
+      const isSpectator = room.isSpectator(ws.data.playerId);
 
-      if (!playerInRoom) {
+      if (!playerInRoom && !isSpectator) {
         sendMessage(ws, {
           type: 'error',
           message: 'You are not in this room',
@@ -725,6 +746,30 @@ export function handleMessage(
       ws.subscribe(message.roomCode);
       playerSockets.set(ws.data.playerId, ws);
 
+      // If spectator reconnecting, send spectator-state instead of player view
+      if (isSpectator) {
+        const spectatorView = room.getSpectatorView();
+        if (spectatorView) {
+          sendMessage(ws, {
+            type: 'spectator-state',
+            room: roomState,
+            playerId: ws.data.playerId,
+            discardPile: spectatorView.discardPile,
+            opponents: spectatorView.opponents,
+            drawPileCount: spectatorView.drawPileCount,
+            currentPlayerIndex: spectatorView.currentPlayerIndex,
+          });
+        } else {
+          // Game ended — send lobby state so spectator isn't left hanging
+          sendMessage(ws, {
+            type: 'room-joined',
+            room: roomState,
+            playerId: ws.data.playerId,
+          });
+        }
+        return;
+      }
+
       // Handle reconnection in room (clears grace period timer)
       room.handlePlayerReconnect(ws.data.playerId);
 
@@ -736,7 +781,7 @@ export function handleMessage(
       });
 
       // If game in progress, send player-specific game view
-      const gameView = room.getPlayerView(ws.data.playerId);
+      const gameView = room.getAugmentedPlayerView(ws.data.playerId);
       if (gameView) {
         sendMessage(ws, {
           type: 'game-dealt',
@@ -844,14 +889,66 @@ export function handleMessage(
 
       break;
     }
+
+    case 'set-round-time': {
+      const roomCode = ws.data.roomCode;
+      if (!roomCode) {
+        sendMessage(ws, { type: 'error', message: 'Not in a room', code: 'ROOM_NOT_FOUND' });
+        return;
+      }
+
+      const room = manager.getRoom(roomCode);
+      if (!room) {
+        sendMessage(ws, { type: 'error', message: 'Room not found', code: 'ROOM_NOT_FOUND' });
+        return;
+      }
+
+      // Host-only validation
+      const roomState = room.getState();
+      if (roomState.hostId !== ws.data.playerId) {
+        sendMessage(ws, { type: 'error', message: 'Only the host can change round time', code: 'NOT_HOST' });
+        return;
+      }
+
+      const result = room.setRoundTime(message.roundTime);
+      if (!result.success) {
+        sendMessage(ws, { type: 'error', message: result.error, code: result.code });
+        return;
+      }
+
+      // Broadcast updated room state to all players
+      const updatedState = room.getState();
+      sendMessage(ws, { type: 'room-updated', room: updatedState });
+      publishToRoom(ws, roomCode, { type: 'room-updated', room: updatedState });
+      break;
+    }
   }
 }
 
 export function handleClose(ws: ServerWebSocket<WebSocketData>, manager: RoomManager): void {
+  const roomCode = ws.data.roomCode;
+
+  // Check if disconnecting player is a spectator before removing from sockets
+  if (roomCode) {
+    const room = manager.getRoom(roomCode);
+    if (room && room.isSpectator(ws.data.playerId)) {
+      // Clean up spectator: remove from room and player index
+      room.removeSpectator(ws.data.playerId);
+      manager.removePlayerIndex(ws.data.playerId);
+
+      // Broadcast updated spectator count to active players
+      broadcastToRoom(room, { type: 'spectator-count', count: room.getSpectatorCount() });
+
+      // Clean up socket tracking
+      playerSockets.delete(ws.data.playerId);
+      ws.unsubscribe(roomCode);
+      return; // Early return — spectator cleanup is complete, skip player disconnect logic
+    }
+  }
+
   // Always remove from active sockets (the WebSocket connection is dead)
   playerSockets.delete(ws.data.playerId);
 
-  const roomCode = ws.data.roomCode;
   if (!roomCode) return;
 
   const room = manager.getRoomByPlayerId(ws.data.playerId);
@@ -870,80 +967,54 @@ export function handleClose(ws: ServerWebSocket<WebSocketData>, manager: RoomMan
       room.setDisconnectCallbacks({
         onDisconnected: (disconnectedPlayerId, nickname) => {
           // Lobby disconnect: notify other players
-          const playerIds = room.getPlayerIds();
-          for (const pid of playerIds) {
-            if (pid === disconnectedPlayerId) continue;
-            const pWs = playerSockets.get(pid);
-            if (pWs) {
-              sendMessage(pWs, {
-                type: 'player-disconnected',
-                playerId: disconnectedPlayerId,
-                nickname,
-                graceTimeRemaining: room.getDisconnectGraceRemaining(disconnectedPlayerId),
-              });
-            }
-          }
+          broadcastToRoom(room, {
+            type: 'player-disconnected',
+            playerId: disconnectedPlayerId,
+            nickname,
+            graceTimeRemaining: room.getDisconnectGraceRemaining(disconnectedPlayerId),
+          }, disconnectedPlayerId);
         },
         onReconnected: (reconnectedPlayerId, nickname) => {
-          const playerIds = room.getPlayerIds();
-          for (const pid of playerIds) {
-            if (pid === reconnectedPlayerId) continue;
-            const pWs = playerSockets.get(pid);
-            if (pWs) {
-              sendMessage(pWs, {
-                type: 'player-reconnected',
-                playerId: reconnectedPlayerId,
-                nickname,
-              });
-            }
-          }
+          broadcastToRoom(room, {
+            type: 'player-reconnected',
+            playerId: reconnectedPlayerId,
+            nickname,
+          }, reconnectedPlayerId);
         },
         onRemoved: (removedPlayerId, nickname, reason) => {
           if (reason === 'host-left') {
-            const playerIds = room.getPlayerIds();
-            for (const pid of playerIds) {
-              if (pid === removedPlayerId) continue;
-              const pWs = playerSockets.get(pid);
-              if (pWs) {
-                sendMessage(pWs, {
-                  type: 'player-removed',
-                  playerId: removedPlayerId,
-                  nickname,
-                  reason: 'host-left',
-                });
-              }
-            }
+            broadcastToRoom(room, {
+              type: 'player-removed',
+              playerId: removedPlayerId,
+              nickname,
+              reason: 'host-left',
+            }, removedPlayerId);
             manager.destroyRoom(room.code);
           } else {
-            const playerIds = room.getPlayerIds();
-            for (const pid of playerIds) {
-              if (pid === removedPlayerId) continue;
-              const pWs = playerSockets.get(pid);
-              if (pWs) {
-                sendMessage(pWs, {
-                  type: 'player-removed',
-                  playerId: removedPlayerId,
-                  nickname,
-                  reason: 'timeout',
-                });
-              }
-            }
+            broadcastToRoom(room, {
+              type: 'player-removed',
+              playerId: removedPlayerId,
+              nickname,
+              reason: 'timeout',
+            }, removedPlayerId);
             manager.removePlayerIndex(removedPlayerId);
             // Send room-updated to remaining players
             const updatedRoom = manager.getRoom(room.code);
             if (updatedRoom) {
-              for (const pid of updatedRoom.getPlayerIds()) {
-                const pWs = playerSockets.get(pid);
-                if (pWs) {
-                  sendMessage(pWs, {
-                    type: 'room-updated',
-                    room: updatedRoom.getState(),
-                  });
-                }
-              }
+              broadcastToRoom(updatedRoom, {
+                type: 'room-updated',
+                room: updatedRoom.getState(),
+              });
             }
           }
         },
+      });
+
+      // Set host migration callback for lobby host migration
+      room.setHostMigrationCallback((oldHostId, _newHostId) => {
+        manager.removePlayerIndex(oldHostId);
+        // Broadcast room-updated with new host to all remaining players
+        broadcastToRoom(room, { type: 'room-updated', room: room.getState() });
       });
     }
 

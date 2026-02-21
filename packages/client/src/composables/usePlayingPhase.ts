@@ -1,6 +1,7 @@
 import { ref, computed, watch } from 'vue';
 import { useGameSocket } from './useGameSocket';
 import type { Card } from '@shit-head/shared';
+import { canPlayOnPile } from '../game/cardRules';
 
 export function usePlayingPhase() {
   const { send, gameView, playerId, roomState, turnTimeRemaining, turnTimerPlayerIndex } = useGameSocket();
@@ -74,6 +75,33 @@ export function usePlayingPhase() {
     return selectedHandIndices.value.size > 0 || selectedFaceUpIndex.value !== null || selectedFaceDownIndex.value !== null;
   });
 
+  // Computed: which hand card indices are playable on the current pile
+  const playableHandIndices = computed<Set<number>>(() => {
+    if (!gameView.value || !isMyTurn.value) return new Set();
+    // On first turn, use forced card indices directly
+    if (isFirstTurn.value) return forcedCardIndices.value;
+    // Normal turn: check each hand card against pile
+    const result = new Set<number>();
+    gameView.value.hand.forEach((card, i) => {
+      if (canPlayOnPile(card, gameView.value!.discardPile)) {
+        result.add(i);
+      }
+    });
+    return result;
+  });
+
+  // Computed: which face-up card indices are playable on the current pile
+  const playableFaceUpIndices = computed<Set<number>>(() => {
+    if (!gameView.value || !isMyTurn.value || activeSource.value !== 'face-up') return new Set();
+    const result = new Set<number>();
+    gameView.value.faceUp.forEach((card, i) => {
+      if (canPlayOnPile(card, gameView.value!.discardPile)) {
+        result.add(i);
+      }
+    });
+    return result;
+  });
+
   // Actions: toggle hand card (multi-card with same-rank validation)
   const toggleHandCard = (index: number) => {
     if (!canClickHand.value) return;
@@ -109,10 +137,13 @@ export function usePlayingPhase() {
     const thisCard = gameView.value.hand[index];
 
     if (cardRank(firstCard) === cardRank(thisCard)) {
+      // Same rank: accumulate
       selectedHandIndices.value.add(index);
       selectedHandIndices.value = new Set(selectedHandIndices.value);
+    } else {
+      // Different rank: switch selection to this card
+      selectedHandIndices.value = new Set([index]);
     }
-    // Else: ignore different rank (don't add)
   };
 
   // Actions: select face-up card (single selection, then play immediately)
@@ -201,6 +232,8 @@ export function usePlayingPhase() {
     canClickFaceUp,
     canClickFaceDown,
     hasSelection,
+    playableHandIndices,
+    playableFaceUpIndices,
     // Actions
     toggleHandCard,
     selectFaceUpCard,

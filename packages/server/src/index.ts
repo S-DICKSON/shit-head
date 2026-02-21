@@ -4,6 +4,7 @@ import type { WebSocketData } from './websocket/handlers';
 import { nanoid } from 'nanoid';
 import type { ServerWebSocket } from 'bun';
 import { join } from 'path';
+import { isOriginAllowed } from './utils/originValidation';
 
 // Environment configuration
 const NODE_ENV = process.env.NODE_ENV || 'development';
@@ -19,6 +20,7 @@ if (NODE_ENV !== 'production') {
   ALLOWED_ORIGINS.push('http://localhost:5173', 'http://localhost:4173');
 }
 
+
 // Static file serving: check if client dist exists (tunnel/production single-origin mode)
 const clientDistPath = join(import.meta.dir, '../../client/dist');
 const indexHtml = Bun.file(join(clientDistPath, 'index.html'));
@@ -32,9 +34,15 @@ const server = Bun.serve<WebSocketData>({
 
   async fetch(req, server) {
     const url = new URL(req.url);
+    // Strip Discord Activity /.proxy prefix (Discord adds this for all proxied requests)
+    let pathname = url.pathname;
+    if (pathname.startsWith('/.proxy/')) {
+      pathname = pathname.replace(/^\/.proxy/, '');
+      if (pathname === '/ws') pathname = '/game-ws';
+    }
 
     // Health check endpoint with metrics
-    if (url.pathname === '/health') {
+    if (pathname === '/health') {
       return new Response(
         JSON.stringify({
           status: 'ok',
@@ -53,13 +61,92 @@ const server = Bun.serve<WebSocketData>({
       );
     }
 
+    // Discord OAuth2 token exchange endpoint
+    // Exchanges authorization code for access token using server-side client secret
+    if (pathname === '/api/token' && req.method === 'POST') {
+      try {
+        let body: { code?: string; code_verifier?: string };
+        try {
+          body = await req.json() as { code?: string; code_verifier?: string };
+        } catch (e) {
+          if (e instanceof SyntaxError) {
+            return new Response(JSON.stringify({ error: 'Invalid JSON body' }), {
+              status: 400,
+              headers: { 'Content-Type': 'application/json' },
+            });
+          }
+          throw e;
+        }
+
+        if (!body.code) {
+          return new Response(JSON.stringify({ error: 'Missing code' }), {
+            status: 400,
+            headers: { 'Content-Type': 'application/json' },
+          });
+        }
+
+        const discordClientId = process.env.DISCORD_CLIENT_ID;
+        const discordClientSecret = process.env.DISCORD_CLIENT_SECRET;
+
+        if (!discordClientId || !discordClientSecret) {
+          console.error('Missing DISCORD_CLIENT_ID or DISCORD_CLIENT_SECRET env vars');
+          return new Response(JSON.stringify({ error: 'Server configuration error' }), {
+            status: 500,
+            headers: { 'Content-Type': 'application/json' },
+          });
+        }
+
+        // Build token exchange params — use PKCE code_verifier if provided
+        const tokenParams: Record<string, string> = {
+          client_id: discordClientId,
+          client_secret: discordClientSecret,
+          grant_type: 'authorization_code',
+          code: body.code,
+          redirect_uri: 'https://127.0.0.1',
+        };
+        if (body.code_verifier) {
+          tokenParams.code_verifier = body.code_verifier;
+        }
+
+        const tokenResponse = await fetch('https://discord.com/api/oauth2/token', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: new URLSearchParams(tokenParams),
+        });
+
+        if (!tokenResponse.ok) {
+          const errorText = await tokenResponse.text();
+          console.error(`Discord token exchange failed: ${tokenResponse.status} ${errorText}`);
+          return new Response(JSON.stringify({ error: 'Token exchange failed' }), {
+            status: tokenResponse.status,
+            headers: { 'Content-Type': 'application/json' },
+          });
+        }
+
+        const { access_token } = await tokenResponse.json() as { access_token: string };
+
+        return new Response(JSON.stringify({ access_token }), {
+          headers: { 'Content-Type': 'application/json' },
+        });
+      } catch (err) {
+        console.error('Token exchange error:', err);
+        return new Response(JSON.stringify({ error: 'Internal server error' }), {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
     // WebSocket upgrade endpoint with Origin validation
-    if (url.pathname === '/game-ws') {
+    // /game-ws = web client, /ws = Discord Activity (Discord strips /.proxy prefix)
+    if (pathname === '/game-ws' || pathname === '/ws') {
       const origin = req.headers.get('Origin');
 
       // Validate origin in production (skip when serving static files — same-origin tunnel mode)
       if (NODE_ENV === 'production' && !serveStaticFiles) {
-        if (!origin || !ALLOWED_ORIGINS.includes(origin)) {
+        if (!isOriginAllowed(origin, ALLOWED_ORIGINS)) {
           console.warn(`WebSocket upgrade rejected - invalid origin: ${origin}`);
           return new Response('Forbidden', { status: 403 });
         }
@@ -120,7 +207,7 @@ const server = Bun.serve<WebSocketData>({
 
 console.log(`Server listening on port ${server.port}`);
 console.log(`Environment: ${NODE_ENV}`);
-console.log(`Allowed origins: ${ALLOWED_ORIGINS.join(', ')}`);
+console.log(`Allowed origins: ${ALLOWED_ORIGINS.join(', ')}, *.discordsays.com`);
 
 // Graceful shutdown handler
 process.on('SIGTERM', async () => {

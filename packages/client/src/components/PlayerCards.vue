@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col h-full">
-    <!-- Scrollable card area (mobile only) -->
-    <div class="overflow-y-auto max-h-[35vh] sm:max-h-none flex-1">
+    <!-- Card area -->
+    <div class="overflow-y-auto min-h-0">
       <!-- Table cards: face-down underneath face-up (stacked) -->
       <div
         v-if="faceUp.length > 0 || faceDownCount > 0"
@@ -36,8 +36,12 @@
               class="absolute inset-0 w-14 h-21 sm:w-16 sm:h-24 bg-white text-black rounded border-2 flex flex-col items-center justify-center text-xs sm:text-sm transition-all"
               :class="[
                 selectedFaceUpIndex === (i - 1)
-                  ? 'ring-2 ring-yellow-400 -translate-y-2 border-yellow-400 shadow-lg'
-                  : 'border-gray-300',
+                  ? 'ring-2 ring-yellow-400 scale-105 border-yellow-400 shadow-lg'
+                  : playableFaceUpIndices.size > 0 && playableFaceUpIndices.has(i - 1)
+                    ? 'border-green-400 shadow-md shadow-green-400/40'
+                    : playableFaceUpIndices.size > 0
+                      ? 'border-gray-400 opacity-50'
+                      : 'border-gray-300',
                 activeSource !== 'face-up'
                   ? 'opacity-40 cursor-not-allowed'
                   : 'cursor-pointer hover:border-gray-400'
@@ -63,67 +67,28 @@
           <span class="text-xs text-green-300 uppercase tracking-wide">Hand ({{ hand.length }})</span>
         </div>
 
-        <!-- Mobile grouped view (> 5 cards on mobile) -->
-        <div
-          v-if="shouldShowGrouped"
-          class="flex flex-col gap-2 max-h-[30vh] overflow-y-auto px-2"
-        >
-          <div
-            v-for="group in groupedCards"
-            :key="group.rank"
-            class="bg-gray-800/50 rounded-lg p-2 flex items-center gap-3"
-          >
-            <!-- Sample card visual -->
-            <div class="w-10 h-15 bg-white text-black rounded border-2 border-gray-300 flex flex-col items-center justify-center text-xs flex-shrink-0">
-              <span class="font-bold">{{ group.rank }}</span>
-              <span :class="suitColor(group.cards[0])">
-                {{ group.cards[0].kind === 'standard' ? suitSymbol(group.cards[0].suit) : '★' }}
-              </span>
-            </div>
-
-            <!-- Rank label -->
-            <div class="flex-1 text-sm text-green-200">
-              {{ group.count }}× {{ group.rank }}{{ group.count > 1 ? 's' : '' }}
-            </div>
-
-            <!-- Quantity selectors -->
-            <div class="flex items-center gap-2">
-              <button
-                class="w-8 h-8 rounded-full bg-gray-600 text-white font-bold flex items-center justify-center disabled:opacity-30 transition-colors"
-                :disabled="activeSource !== 'hand' || !isMyTurn || getSelectedCount(group.rank) === 0"
-                @click="decrementSelection(group.rank)"
-              >
-                −
-              </button>
-              <span class="w-6 text-center text-sm font-bold text-yellow-400">
-                {{ getSelectedCount(group.rank) }}
-              </span>
-              <button
-                class="w-8 h-8 rounded-full bg-gray-600 text-white font-bold flex items-center justify-center disabled:opacity-30 transition-colors"
-                :disabled="activeSource !== 'hand' || !isMyTurn || getSelectedCount(group.rank) >= group.count"
-                @click="incrementSelection(group.rank)"
-              >
-                +
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Desktop/small hand view (normal card buttons) -->
+        <!-- Card buttons — centered when few cards, horizontal scroll when many -->
         <TransitionGroup
-          v-else
           name="card-list"
           tag="div"
-          class="flex justify-center gap-1 sm:gap-2 flex-wrap"
+          class="flex gap-1 sm:gap-2 pt-2 pb-2 sm:flex-wrap sm:justify-center sm:overflow-x-visible sm:snap-none sm:px-3"
+          :class="needsScroll
+            ? 'flex-nowrap overflow-x-auto snap-x snap-mandatory px-3 scroll-px-3'
+            : 'flex-wrap justify-center px-1'"
         >
           <button
             v-for="(card, i) in hand"
             :key="cardKey(card)"
-            class="w-14 h-21 sm:w-16 sm:h-24 bg-white text-black rounded border-2 flex flex-col items-center justify-center text-xs sm:text-sm transition-all"
+            class="w-14 h-21 sm:w-16 sm:h-24 bg-white text-black rounded border-2 flex flex-col items-center justify-center text-xs sm:text-sm transition-all flex-shrink-0"
             :class="[
+              needsScroll ? 'snap-start' : '',
               selectedHandIndices.has(i)
-                ? 'ring-2 ring-yellow-400 -translate-y-2 border-yellow-400 shadow-lg'
-                : 'border-gray-300',
+                ? 'ring-2 ring-yellow-400 scale-105 border-yellow-400 shadow-lg'
+                : playableHandIndices.size > 0 && playableHandIndices.has(i)
+                  ? 'border-green-400 shadow-md shadow-green-400/40'
+                  : playableHandIndices.size > 0
+                    ? 'border-gray-400 opacity-50'
+                    : 'border-gray-300',
               activeSource !== 'hand'
                 ? 'opacity-40 cursor-not-allowed'
                 : 'cursor-pointer hover:border-gray-400'
@@ -139,33 +104,30 @@
       </div>
     </div>
 
-    <!-- Action buttons (always visible below scrollable area) -->
+    <!-- Action buttons (always visible below card area) -->
     <div class="flex-shrink-0 bg-green-900 py-2 -mx-2 px-2">
       <div class="flex flex-col items-center gap-2">
         <div class="flex justify-center gap-4">
           <button
-            v-if="shouldShowGrouped ? hasGroupSelection : hasSelection"
-            class="px-6 py-2 bg-yellow-500 text-black font-bold rounded-lg disabled:opacity-50 hover:bg-yellow-400 transition-colors"
+            v-if="hasSelection"
+            class="px-6 py-2 bg-yellow-500 hover:bg-yellow-400 text-black font-bold rounded-lg disabled:opacity-50 transition-colors"
             :disabled="!isMyTurn"
-            @click="shouldShowGrouped ? handleGroupedPlay() : emit('play-cards')"
+            @click="emit('play-cards')"
           >
             Play
           </button>
           <button
             class="px-6 py-2 bg-red-500 text-white font-bold rounded-lg disabled:opacity-50 hover:bg-red-400 transition-colors"
-            :class="{ 'ring-4 ring-yellow-400 animate-pulse': pickupConfirming }"
+            :class="{
+              'ring-4 ring-yellow-400 animate-pulse': pickupConfirming,
+              'ring-2 ring-red-300 shadow-lg shadow-red-500/50': mustPickUp && !pickupConfirming,
+            }"
             :disabled="!isMyTurn"
             @click="handlePickupTap"
           >
             {{ pickupConfirming ? 'Tap Again to Pick Up' : 'Pick Up Pile' }}
           </button>
         </div>
-        <p
-          v-if="isMyTurn"
-          class="text-center text-xs text-green-400 mt-1"
-        >
-          Double-tap to pick up pile
-        </p>
       </div>
     </div>
   </div>
@@ -173,9 +135,8 @@
 
 <script setup lang="ts">
 import type { Card } from '@shit-head/shared';
-import { computed, ref, onMounted, onUnmounted } from 'vue';
+import { computed } from 'vue';
 import { useDoubleTap } from '../composables/useDoubleTap';
-import { useCardGrouping } from '../composables/useCardGrouping';
 
 const props = defineProps<{
   hand: Card[];
@@ -186,6 +147,8 @@ const props = defineProps<{
   isMyTurn: boolean;
   activeSource: 'hand' | 'face-up' | 'face-down';
   hasSelection: boolean;
+  playableHandIndices: Set<number>;
+  playableFaceUpIndices: Set<number>;
 }>();
 
 const emit = defineEmits<{
@@ -194,7 +157,6 @@ const emit = defineEmits<{
   'select-face-down': [index: number];
   'play-cards': [];
   'pickup-pile': [];
-  'play-grouped-cards': [indices: number[]];
 }>();
 
 // Double-tap handler for pickup pile
@@ -203,43 +165,13 @@ const { handleTap: handlePickupTap, isWaitingForSecondTap: pickupConfirming } = 
   300
 );
 
-// Mobile detection
-const windowWidth = ref(window.innerWidth);
+// Use horizontal scroll only when cards would overflow (~6+ cards on mobile)
+const needsScroll = computed(() => props.hand.length > 5);
 
-function updateWidth() {
-  windowWidth.value = window.innerWidth;
-}
-
-onMounted(() => {
-  window.addEventListener('resize', updateWidth);
-});
-
-onUnmounted(() => {
-  window.removeEventListener('resize', updateWidth);
-});
-
-const isMobile = computed(() => windowWidth.value < 640);
-
-// Card grouping for mobile
-const handRef = computed(() => props.hand);
-const {
-  groupedCards,
-  incrementSelection,
-  decrementSelection,
-  selectedIndices,
-  hasGroupSelection,
-  clearGroupSelection,
-  getSelectedCount,
-} = useCardGrouping(handRef);
-
-// Determine if we should show grouped view
-const shouldShowGrouped = computed(() => isMobile.value && props.hand.length > 5);
-
-// Handle play button click for grouped mode
-function handleGroupedPlay() {
-  emit('play-grouped-cards', selectedIndices.value);
-  clearGroupSelection();
-}
+// Hint: must pick up pile (no playable cards from active source)
+const mustPickUp = computed(() =>
+  props.isMyTurn && props.activeSource === 'hand' && props.playableHandIndices.size === 0
+);
 
 // Helper: suit symbol
 function suitSymbol(suit: string): string {

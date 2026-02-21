@@ -7,6 +7,15 @@
     Leave
   </button>
 
+  <!-- Mute button -->
+  <MuteButton />
+
+  <!-- Turn Timer (fixed overlay in bottom-right) -->
+  <TurnTimer
+    :time-remaining="swapTimeRemaining"
+    :total-time="30"
+  />
+
   <!-- Transition overlay -->
   <div
     v-if="isTransitioning"
@@ -17,12 +26,10 @@
     </h1>
   </div>
 
-  <div class="flex flex-col min-h-screen bg-green-900 text-white p-4">
-    <!-- Timer -->
-    <div class="text-center text-4xl font-mono mb-4">
-      {{ timerDisplay }}
-    </div>
-
+  <div
+    class="flex flex-col bg-green-900 text-white p-4 overflow-hidden"
+    style="height: calc(100vh - var(--safe-top) - var(--safe-bottom)); height: calc(100dvh - var(--safe-top) - var(--safe-bottom));"
+  >
     <!-- Opponents -->
     <div class="flex flex-wrap justify-center gap-4 mb-6">
       <div
@@ -64,7 +71,7 @@
         v-for="(card, i) in gameView?.faceUp"
         :key="'fu-' + i"
         class="w-16 h-24 bg-white text-black rounded border-2 flex flex-col items-center justify-center text-sm cursor-pointer transition-all"
-        :class="selectedFaceUpIndex === i ? 'ring-2 ring-blue-500 scale-105 border-blue-500' : 'border-gray-300 hover:border-gray-400'"
+        :class="selectedFaceUpIndices.has(i) ? 'ring-2 ring-blue-500 scale-105 border-blue-500' : 'border-gray-300 hover:border-gray-400'"
         @click="selectFaceUpCard(i)"
       >
         <span class="font-bold">{{ card.kind === 'standard' ? card.rank : 'JKR' }}</span>
@@ -97,7 +104,7 @@
         v-for="(card, i) in gameView?.hand"
         :key="'h-' + i"
         class="w-16 h-24 bg-white text-black rounded border-2 flex flex-col items-center justify-center text-sm cursor-pointer transition-all"
-        :class="selectedHandIndex === i ? 'ring-2 ring-blue-500 scale-105 border-blue-500' : 'border-gray-300 hover:border-gray-400'"
+        :class="selectedHandIndices.has(i) ? 'ring-2 ring-blue-500 scale-105 border-blue-500' : 'border-gray-300 hover:border-gray-400'"
         @click="selectHandCard(i)"
       >
         <span class="font-bold">{{ card.kind === 'standard' ? card.rank : 'JKR' }}</span>
@@ -125,6 +132,8 @@
 
 <script setup lang="ts">
 import { useSwapPhase } from '../composables/useSwapPhase';
+import MuteButton from './MuteButton.vue';
+import TurnTimer from './TurnTimer.vue';
 
 const emit = defineEmits<{
   leave: [];
@@ -132,14 +141,14 @@ const emit = defineEmits<{
 
 const {
   gameView,
-  selectedHandIndex,
-  selectedFaceUpIndex,
+  selectedHandIndices,
+  selectedFaceUpIndices,
   selectHandCard,
   selectFaceUpCard,
   toggleReady,
   isReady,
   readyPlayers,
-  timerDisplay,
+  swapTimeRemaining,
   isTransitioning,
   transitionMessage,
 } = useSwapPhase();

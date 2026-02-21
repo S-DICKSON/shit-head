@@ -1,11 +1,35 @@
 import { ref, watch, effectScope } from 'vue';
 import { useWebSocket } from '@vueuse/core';
-import type { ClientMessage, ServerMessage, RoomState, PlayerGameView } from '@shit-head/shared';
+import type { ClientMessage, ServerMessage, RoomState, PlayerGameView, Card, OpponentView } from '@shit-head/shared';
 
 // Singleton state to share socket across all components
 let socketInstance: ReturnType<typeof createGameSocket> | null = null;
 
 type MessageHandler = (msg: ServerMessage) => void;
+
+/**
+ * Resolve the WebSocket URL based on current context.
+ * Exported for testing.
+ */
+export function resolveWebSocketUrl(
+  hostname: string,
+  protocol: string,
+  host: string,
+  serverUrl?: string,
+): string {
+  if (serverUrl) {
+    return `${serverUrl}/game-ws`;
+  }
+  if (hostname.endsWith('.discordsays.com')) {
+    const wsProtocol = protocol === 'https:' ? 'wss:' : 'ws:';
+    return `${wsProtocol}//${host}/.proxy/ws`;
+  }
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    return `ws://${hostname}:3000/game-ws`;
+  }
+  const wsProtocol = protocol === 'https:' ? 'wss:' : 'ws:';
+  return `${wsProtocol}//${host}/game-ws`;
+}
 
 function createGameSocket() {
   // Detached scope so the WebSocket survives component unmounts
@@ -17,23 +41,17 @@ function createGameSocket() {
 
   // Determine WebSocket URL:
   // 1. VITE_SERVER_URL (production split deployment — e.g., wss://shit-head-server.fly.dev)
-  // 2. localhost: connect directly to server on port 3000 (bypasses Vite proxy)
-  // 3. tunnel/non-localhost: use proxy path through current host (ngrok, etc.)
+  // 2. Discord Activity: route through Discord's proxy (*.discordsays.com)
+  // 3. localhost: connect directly to server on port 3000 (bypasses Vite proxy)
+  // 4. tunnel/non-localhost: use proxy path through current host (ngrok, etc.)
   const serverUrl = import.meta.env.VITE_SERVER_URL;
-  const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
-  let wsUrl: string;
-  if (serverUrl) {
-    // Split deployment: connect to separate server origin
-    // VITE_SERVER_URL should be like "wss://shit-head-server.fly.dev"
-    wsUrl = `${serverUrl}/game-ws`;
-  } else if (isLocalhost) {
-    // Local dev: connect directly to server (bypasses Vite proxy)
-    wsUrl = `ws://${window.location.hostname}:3000/game-ws`;
-  } else {
-    // Tunnel/proxy: use current host with protocol detection
-    wsUrl = `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/game-ws`;
-  }
+  let wsUrl = resolveWebSocketUrl(
+    window.location.hostname,
+    window.location.protocol,
+    window.location.host,
+    serverUrl || undefined,
+  );
 
   // Include stored playerId for reconnection
   if (storedPlayerId) {
@@ -47,6 +65,18 @@ function createGameSocket() {
   const lastMessage = ref<ServerMessage | null>(null);
   const error = ref<string | null>(null);
   const messageHandlers: MessageHandler[] = [];
+
+  // Connection state for UI feedback
+  type ConnectionState = 'connected' | 'connecting' | 'reconnecting' | 'failed';
+  const connectionState = ref<ConnectionState>('connecting');
+
+  interface ConnectionError {
+    message: string;
+    code: string;
+    timestamp: number;
+    retryCount: number;
+  }
+  const connectionError = ref<ConnectionError | null>(null);
 
   // Reconnection state tracking
   const reconnecting = ref<boolean>(false);
@@ -68,6 +98,11 @@ function createGameSocket() {
 
   // Game-over state
   const shitheadNickname = ref<string | null>(null);
+
+  // Spectator state
+  const isSpectator = ref<boolean>(false);
+  const spectatorCount = ref<number>(0);
+  const spectatorGameView = ref<{ discardPile: Card[]; opponents: OpponentView[]; drawPileCount: number; currentPlayerIndex: number } | null>(null);
 
   // Notification state
   interface GameNotification {
@@ -98,9 +133,21 @@ function createGameSocket() {
     useWebSocket(wsUrl, {
       autoReconnect: {
         retries: 5,
-        delay: 1000,
+        delay: (retryCount) => {
+          // Exponential backoff: 1s, 2s, 4s, 8s, 16s (~31s total)
+          const baseDelay = Math.min(1000 * Math.pow(2, retryCount - 1), 16000);
+          // Add +/- 10% jitter to prevent thundering herd
+          const jitter = baseDelay * 0.1 * (Math.random() - 0.5);
+          return Math.round(baseDelay + jitter);
+        },
         onFailed() {
-          error.value = 'Failed to connect to server after multiple attempts';
+          connectionState.value = 'failed';
+          connectionError.value = {
+            message: 'Unable to connect to server after multiple attempts',
+            code: 'CONNECTION_FAILED',
+            timestamp: Date.now(),
+            retryCount: 5,
+          };
         },
       },
       heartbeat: {
@@ -126,14 +173,32 @@ function createGameSocket() {
     }
   }));
 
+  // Reopen WebSocket when tab becomes visible again (mobile tab-out fix)
+  const handleVisibilityChange = () => {
+    if (document.visibilityState === 'visible' && status.value === 'CLOSED') {
+      connectionState.value = 'reconnecting';
+      open();
+    }
+  };
+  document.addEventListener('visibilitychange', handleVisibilityChange);
+
   // Auto-reconnect to room when WebSocket reopens
   scope.run(() => watch(status, (newStatus) => {
-    if (newStatus === 'OPEN' && storedPlayerId && storedRoomCode) {
-      // Track reconnection state
-      reconnecting.value = true;
-      reconnectTarget.value = { roomCode: storedRoomCode };
-      // Send reconnect message to rejoin room
-      wsSend(JSON.stringify({ type: 'reconnect', roomCode: storedRoomCode }));
+    if (newStatus === 'OPEN') {
+      connectionState.value = 'connected';
+      connectionError.value = null;
+      if (storedPlayerId && storedRoomCode) {
+        // Track reconnection state
+        reconnecting.value = true;
+        reconnectTarget.value = { roomCode: storedRoomCode };
+        // Send reconnect message to rejoin room
+        wsSend(JSON.stringify({ type: 'reconnect', roomCode: storedRoomCode }));
+      }
+    } else if (newStatus === 'CLOSED') {
+      // Only set reconnecting if we were previously connected
+      if (connectionState.value === 'connected') {
+        connectionState.value = 'reconnecting';
+      }
     }
   }));
 
@@ -188,6 +253,7 @@ function createGameSocket() {
             discardPile: message.discardPile,
             currentPlayerIndex: message.currentPlayerIndex,
             dealerIndex: message.dealerIndex,
+            firstTurn: message.firstTurn,
           };
           swapPhaseComplete.value = false;
           swapPhaseReason.value = null;
@@ -229,6 +295,7 @@ function createGameSocket() {
               currentPlayerIndex: message.currentPlayerIndex,
               drawPileCount: message.drawPileCount,
               discardPile: message.discardPile,
+              firstTurn: message.firstTurn,
               ...(message.hand ? { hand: message.hand } : {}),
               ...(message.faceUp ? { faceUp: message.faceUp } : {}),
               ...(message.faceDownCount !== undefined ? { faceDownCount: message.faceDownCount } : {}),
@@ -267,6 +334,7 @@ function createGameSocket() {
               ...gameView.value,
               phase: 'playing',
               currentPlayerIndex: message.currentPlayerIndex,
+              firstTurn: message.firstTurn,
             };
           }
           break;
@@ -287,6 +355,20 @@ function createGameSocket() {
             };
           }
           break;
+        case 'spectator-state':
+          playerId.value = message.playerId;
+          roomState.value = message.room;
+          isSpectator.value = true;
+          spectatorGameView.value = {
+            discardPile: message.discardPile,
+            opponents: message.opponents,
+            drawPileCount: message.drawPileCount,
+            currentPlayerIndex: message.currentPlayerIndex,
+          };
+          break;
+        case 'spectator-count':
+          spectatorCount.value = message.count;
+          break;
         case 'return-to-lobby':
           // Reset game state — we're back in lobby
           gameView.value = null;
@@ -295,8 +377,12 @@ function createGameSocket() {
           swapPhaseReason.value = null;
           readyPlayers.value = [];
           burnTriggered.value = false;
-          turnTimeRemaining.value = 45;
+          turnTimeRemaining.value = message.room.roundTime ?? 45;
           turnTimerPlayerIndex.value = -1;
+          // Clear spectator state on return to lobby
+          isSpectator.value = false;
+          spectatorGameView.value = null;
+          spectatorCount.value = 0;
           // Update room state with the reset room
           roomState.value = message.room;
           break;
@@ -346,9 +432,17 @@ function createGameSocket() {
   // Send typed message
   const send = (msg: ClientMessage) => {
     error.value = null; // Clear previous errors
-    // Clear room code when deliberately leaving
+    // Clear all client state when deliberately leaving so the router guard
+    // sees no active room and allows navigation to '/' to proceed.
     if (msg.type === 'leave-room') {
       localStorage.removeItem('shithead-room-code');
+      localStorage.removeItem('shithead-player-id');
+      roomState.value = null;
+      gameView.value = null;
+      playerId.value = null;
+      isSpectator.value = false;
+      spectatorGameView.value = null;
+      spectatorCount.value = 0;
     }
     wsSend(JSON.stringify(msg));
   };
@@ -363,6 +457,15 @@ function createGameSocket() {
         messageHandlers.splice(index, 1);
       }
     };
+  };
+
+  // Manual retry function
+  const retryConnection = () => {
+    connectionState.value = 'reconnecting';
+    connectionError.value = null;
+    close();
+    // Small delay to ensure clean close before reopening
+    setTimeout(() => open(), 100);
   };
 
   return {
@@ -389,12 +492,20 @@ function createGameSocket() {
     // Reconnection state
     reconnecting,
     reconnectTarget,
+    // Connection state
+    connectionState,
+    connectionError,
+    retryConnection,
     // Notification state
     notifications,
     addNotification,
     dismissNotification,
     // Game-over state
     shitheadNickname,
+    // Spectator state
+    isSpectator,
+    spectatorCount,
+    spectatorGameView,
   };
 }
 

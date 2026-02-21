@@ -13,6 +13,8 @@ import type {
   reconnectSchema,
   renamePlayerSchema,
   playAgainSchema,
+  joinOrCreateSchema,
+  setRoundTimeSchema,
   roomCreatedSchema,
   roomJoinedSchema,
   roomUpdatedSchema,
@@ -35,6 +37,8 @@ import type {
   gameOverSchema,
   returnToLobbySchema,
   errorSchema,
+  spectatorStateSchema,
+  spectatorCountSchema,
   clientMessageSchema,
   serverMessageSchema,
 } from '../schemas/messages';
@@ -52,6 +56,8 @@ export type PlayFaceDownMessage = z.infer<typeof playFaceDownSchema>;
 export type ReconnectMessage = z.infer<typeof reconnectSchema>;
 export type RenamePlayerMessage = z.infer<typeof renamePlayerSchema>;
 export type PlayAgainMessage = z.infer<typeof playAgainSchema>;
+export type JoinOrCreateMessage = z.infer<typeof joinOrCreateSchema>;
+export type SetRoundTimeMessage = z.infer<typeof setRoundTimeSchema>;
 
 export type ClientMessage = z.infer<typeof clientMessageSchema>;
 
@@ -78,6 +84,8 @@ export type PlayerEliminatedMessage = z.infer<typeof playerEliminatedSchema>;
 export type GameOverMessage = z.infer<typeof gameOverSchema>;
 export type ReturnToLobbyMessage = z.infer<typeof returnToLobbySchema>;
 export type ErrorMessage = z.infer<typeof errorSchema>;
+export type SpectatorStateMessage = z.infer<typeof spectatorStateSchema>;
+export type SpectatorCountMessage = z.infer<typeof spectatorCountSchema>;
 
 export type ServerMessage = z.infer<typeof serverMessageSchema>;
 

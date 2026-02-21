@@ -63,6 +63,12 @@
       >
         8 is invisible
       </div>
+      <div
+        v-if="effectiveTopIsSeven"
+        class="text-amber-300 mt-0.5"
+      >
+        Play 7 or lower
+      </div>
     </div>
   </div>
 </template>
@@ -108,6 +114,16 @@ const pileCount = computed(() => props.cards.length);
 const topCardIsEight = computed(() => {
   const topCard = props.cards[props.cards.length - 1];
   return topCard?.kind === 'standard' && topCard.rank === '8';
+});
+
+// The effective top card (skip trailing 8s — they're invisible)
+const effectiveTopIsSeven = computed(() => {
+  for (let i = props.cards.length - 1; i >= 0; i--) {
+    const card = props.cards[i];
+    if (card?.kind === 'standard' && card.rank === '8') continue;
+    return card?.kind === 'standard' && card.rank === '7';
+  }
+  return false;
 });
 
 // Count consecutive trailing 8s within visible cards

@@ -15,3 +15,6 @@ export * from './types/room';
 // Phase 3: Deck, dealing, and game state types
 export * from './types/card';
 export * from './types/game';
+
+// Card rules — rank comparison, play validation, burn detection, hand sorting
+export * from './game/cardRules';

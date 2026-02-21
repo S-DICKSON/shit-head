@@ -3,10 +3,18 @@
  * Uses Web Audio API to generate programmatic beep sounds
  */
 
-// Module-level state (shared across instances)
+import { ref } from 'vue';
+
+// Module-level state (shared across instances — singleton pattern)
 let audioContext: AudioContext | null = null;
+const muteState = ref<boolean>(localStorage.getItem('shithead-muted') === 'true');
 
 export function useSoundEffects() {
+  function toggleMute(): void {
+    muteState.value = !muteState.value;
+    localStorage.setItem('shithead-muted', String(muteState.value));
+  }
+
   /**
    * Plays a short notification beep using Web Audio API
    * - 880 Hz sine wave (high-pitched, alert-like)
@@ -14,6 +22,8 @@ export function useSoundEffects() {
    * - Low volume (0.15) to avoid being jarring
    */
   function playBeep(): void {
+    if (muteState.value) return;
+
     try {
       // Create or reuse AudioContext (lazy initialization)
       if (!audioContext) {
@@ -51,6 +61,8 @@ export function useSoundEffects() {
   }
 
   return {
+    muteState,
+    toggleMute,
     playTurnNotification,
   };
 }

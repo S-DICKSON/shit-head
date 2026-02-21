@@ -4,6 +4,7 @@ import { usePlayingPhase } from '../composables/usePlayingPhase';
 import { useGameSocket } from '../composables/useGameSocket';
 import TurnTimer from './TurnTimer.vue';
 import TurnBanner from './TurnBanner.vue';
+import MuteButton from './MuteButton.vue';
 import OpponentCards from './OpponentCards.vue';
 import DrawPile from './DrawPile.vue';
 import DiscardPile from './DiscardPile.vue';
@@ -21,9 +22,10 @@ const {
   selectedFaceUpIndex,
   isMyTurn,
   isFirstTurn,
-  forcedCardIndices,
   activeSource,
   hasSelection,
+  playableHandIndices,
+  playableFaceUpIndices,
   toggleHandCard,
   selectFaceUpCard,
   selectFaceDownCard,
@@ -31,18 +33,13 @@ const {
   pickupPile,
 } = usePlayingPhase();
 
-// Get send and burnTriggered from useGameSocket
-const { send, burnTriggered } = useGameSocket();
+// Get burnTriggered and spectatorCount from useGameSocket
+const { burnTriggered, spectatorCount } = useGameSocket();
 
 function isOpponentCurrentTurn(opponentPlayerId: string): boolean {
   if (!roomState.value || gameView.value?.currentPlayerIndex === undefined) return false;
   const opponentIndex = roomState.value.players.findIndex(p => p.id === opponentPlayerId);
   return opponentIndex === gameView.value.currentPlayerIndex;
-}
-
-// Handle grouped card play from mobile view
-function handleGroupedPlay(indices: number[]): void {
-  send({ type: 'play-cards', cardIndices: indices });
 }
 
 // ARIA live region for turn announcements
@@ -63,7 +60,10 @@ watch(
 </script>
 
 <template>
-  <div class="flex flex-col h-screen bg-green-900 text-white overflow-hidden">
+  <div
+    class="flex flex-col bg-green-900 text-white overflow-hidden"
+    style="height: calc(100vh - var(--safe-top) - var(--safe-bottom)); height: calc(100dvh - var(--safe-top) - var(--safe-bottom));"
+  >
     <!-- Leave button -->
     <button
       class="fixed top-2 left-2 z-40 px-3 py-1 text-xs font-medium bg-gray-800/70 hover:bg-gray-800/90 text-gray-300 hover:text-white rounded-full backdrop-blur-sm transition-all"
@@ -71,6 +71,14 @@ watch(
     >
       Leave
     </button>
+
+    <!-- Spectator count (visible to active players) -->
+    <span
+      v-if="spectatorCount > 0"
+      class="fixed top-2 right-2 z-40 px-3 py-1 text-xs font-medium bg-gray-800/70 text-gray-300 rounded-full backdrop-blur-sm"
+    >
+      &#128065; {{ spectatorCount }}
+    </span>
 
     <!-- Top bar: Opponents -->
     <div class="flex-shrink-0 pt-2">
@@ -84,54 +92,54 @@ watch(
       </div>
     </div>
 
-    <!-- Center game area: Turn Banner + Draw/Discard Piles -->
-    <div class="flex-1 flex flex-col items-center justify-center px-4">
-      <!-- Turn Banner (inline within center area) -->
-      <TurnBanner :visible="isMyTurn" />
-
-      <!-- First Turn Banner -->
-      <p
-        v-if="isFirstTurn && isMyTurn"
-        class="text-yellow-300 text-sm text-center mb-1 animate-pulse"
-      >
-        You must play your lowest card(s)!
-      </p>
-
-      <!-- Draw Pile + Discard Pile -->
-      <div class="flex items-center justify-center gap-6 sm:gap-8 mb-2">
+    <!-- Center game area: Draw/Discard Piles + Turn Banner below -->
+    <div class="flex-shrink-0 sm:flex-1 flex flex-col items-center justify-center px-4 py-2">
+      <div class="flex items-center justify-center gap-6 sm:gap-8">
         <DrawPile :count="gameView?.drawPileCount ?? 0" />
         <DiscardPile
           :cards="gameView?.discardPile ?? []"
           :burn-animation="burnTriggered"
         />
       </div>
+      <div class="mt-1">
+        <TurnBanner :visible="isMyTurn" />
+        <p
+          v-if="isFirstTurn && isMyTurn"
+          class="text-yellow-300 text-xs text-center animate-pulse mt-1"
+        >
+          You must play your lowest card(s)!
+        </p>
+      </div>
     </div>
 
-    <!-- Player's cards area (scrollable on mobile with many cards) -->
-    <div class="flex-shrink-0 px-2 pb-3 flex flex-col max-h-[45vh]">
+    <!-- Player's cards area (takes remaining space) -->
+    <div class="flex-1 min-h-0 px-2 pb-3 flex flex-col">
       <PlayerCards
         :hand="gameView?.hand ?? []"
         :face-up="gameView?.faceUp ?? []"
         :face-down-count="gameView?.faceDownCount ?? 0"
         :selected-hand-indices="selectedHandIndices"
         :selected-face-up-index="selectedFaceUpIndex"
-        :forced-indices="forcedCardIndices"
         :is-my-turn="isMyTurn"
         :active-source="activeSource"
         :has-selection="hasSelection"
+        :playable-hand-indices="playableHandIndices"
+        :playable-face-up-indices="playableFaceUpIndices"
         @toggle-hand-card="toggleHandCard"
         @select-face-up="selectFaceUpCard"
         @select-face-down="selectFaceDownCard"
         @play-cards="playSelectedCards"
         @pickup-pile="pickupPile"
-        @play-grouped-cards="handleGroupedPlay"
       />
     </div>
+
+    <!-- Mute Button (fixed overlay) -->
+    <MuteButton />
 
     <!-- Turn Timer (fixed overlay in bottom-right) -->
     <TurnTimer
       :time-remaining="turnTimeRemaining"
-      :total-time="45"
+      :total-time="roomState?.roundTime ?? 45"
     />
 
     <!-- ARIA live region for screen readers -->

@@ -62,6 +62,7 @@ jobs:
           DEPLOY_IMAGE: ${{ env.IMAGE }}
           DEPLOY_DOMAIN: splatmonkey.com
           DEPLOY_ORIGINS: https://splatmonkey.com
+          DISCORD_CLIENT_SECRET: ${{ secrets.DISCORD_CLIENT_SECRET }}
         run: |
           ssh -o StrictHostKeyChecking=no root@46.225.52.135 << ENDSSH
             # Login to GHCR (variables interpolated by runner before SSH)
@@ -75,6 +76,8 @@ jobs:
           NODE_ENV=production
           PORT=3000
           ALLOWED_ORIGINS=${DEPLOY_ORIGINS}
+          DISCORD_CLIENT_ID=1473070068190679163
+          DISCORD_CLIENT_SECRET=${DISCORD_CLIENT_SECRET}
           ENVEOF
 
             # Update systemd service with correct image

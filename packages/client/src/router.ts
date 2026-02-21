@@ -20,6 +20,11 @@ export const router = createRouter({
       name: 'game',
       component: () => import('./components/Game.vue'),
     },
+    {
+      path: '/discord-lobby',
+      name: 'discord-lobby',
+      component: () => import('./components/DiscordLobby.vue'),
+    },
   ],
 });
 

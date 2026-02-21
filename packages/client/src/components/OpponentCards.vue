@@ -5,10 +5,23 @@
   >
     <!-- Nickname row -->
     <div class="flex items-center justify-center gap-1 mb-1">
+      <!-- Discord avatar (only shown for Discord users) -->
+      <img
+        v-if="opponent.discordUserId"
+        :src="getAvatarUrl(opponent.avatarHash, opponent.discordUserId || opponent.playerId)"
+        :alt="opponent.nickname"
+        class="w-6 h-6 rounded-full inline-block"
+      >
       <span
         class="text-sm font-medium truncate max-w-[100px]"
         :class="isCurrentTurn ? 'text-yellow-300 font-semibold' : ''"
       >{{ opponent.nickname }}</span>
+      <!-- Shithead marker (previous game's loser) -->
+      <span
+        v-if="opponent.isShithead"
+        class="text-lg"
+        title="Lost last game"
+      >&#128169;</span>
       <Transition name="dot">
         <span
           v-if="isCurrentTurn"
@@ -57,6 +70,17 @@ interface Props {
 withDefaults(defineProps<Props>(), {
   isDisconnected: false,
 });
+
+function getAvatarUrl(avatarHash: string | null | undefined, userId: string, size = 48): string {
+  if (!avatarHash) {
+    let hash = 0;
+    for (let i = 0; i < userId.length; i++) hash = (hash * 31 + userId.charCodeAt(i)) | 0;
+    const defaultIndex = ((hash % 5) + 5) % 5;
+    return `https://cdn.discordapp.com/embed/avatars/${defaultIndex}.png`;
+  }
+  const extension = avatarHash.startsWith('a_') ? 'gif' : 'webp';
+  return `https://cdn.discordapp.com/avatars/${userId}/${avatarHash}.${extension}?size=${size}`;
+}
 
 function suitSymbol(suit: string): string {
   const symbols: Record<string, string> = {

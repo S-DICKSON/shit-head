@@ -1,6 +1,6 @@
 // Room class - individual room state and logic
 import { customAlphabet } from 'nanoid';
-import type { RoomState, RoomStatus, LobbyPlayer, ErrorCode, GameState, PlayerGameView } from '@shit-head/shared';
+import type { RoomState, RoomStatus, LobbyPlayer, ErrorCode, GameState, PlayerGameView, Card, OpponentView, RoundTime } from '@shit-head/shared';
 import { GameEngine, type BlindPlayResult, type AutoPlayResult } from '../game/GameEngine';
 
 // Custom alphabet excludes confusable characters: 0/O, 1/I/L, 5/S
@@ -14,7 +14,8 @@ type OperationResult<T = void> = T extends void
 export class Room {
   public readonly code: string;
   private hostId: string;
-  private players: Map<string, { id: string; nickname: string; isHost: boolean }>;
+  private players: Map<string, { id: string; nickname: string; isHost: boolean; avatarHash?: string | null; discordUserId?: string | null }>;
+  private spectators: Map<string, { id: string; nickname: string; avatarHash?: string | null; discordUserId?: string | null }>;
   private status: RoomStatus;
   private readonly maxPlayers = 4;
   private readonly minPlayers = 2;
@@ -26,7 +27,7 @@ export class Room {
   private turnTimer: ReturnType<typeof setInterval> | null = null;
   private turnTimerDelay: ReturnType<typeof setTimeout> | null = null;
   private turnTimeRemaining: number = 45;
-  private readonly TURN_DURATION = 45;
+  private roundTime: RoundTime = 45;
   private readonly TURN_START_DELAY = 1500; // 1.5 seconds per Claude's discretion
   private disconnectedPlayers: Map<string, {
     disconnectTime: number;
@@ -34,10 +35,13 @@ export class Room {
   }> = new Map();
   private readonly DISCONNECT_GRACE_PERIOD = 90000; // 90 seconds
   private readonly LOBBY_DISCONNECT_GRACE_PERIOD = 15000; // 15 seconds
+  private shitheadPlayerId: string | null = null;
+  private autoReturnTimer: ReturnType<typeof setTimeout> | null = null;
+  private readonly AUTO_RETURN_DELAY = 5000; // 5 seconds to see game-over screen
   private onSwapTimerTick?: (timeRemaining: number) => void;
   private onPlayerReady?: (playerId: string, readyPlayers: string[]) => void;
   private onSwapPhaseComplete?: (reason: 'timer-expired' | 'all-ready') => void;
-  private onPlayPhaseStart?: (currentPlayerIndex: number) => void;
+  private onPlayPhaseStart?: (currentPlayerIndex: number, firstTurn: boolean) => void;
   private onPlayerEliminated?: (playerId: string, nickname: string, currentPlayerIndex: number) => void;
   private onGameOver?: (shitheadId: string, shitheadNickname: string) => void;
   private onTurnTimerTick?: (timeRemaining: number, currentPlayerIndex: number) => void;
@@ -45,25 +49,30 @@ export class Room {
   private onPlayerDisconnected?: (playerId: string, nickname: string) => void;
   private onPlayerReconnected?: (playerId: string, nickname: string) => void;
   private onPlayerRemoved?: (playerId: string, nickname: string, reason: 'timeout' | 'host-left') => void;
+  private onHostMigrated?: (oldHostId: string, newHostId: string) => void;
+  private onSpectatorJoined?: (spectatorId: string, nickname: string) => void;
   private playAgainPlayers: Set<string> = new Set();
   private playAgainTimeout: ReturnType<typeof setTimeout> | null = null;
   private onReturnToLobby?: (removedPlayerIds: string[]) => void;
 
-  constructor(hostId: string, hostNickname: string) {
-    this.code = generateRoomCode();
+  constructor(hostId: string, hostNickname: string, code?: string, avatarHash?: string | null, discordUserId?: string | null) {
+    this.code = code || generateRoomCode();
     this.hostId = hostId;
     this.status = 'waiting';
     this.players = new Map();
+    this.spectators = new Map();
 
     // Add host as first player
     this.players.set(hostId, {
       id: hostId,
       nickname: hostNickname,
       isHost: true,
+      avatarHash: avatarHash ?? null,
+      discordUserId: discordUserId ?? null,
     });
   }
 
-  addPlayer(id: string, nickname: string): OperationResult {
+  addPlayer(id: string, nickname: string, avatarHash?: string | null, discordUserId?: string | null): OperationResult {
     // Validate nickname
     const trimmedNickname = nickname.trim();
     if (trimmedNickname.length === 0 || trimmedNickname.length > 20) {
@@ -106,17 +115,82 @@ export class Room {
       id,
       nickname: trimmedNickname,
       isHost: false,
+      avatarHash: avatarHash ?? null,
+      discordUserId: discordUserId ?? null,
     });
 
     return { success: true };
   }
 
+  addSpectator(id: string, nickname: string, avatarHash?: string | null, discordUserId?: string | null): OperationResult {
+    if (this.spectators.has(id) || this.players.has(id)) {
+      return { success: false, error: 'Already in room', code: 'ALREADY_IN_ROOM' };
+    }
+    // Allow up to 4 additional spectators beyond max players
+    if (this.players.size + this.spectators.size >= this.maxPlayers + 4) {
+      return { success: false, error: 'Room is full', code: 'ROOM_FULL' };
+    }
+    this.spectators.set(id, { id, nickname: nickname.trim(), avatarHash, discordUserId: discordUserId ?? null });
+    this.onSpectatorJoined?.(id, nickname);
+    return { success: true };
+  }
+
+  removeSpectator(id: string): void {
+    this.spectators.delete(id);
+  }
+
+  getSpectatorCount(): number {
+    return this.spectators.size;
+  }
+
+  getSpectatorIds(): string[] {
+    return Array.from(this.spectators.keys());
+  }
+
+  isSpectator(playerId: string): boolean {
+    return this.spectators.has(playerId);
+  }
+
+  getShitheadPlayerId(): string | null {
+    return this.shitheadPlayerId;
+  }
+
+  getSpectatorView(): { discardPile: Card[]; opponents: OpponentView[]; drawPileCount: number; currentPlayerIndex: number } | null {
+    if (!this.gameState) return null;
+    // Build opponent views for ALL players (spectator sees everyone the same way)
+    const opponents: OpponentView[] = this.gameState.players.map(p => ({
+      playerId: p.playerId,
+      nickname: p.nickname,
+      faceDownCount: p.faceDown.length,
+      faceUp: p.faceUp,
+      handCount: p.hand.length,
+      isShithead: p.playerId === this.shitheadPlayerId,
+      avatarHash: this.players.get(p.playerId)?.avatarHash ?? null,
+      discordUserId: this.players.get(p.playerId)?.discordUserId ?? null,
+    }));
+    return {
+      discardPile: this.gameState.discardPile,
+      opponents,
+      drawPileCount: this.gameState.drawPile.length,
+      currentPlayerIndex: this.gameState.currentPlayerIndex,
+    };
+  }
+
   removePlayer(id: string): boolean {
+    const isHost = id === this.hostId;
     this.players.delete(id);
 
-    // If host left, room should be destroyed
-    if (id === this.hostId) {
-      return true;
+    if (isHost) {
+      const remaining = Array.from(this.players.keys());
+      if (remaining.length > 0) {
+        // Migrate host instead of destroying
+        this.hostId = remaining[0];
+        for (const [pid, player] of this.players) {
+          player.isHost = pid === this.hostId;
+        }
+        return false; // Room continues
+      }
+      return true; // Empty room, destroy
     }
 
     return false;
@@ -162,6 +236,18 @@ export class Room {
     return this.players.size >= this.minPlayers && this.status === 'waiting';
   }
 
+  setRoundTime(time: RoundTime): OperationResult {
+    if (this.status !== 'waiting') {
+      return {
+        success: false,
+        error: 'Cannot change round time after game starts',
+        code: 'INVALID_ACTION',
+      };
+    }
+    this.roundTime = time;
+    return { success: true };
+  }
+
   startCountdown(): void {
     this.status = 'countdown';
   }
@@ -186,6 +272,20 @@ export class Room {
     return GameEngine.getPlayerView(this.gameState, playerId);
   }
 
+  getAugmentedPlayerView(playerId: string): PlayerGameView | null {
+    const view = this.getPlayerView(playerId);
+    if (!view) return null;
+    return {
+      ...view,
+      opponents: view.opponents.map(o => ({
+        ...o,
+        isShithead: o.playerId === this.shitheadPlayerId,
+        avatarHash: this.players.get(o.playerId)?.avatarHash ?? null,
+        discordUserId: this.players.get(o.playerId)?.discordUserId ?? null,
+      })),
+    };
+  }
+
   getGameState(): GameState | null {
     return this.gameState;
   }
@@ -199,6 +299,8 @@ export class Room {
       id: p.id,
       nickname: p.nickname,
       isHost: p.isHost,
+      avatarHash: p.avatarHash ?? null,
+      discordUserId: p.discordUserId ?? null,
     }));
 
     return {
@@ -208,6 +310,9 @@ export class Room {
       hostId: this.hostId,
       maxPlayers: this.maxPlayers,
       minPlayers: this.minPlayers,
+      spectatorCount: this.spectators.size,
+      shitheadPlayerId: this.shitheadPlayerId,
+      roundTime: this.roundTime,
     };
   }
 
@@ -215,7 +320,7 @@ export class Room {
     onTick: (timeRemaining: number) => void;
     onReady: (playerId: string, readyPlayers: string[]) => void;
     onComplete: (reason: 'timer-expired' | 'all-ready') => void;
-    onPlayPhaseStart: (currentPlayerIndex: number) => void;
+    onPlayPhaseStart: (currentPlayerIndex: number, firstTurn: boolean) => void;
   }): void {
     this.onSwapTimerTick = callbacks.onTick;
     this.onPlayerReady = callbacks.onReady;
@@ -253,6 +358,16 @@ export class Room {
     onReturnToLobby: (removedPlayerIds: string[]) => void;
   }): void {
     this.onReturnToLobby = callbacks.onReturnToLobby;
+  }
+
+  setSpectatorCallbacks(callbacks: {
+    onSpectatorJoined: (spectatorId: string, nickname: string) => void;
+  }): void {
+    this.onSpectatorJoined = callbacks.onSpectatorJoined;
+  }
+
+  setHostMigrationCallback(callback: (oldHostId: string, newHostId: string) => void): void {
+    this.onHostMigrated = callback;
   }
 
   hasDisconnectCallbacks(): boolean {
@@ -308,6 +423,12 @@ export class Room {
       this.playAgainTimeout = null;
     }
 
+    // Cancel any pending auto-return timer
+    if (this.autoReturnTimer) {
+      clearTimeout(this.autoReturnTimer);
+      this.autoReturnTimer = null;
+    }
+
     // Identify players to remove (those who didn't click play-again)
     const removedPlayerIds: string[] = [];
     for (const [playerId] of this.players) {
@@ -349,6 +470,47 @@ export class Room {
 
     // Notify callback with removed player IDs
     this.onReturnToLobby?.(removedPlayerIds);
+  }
+
+  private autoReturnToLobby(): void {
+    if (this.autoReturnTimer) {
+      clearTimeout(this.autoReturnTimer);
+      this.autoReturnTimer = null;
+    }
+
+    // Cancel any play-again timeout since we're auto-returning
+    if (this.playAgainTimeout) {
+      clearTimeout(this.playAgainTimeout);
+      this.playAgainTimeout = null;
+    }
+
+    // Promote spectators to players
+    for (const [spectatorId, spectator] of this.spectators) {
+      this.players.set(spectatorId, {
+        id: spectator.id,
+        nickname: spectator.nickname,
+        isHost: false,
+        avatarHash: spectator.avatarHash,
+        discordUserId: spectator.discordUserId,
+      });
+    }
+    this.spectators.clear();
+
+    // Clear game state
+    this.gameState = null;
+    this.status = 'waiting';
+    this.readyPlayers.clear();
+    this.playAgainPlayers.clear();
+
+    // Clear timers
+    if (this.swapTimer) {
+      clearInterval(this.swapTimer);
+      this.swapTimer = null;
+    }
+    this.clearTurnTimer();
+
+    // Notify all players (empty removedPlayerIds since nobody removed)
+    this.onReturnToLobby?.([]);
   }
 
   swapCards(playerId: string, handIndex: number, faceUpIndex: number): OperationResult {
@@ -451,7 +613,7 @@ export class Room {
           firstTurn: true,
         };
         // Notify that playing phase has started with first player
-        this.onPlayPhaseStart?.(this.gameState.currentPlayerIndex);
+        this.onPlayPhaseStart?.(this.gameState.currentPlayerIndex, this.gameState.firstTurn);
         // Start turn timer for first player
         this.startTurnTimer(this.gameState.currentPlayerIndex);
       }
@@ -464,7 +626,7 @@ export class Room {
 
   startTurnTimer(playerIndex: number): void {
     this.clearTurnTimer();
-    this.turnTimeRemaining = this.TURN_DURATION;
+    this.turnTimeRemaining = this.roundTime;
 
     this.turnTimerDelay = setTimeout(() => {
       // Fire initial tick with full time
@@ -527,7 +689,13 @@ export class Room {
           // Set dealer index for next hand
           const shitheadIndex = this.gameState.players.findIndex(p => p.playerId === shitheadId);
           this.dealerIndex = shitheadIndex;
+          // Track the shithead
+          this.shitheadPlayerId = shitheadId;
           this.onGameOver?.(shitheadId, shithead.nickname);
+          // After onGameOver callback fires, start auto-return timer
+          this.autoReturnTimer = setTimeout(() => {
+            this.autoReturnToLobby();
+          }, this.AUTO_RETURN_DELAY);
         }
       }
     }
@@ -644,6 +812,12 @@ export class Room {
   }
 
   handlePlayerDisconnect(playerId: string): void {
+    // Check if spectator disconnected
+    if (this.spectators.has(playerId)) {
+      this.spectators.delete(playerId);
+      return;
+    }
+
     const player = this.players.get(playerId);
     if (!player) return;
 
@@ -721,6 +895,68 @@ export class Room {
     }
   }
 
+  private migrateHost(oldHostId: string, newHostId: string): void {
+    this.players.delete(oldHostId);
+    this.hostId = newHostId;
+    for (const [pid, player] of this.players) {
+      player.isHost = pid === newHostId;
+    }
+    this.disconnectedPlayers.delete(oldHostId);
+
+    // If game in progress, handle game state updates (same as non-host removal)
+    if (this.gameState) {
+      const gamePlayer = this.gameState.players.find(p => p.playerId === oldHostId);
+      if (gamePlayer) {
+        gamePlayer.hand = [];
+        gamePlayer.faceUp = [];
+        gamePlayer.faceDown = [];
+      }
+
+      if (this.gameState.phase === 'playing') {
+        const currentPlayer = this.gameState.players[this.gameState.currentPlayerIndex];
+        if (currentPlayer?.playerId === oldHostId) {
+          this.gameState.currentPlayerIndex = GameEngine.nextActivePlayerIndex(
+            this.gameState,
+            this.gameState.currentPlayerIndex
+          );
+          this.clearTurnTimer();
+          this.startTurnTimer(this.gameState.currentPlayerIndex);
+          this.onPlayPhaseStart?.(this.gameState.currentPlayerIndex, this.gameState.firstTurn);
+        }
+      }
+
+      // Game-end check
+      const connectedPlayerCount = this.players.size;
+      if (connectedPlayerCount < 2) {
+        this.gameState.phase = 'finished';
+        this.clearTurnTimer();
+
+        const remainingPlayerIds = Array.from(this.players.keys());
+        if (remainingPlayerIds.length === 1) {
+          const remainingPlayerId = remainingPlayerIds[0];
+          const remainingGamePlayer = this.gameState.players.find(p => p.playerId === remainingPlayerId);
+          if (remainingGamePlayer) {
+            this.shitheadPlayerId = remainingGamePlayer.playerId;
+            this.onGameOver?.(remainingGamePlayer.playerId, remainingGamePlayer.nickname);
+            this.autoReturnTimer = setTimeout(() => {
+              this.autoReturnToLobby();
+            }, this.AUTO_RETURN_DELAY);
+          }
+        } else if (remainingPlayerIds.length === 0 && this.gameState.players.length > 0) {
+          const fallbackPlayer = this.gameState.players[0];
+          this.shitheadPlayerId = fallbackPlayer.playerId;
+          this.onGameOver?.(fallbackPlayer.playerId, fallbackPlayer.nickname);
+          this.autoReturnTimer = setTimeout(() => {
+            this.autoReturnToLobby();
+          }, this.AUTO_RETURN_DELAY);
+        }
+      }
+    }
+
+    // Notify host migration via dedicated callback
+    this.onHostMigrated?.(oldHostId, newHostId);
+  }
+
   private removePlayerAfterTimeout(playerId: string): void {
     // Race condition safety: player may have reconnected just before timeout fires
     if (!this.disconnectedPlayers.has(playerId)) return;
@@ -732,8 +968,18 @@ export class Room {
 
     const isHost = playerId === this.hostId;
 
-    // If host, notify and return (room destruction handled by handler layer)
+    // If host, check if other players remain for migration
     if (isHost) {
+      const remainingPlayers = Array.from(this.players.keys())
+        .filter(pid => pid !== playerId && !this.disconnectedPlayers.has(pid));
+
+      if (remainingPlayers.length > 0) {
+        // Migrate host instead of destroying the room
+        this.migrateHost(playerId, remainingPlayers[0]);
+        return;
+      }
+
+      // No remaining connected players — destroy room
       this.onPlayerRemoved?.(playerId, player.nickname, 'host-left');
       return;
     }
@@ -768,7 +1014,7 @@ export class Room {
           this.startTurnTimer(this.gameState.currentPlayerIndex);
 
           // Notify play phase start for new current player
-          this.onPlayPhaseStart?.(this.gameState.currentPlayerIndex);
+          this.onPlayPhaseStart?.(this.gameState.currentPlayerIndex, this.gameState.firstTurn);
         }
       }
 
@@ -786,12 +1032,20 @@ export class Room {
           const remainingPlayerId = remainingPlayerIds[0];
           const remainingGamePlayer = this.gameState.players.find(p => p.playerId === remainingPlayerId);
           if (remainingGamePlayer) {
+            this.shitheadPlayerId = remainingGamePlayer.playerId;
             this.onGameOver?.(remainingGamePlayer.playerId, remainingGamePlayer.nickname);
+            this.autoReturnTimer = setTimeout(() => {
+              this.autoReturnToLobby();
+            }, this.AUTO_RETURN_DELAY);
           }
         } else if (remainingPlayerIds.length === 0 && this.gameState.players.length > 0) {
           // Edge case: all players disconnected, use first from game state
           const fallbackPlayer = this.gameState.players[0];
+          this.shitheadPlayerId = fallbackPlayer.playerId;
           this.onGameOver?.(fallbackPlayer.playerId, fallbackPlayer.nickname);
+          this.autoReturnTimer = setTimeout(() => {
+            this.autoReturnToLobby();
+          }, this.AUTO_RETURN_DELAY);
         }
       }
     }

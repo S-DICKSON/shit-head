@@ -1,4 +1,4 @@
-.PHONY: help install dev test test-server test-client clean lint lint-fix type-check type-check-server type-check-shared tunnel prod-local prod-local-down
+.PHONY: help install dev test test-server test-client clean lint lint-fix type-check type-check-server type-check-shared tunnel dev-discord dev-discord-down prod-local prod-local-down
 
 .DEFAULT_GOAL := help
 
@@ -46,10 +46,19 @@ type-check-server: ## Run server type checking
 clean: ## Clean up containers, volumes, and images
 	docker compose down -v --rmi local --remove-orphans
 	docker compose -f docker-compose.tunnel.yml down -v --remove-orphans
+	docker compose -f docker-compose.discord.yml down -v --remove-orphans
 	docker compose -f docker-compose.prod.yml down -v --remove-orphans
 
 tunnel: ## Start cloudflared tunnel for mobile testing (one command)
 	docker compose -f docker-compose.tunnel.yml up --build
+
+dev-discord: install ## Start Discord Activity dev environment (with cloudflared tunnel)
+	@if [ ! -f packages/server/.env ]; then echo "ERROR: packages/server/.env missing — cp packages/server/.env.example packages/server/.env"; exit 1; fi
+	@if [ ! -f packages/client/.env ]; then echo "ERROR: packages/client/.env missing — cp packages/client/.env.example packages/client/.env"; exit 1; fi
+	set -a && . packages/client/.env && set +a && docker compose -f docker-compose.discord.yml up --build
+
+dev-discord-down: ## Stop Discord Activity dev environment
+	docker compose -f docker-compose.discord.yml down -v --remove-orphans
 
 prod-local: ## Start production-like environment with Caddy reverse proxy
 	docker compose -f docker-compose.prod.yml up --build

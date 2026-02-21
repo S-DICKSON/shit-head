@@ -1,0 +1,31 @@
+# Discord Activity local development
+# Builds client + serves from server (single origin, reliable WebSocket)
+# Usage: make dev-discord
+#
+# Prerequisites:
+#   1. Create packages/server/.env with DISCORD_CLIENT_ID and DISCORD_CLIENT_SECRET
+#   2. Create packages/client/.env with VITE_DISCORD_CLIENT_ID
+#   See .planning/phases/18-discord-authentication/18-01-USER-SETUP.md
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.tunnel
+      args:
+        - VITE_DISCORD_CLIENT_ID=${VITE_DISCORD_CLIENT_ID}
+    ports:
+      - "3000:3000"
+    env_file:
+      - packages/server/.env
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    restart: unless-stopped
+
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    command: tunnel --no-autoupdate --url http://app:3000
+    depends_on:
+      - app
+    restart: unless-stopped

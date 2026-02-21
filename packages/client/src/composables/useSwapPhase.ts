@@ -1,60 +1,115 @@
 import { ref, computed } from 'vue';
-import { useDebounceFn } from '@vueuse/core';
+import type { Card } from '@shithead/shared';
 import { useGameSocket } from './useGameSocket';
 
 export function useSwapPhase() {
   const { send, gameView, playerId, swapTimeRemaining, readyPlayers, swapPhaseComplete, swapPhaseReason } = useGameSocket();
 
-  // Card selection state for tap-tap swap
-  const selectedHandIndex = ref<number | null>(null);
-  const selectedFaceUpIndex = ref<number | null>(null);
+  // Card selection state: Set-based for multi-select
+  const selectedHandIndices = ref<Set<number>>(new Set());
+  const selectedFaceUpIndices = ref<Set<number>>(new Set());
 
-  // Debounced swap send (150ms debounce, 500ms maxWait)
-  const sendSwap = useDebounceFn(
-    (handIndex: number, faceUpIndex: number) => {
-      send({ type: 'swap-cards', handIndex, faceUpIndex });
-    },
-    150,
-    { maxWait: 500 }
-  );
+  // Helper: get rank string for a card (standard uses card.rank, joker uses 'JKR')
+  function getRank(card: Card): string {
+    return card.kind === 'standard' ? card.rank : 'JKR';
+  }
 
-  // Select a hand card
+  // Attempt to execute paired swaps when both zones have selections
+  function tryPerformSwaps() {
+    const handSet = selectedHandIndices.value;
+    const faceUpSet = selectedFaceUpIndices.value;
+
+    if (handSet.size === 0 || faceUpSet.size === 0) return;
+
+    const handArr = [...handSet];
+    const faceUpArr = [...faceUpSet];
+
+    // Send swaps directly (not debounced) — debounce would eat all but the last
+    for (let i = 0; i < handArr.length; i++) {
+      send({ type: 'swap-cards', handIndex: handArr[i], faceUpIndex: faceUpArr[i % faceUpArr.length] });
+    }
+
+    // Clear all selections
+    selectedHandIndices.value = new Set();
+    selectedFaceUpIndices.value = new Set();
+  }
+
+  // Select a hand card (rank-aware multi-select)
   const selectHandCard = (index: number) => {
-    if (swapPhaseComplete.value) return; // No swaps during transition
+    if (swapPhaseComplete.value) return;
 
-    if (selectedHandIndex.value === index) {
-      // Deselect if same card tapped again
-      selectedHandIndex.value = null;
+    const card = gameView.value?.hand[index];
+    if (!card) return;
+
+    // Deselect if already selected
+    if (selectedHandIndices.value.has(index)) {
+      const next = new Set(selectedHandIndices.value);
+      next.delete(index);
+      selectedHandIndices.value = next;
       return;
     }
 
-    selectedHandIndex.value = index;
+    const tappedRank = getRank(card);
 
-    // If face-up card already selected, perform swap
-    if (selectedFaceUpIndex.value !== null) {
-      sendSwap(index, selectedFaceUpIndex.value);
-      selectedHandIndex.value = null;
-      selectedFaceUpIndex.value = null;
+    if (selectedHandIndices.value.size > 0) {
+      // Get rank of first selected card
+      const firstIndex = [...selectedHandIndices.value][0];
+      const firstCard = gameView.value?.hand[firstIndex];
+      const firstRank = firstCard ? getRank(firstCard) : null;
+
+      if (firstRank === tappedRank) {
+        // Same rank: accumulate
+        selectedHandIndices.value = new Set([...selectedHandIndices.value, index]);
+      } else {
+        // Different rank: switch selection
+        selectedHandIndices.value = new Set([index]);
+      }
+    } else {
+      // No selection yet: start
+      selectedHandIndices.value = new Set([index]);
     }
+
+    // Check if both zones now have selections
+    tryPerformSwaps();
   };
 
-  // Select a face-up card
+  // Select a face-up card (rank-aware multi-select)
   const selectFaceUpCard = (index: number) => {
     if (swapPhaseComplete.value) return;
 
-    if (selectedFaceUpIndex.value === index) {
-      selectedFaceUpIndex.value = null;
+    const card = gameView.value?.faceUp[index];
+    if (!card) return;
+
+    // Deselect if already selected
+    if (selectedFaceUpIndices.value.has(index)) {
+      const next = new Set(selectedFaceUpIndices.value);
+      next.delete(index);
+      selectedFaceUpIndices.value = next;
       return;
     }
 
-    selectedFaceUpIndex.value = index;
+    const tappedRank = getRank(card);
 
-    // If hand card already selected, perform swap
-    if (selectedHandIndex.value !== null) {
-      sendSwap(selectedHandIndex.value, index);
-      selectedHandIndex.value = null;
-      selectedFaceUpIndex.value = null;
+    if (selectedFaceUpIndices.value.size > 0) {
+      // Get rank of first selected card
+      const firstIndex = [...selectedFaceUpIndices.value][0];
+      const firstCard = gameView.value?.faceUp[firstIndex];
+      const firstRank = firstCard ? getRank(firstCard) : null;
+
+      if (firstRank === tappedRank) {
+        // Same rank: accumulate
+        selectedFaceUpIndices.value = new Set([...selectedFaceUpIndices.value, index]);
+      } else {
+        // Different rank: switch selection
+        selectedFaceUpIndices.value = new Set([index]);
+      }
+    } else {
+      // No selection yet: start
+      selectedFaceUpIndices.value = new Set([index]);
     }
+
+    // Check if both zones now have selections
+    tryPerformSwaps();
   };
 
   // Ready up toggle
@@ -77,9 +132,9 @@ export function useSwapPhase() {
   return {
     // Card state from socket
     gameView,
-    // Selection state
-    selectedHandIndex,
-    selectedFaceUpIndex,
+    // Selection state (Set-based)
+    selectedHandIndices,
+    selectedFaceUpIndices,
     // Actions
     selectHandCard,
     selectFaceUpCard,

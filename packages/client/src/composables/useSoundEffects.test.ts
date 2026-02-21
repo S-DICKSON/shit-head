@@ -32,6 +32,11 @@ describe('useSoundEffects', () => {
 
     // Mock global AudioContext constructor
     global.AudioContext = vi.fn(() => mockAudioContext) as any;
+
+    // Reset mute state (module-level ref persists across tests)
+    localStorage.removeItem('shithead-muted');
+    const { muteState } = useSoundEffects();
+    muteState.value = false;
   });
 
   afterEach(() => {
@@ -109,6 +114,42 @@ describe('useSoundEffects', () => {
 
       // Even if AudioContext throws, the function should not crash
       expect(() => playTurnNotification()).not.toThrow();
+    });
+  });
+
+  describe('mute', () => {
+    beforeEach(() => {
+      localStorage.removeItem('shithead-muted');
+    });
+
+    it('does not play beep when muted', () => {
+      const { toggleMute, playTurnNotification } = useSoundEffects();
+      toggleMute(); // mute
+      playTurnNotification();
+      expect(mockAudioContext.createOscillator).not.toHaveBeenCalled();
+    });
+
+    it('persists mute state to localStorage', () => {
+      const { toggleMute } = useSoundEffects();
+      toggleMute(); // mute
+      expect(localStorage.getItem('shithead-muted')).toBe('true');
+    });
+
+    it('toggleMute restores unmuted state', () => {
+      const { toggleMute, muteState } = useSoundEffects();
+      toggleMute(); // mute
+      toggleMute(); // unmute
+      expect(muteState.value).toBe(false);
+      expect(localStorage.getItem('shithead-muted')).toBe('false');
+    });
+
+    it('plays beep after unmuting', () => {
+      const { toggleMute, playTurnNotification } = useSoundEffects();
+      toggleMute(); // mute
+      toggleMute(); // unmute
+      playTurnNotification();
+      // Check oscillator.start was called (module-level audioContext reuses cached instance)
+      expect(mockOscillator.start).toHaveBeenCalled();
     });
   });
 });

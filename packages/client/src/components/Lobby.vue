@@ -40,6 +40,10 @@ const leaveRoom = () => {
   router.push('/');
 };
 
+const setRoundTime = (time: 30 | 45 | 60) => {
+  send({ type: 'set-round-time', roundTime: time });
+};
+
 // Rename actions
 const startRenaming = () => {
   const currentPlayer = roomState.value?.players.find(p => p.id === playerId.value);
@@ -191,9 +195,16 @@ onUnmounted(() => {
       <!-- Players Section -->
       <div class="mb-6">
         <div class="flex justify-between items-center mb-4">
-          <h2 class="text-xl font-bold text-gray-800">
-            Players {{ playerCount }}
-          </h2>
+          <div class="flex items-center gap-2">
+            <h2 class="text-xl font-bold text-gray-800">
+              Players {{ playerCount }}
+            </h2>
+            <span
+              v-if="roomState?.spectatorCount && roomState.spectatorCount > 0"
+              class="text-sm text-gray-500"
+              title="Spectators watching"
+            >&#128065; {{ roomState.spectatorCount }} watching</span>
+          </div>
           <button
             class="text-sm text-red-600 hover:text-red-700 hover:underline"
             @click="leaveRoom"
@@ -240,6 +251,13 @@ onUnmounted(() => {
                 >(You)</span>
               </span>
 
+              <!-- Shithead marker -->
+              <span
+                v-if="(player.id !== playerId || !isRenaming) && roomState?.shitheadPlayerId === player.id"
+                class="text-2xl"
+                title="Lost last game"
+              >&#128169;</span>
+
               <!-- Rename button for current player -->
               <button
                 v-if="player.id === playerId && !isRenaming"
@@ -263,13 +281,13 @@ onUnmounted(() => {
                   @keyup.escape="cancelRenaming"
                 >
                 <button
-                  class="text-xs text-green-600 hover:text-green-700 font-semibold"
+                  class="w-10 h-10 flex items-center justify-center text-lg text-green-600 hover:text-green-700 font-semibold bg-green-50 hover:bg-green-100 border border-green-200 rounded-lg transition-colors"
                   @click="confirmRename"
                 >
                   ✓
                 </button>
                 <button
-                  class="text-xs text-red-600 hover:text-red-700 font-semibold"
+                  class="w-10 h-10 flex items-center justify-center text-lg text-red-600 hover:text-red-700 font-semibold bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg transition-colors"
                   @click="cancelRenaming"
                 >
                   ✗
@@ -285,6 +303,24 @@ onUnmounted(() => {
         v-if="isHost"
         class="mt-6"
       >
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-600 mb-2">Round Time</label>
+          <div class="flex gap-2">
+            <button
+              v-for="time in [30, 45, 60]"
+              :key="time"
+              :class="[
+                'px-4 py-2 rounded-lg text-sm font-medium border transition-all',
+                roomState?.roundTime === time
+                  ? 'bg-green-600 text-white border-green-600'
+                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+              ]"
+              @click="setRoundTime(time as 30 | 45 | 60)"
+            >
+              {{ time }}s
+            </button>
+          </div>
+        </div>
         <button
           :disabled="!canStartGame"
           class="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-bold py-4 rounded-lg transition-all shadow-md hover:shadow-lg text-lg"
@@ -298,7 +334,13 @@ onUnmounted(() => {
         v-else
         class="mt-6 text-center text-gray-600 italic"
       >
-        Waiting for host to start...
+        <p>Waiting for host to start...</p>
+        <p
+          v-if="roomState?.roundTime"
+          class="text-sm mt-1"
+        >
+          Round time: {{ roomState.roundTime }}s
+        </p>
       </div>
     </div>
 

@@ -11,6 +11,10 @@ const shareLinkButtonText = ref('Copy Link');
 // Generate shareable URL
 const shareUrl = `${window.location.origin}/#/room/${props.code}`;
 
+// Only use native share on mobile (desktop Safari/Chrome also has navigator.share but opens a clunky dialog)
+const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+const canNativeShare = isMobile && typeof navigator.share === 'function';
+
 // Copy code to clipboard
 const copyCode = async () => {
   try {
@@ -24,8 +28,20 @@ const copyCode = async () => {
   }
 };
 
-// Copy share link to clipboard
-const copyShareLink = async () => {
+// Share or copy link
+const shareOrCopyLink = async () => {
+  if (canNativeShare) {
+    try {
+      await navigator.share({
+        title: 'Join my Shithead game!',
+        url: shareUrl,
+      });
+      return;
+    } catch (err) {
+      // User cancelled or share failed — fall through to clipboard
+      if ((err as DOMException).name === 'AbortError') return;
+    }
+  }
   try {
     await navigator.clipboard.writeText(shareUrl);
     shareLinkButtonText.value = 'Copied!';
@@ -65,9 +81,9 @@ const copyShareLink = async () => {
         </div>
         <button
           class="px-3 py-2 text-sm bg-gray-200 hover:bg-gray-300 text-gray-700 rounded transition-colors whitespace-nowrap"
-          @click="copyShareLink"
+          @click="shareOrCopyLink"
         >
-          {{ shareLinkButtonText }}
+          {{ canNativeShare ? 'Share' : shareLinkButtonText }}
         </button>
       </div>
     </div>
