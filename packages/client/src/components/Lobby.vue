@@ -281,13 +281,13 @@ onUnmounted(() => {
                   @keyup.escape="cancelRenaming"
                 >
                 <button
-                  class="text-xs text-green-600 hover:text-green-700 font-semibold"
+                  class="w-10 h-10 flex items-center justify-center text-lg text-green-600 hover:text-green-700 font-semibold bg-green-50 hover:bg-green-100 border border-green-200 rounded-lg transition-colors"
                   @click="confirmRename"
                 >
                   ✓
                 </button>
                 <button
-                  class="text-xs text-red-600 hover:text-red-700 font-semibold"
+                  class="w-10 h-10 flex items-center justify-center text-lg text-red-600 hover:text-red-700 font-semibold bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg transition-colors"
                   @click="cancelRenaming"
                 >
                   ✗
