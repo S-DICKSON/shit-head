@@ -432,9 +432,17 @@ function createGameSocket() {
   // Send typed message
   const send = (msg: ClientMessage) => {
     error.value = null; // Clear previous errors
-    // Clear room code when deliberately leaving
+    // Clear all client state when deliberately leaving so the router guard
+    // sees no active room and allows navigation to '/' to proceed.
     if (msg.type === 'leave-room') {
       localStorage.removeItem('shithead-room-code');
+      localStorage.removeItem('shithead-player-id');
+      roomState.value = null;
+      gameView.value = null;
+      playerId.value = null;
+      isSpectator.value = false;
+      spectatorGameView.value = null;
+      spectatorCount.value = 0;
     }
     wsSend(JSON.stringify(msg));
   };
