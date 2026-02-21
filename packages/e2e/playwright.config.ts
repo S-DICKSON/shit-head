@@ -60,7 +60,7 @@ export default defineConfig({
     {
       command: 'bun run src/index.ts',
       cwd: '../server',
-      url: 'http://localhost:3000',
+      url: 'http://localhost:3000/health',
       reuseExistingServer: !process.env.CI,
       timeout: 30_000,
       env: {
