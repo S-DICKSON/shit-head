@@ -130,11 +130,11 @@ onUnmounted(() => {
       v-if="showLeaveConfirm"
       class="fixed inset-0 bg-black/60 flex items-center justify-center z-50"
     >
-      <div class="bg-gray-800 rounded-xl p-6 mx-4 max-w-sm w-full text-center">
-        <h2 class="text-xl font-bold mb-2">
+      <div class="bg-white rounded-xl p-6 mx-4 max-w-sm w-full text-center shadow-2xl">
+        <h2 class="text-xl font-bold text-gray-900 mb-2">
           Leave this game?
         </h2>
-        <p class="text-gray-300 text-sm mb-6">
+        <p class="text-gray-500 text-sm mb-6">
           You'll lose your place in this game.
         </p>
         <div class="flex gap-3 justify-center">
@@ -145,7 +145,7 @@ onUnmounted(() => {
             Leave
           </button>
           <button
-            class="px-6 py-2 bg-gray-700 hover:bg-gray-600 text-white font-medium rounded-lg transition-all"
+            class="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium rounded-lg transition-all"
             @click="cancelLeave"
           >
             Stay
