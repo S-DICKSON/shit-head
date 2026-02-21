@@ -9,8 +9,8 @@ import {
   ConnectionAdapterKey,
   RoomAdapterKey,
   WebAuthAdapter,
-  WebConnectionAdapter,
-  WebRoomAdapter,
+  ConnectionAdapter,
+  RoomAdapter,
 } from './platform'
 
 // Wrap in async IIFE so no top-level await appears in the bundle.
@@ -26,8 +26,6 @@ void (async () => {
     try {
       // Dynamic import ensures @discord/embedded-app-sdk is never resolved in web mode
       const { DiscordAuthAdapter } = await import('./platform/adapters/discord/DiscordAuthAdapter')
-      const { DiscordConnectionAdapter } = await import('./platform/adapters/discord/DiscordConnectionAdapter')
-      const { DiscordRoomAdapter } = await import('./platform/adapters/discord/DiscordRoomAdapter')
       const { patchUrlMappings } = await import('@discord/embedded-app-sdk')
 
       // Rewrite external URLs (like CDN avatar images) to go through Discord's proxy
@@ -35,8 +33,8 @@ void (async () => {
 
       const discordAuth = new DiscordAuthAdapter(import.meta.env.VITE_DISCORD_CLIENT_ID)
       app.provide(AuthAdapterKey, discordAuth)
-      app.provide(ConnectionAdapterKey, new DiscordConnectionAdapter())
-      app.provide(RoomAdapterKey, new DiscordRoomAdapter())
+      app.provide(ConnectionAdapterKey, new ConnectionAdapter())
+      app.provide(RoomAdapterKey, new RoomAdapter())
     } catch (err) {
       console.error('[Platform] Discord init failed, falling back to web mode:', err)
       platform = 'web'
@@ -45,8 +43,8 @@ void (async () => {
 
   if (platform === 'web') {
     app.provide(AuthAdapterKey, new WebAuthAdapter())
-    app.provide(ConnectionAdapterKey, new WebConnectionAdapter())
-    app.provide(RoomAdapterKey, new WebRoomAdapter())
+    app.provide(ConnectionAdapterKey, new ConnectionAdapter())
+    app.provide(RoomAdapterKey, new RoomAdapter())
   }
 
   app.provide(PlatformKey, platform)

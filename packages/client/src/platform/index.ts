@@ -17,14 +17,12 @@ export { PlatformKey, AuthAdapterKey, ConnectionAdapterKey, RoomAdapterKey } fro
 
 // Adapter interfaces
 export type { AuthAdapter } from './interfaces/AuthAdapter';
-export type { ConnectionAdapter } from './interfaces/ConnectionAdapter';
-export type { RoomAdapter } from './interfaces/RoomAdapter';
 
-// Web adapter implementations
+// Adapter implementations
 export { WebAuthAdapter } from './adapters/web/WebAuthAdapter';
-export { WebConnectionAdapter } from './adapters/web/WebConnectionAdapter';
-export { WebRoomAdapter } from './adapters/web/WebRoomAdapter';
+export { ConnectionAdapter } from './adapters/ConnectionAdapter';
+export { RoomAdapter } from './adapters/RoomAdapter';
 
-// Discord adapters are loaded via dynamic import() in main.ts only when platform === 'discord'
-// Do NOT import them statically here — that would eagerly resolve @discord/embedded-app-sdk
+// Discord auth adapter is loaded via dynamic import() in main.ts only when platform === 'discord'
+// Do NOT import it statically here — that would eagerly resolve @discord/embedded-app-sdk
 // even in web mode and break standalone deployment.
