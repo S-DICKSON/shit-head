@@ -10,12 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-21)
 ## Current Position
 
 Phase: 24 of 24 (24-playwright-responsive-e2e-testing)
-Plan: 2 of 3 complete
-Status: In progress
-Last activity: 2026-02-21 - Completed 24-02-PLAN.md (home + lobby E2E tests)
+Plan: 3 of 3 complete
+Status: Phase complete
+Last activity: 2026-02-21 - Completed 24-03-PLAN.md (swap phase + game E2E tests, CI integration)
 
-Progress: [##########] v1.0 (15 phases) + v2.0 (8 phases) = 23 phases shipped + Phase 24 in progress (2/3 plans done)
-Next: Execute Plan 03 (responsive layout tests — game screen, swap phase, opponent cards)
+Progress: [##########] v1.0 (15 phases) + v2.0 (8 phases) + Phase 24 (3/3 plans) = ALL PHASES COMPLETE
 
 ## Performance Metrics
 
@@ -31,9 +30,10 @@ Next: Execute Plan 03 (responsive layout tests — game screen, swap phase, oppo
 - Total execution time: 0.58 hours
 - Quick tasks completed: 10
 
-**v3.0 Velocity (so far):**
-- Plans completed: 2
+**v3.0 Velocity:**
+- Plans completed: 3
 - Duration: ~3 minutes each
+- Total: ~9 minutes
 
 ## Accumulated Context
 
@@ -53,7 +53,13 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - Hash-based routing detected via `page.waitForURL(/\/#\/room\//)` pattern
 - Room code validated as `/^[A-Z0-9]{6}$/` from `[data-testid="room-code"]`
 - Lobby tests: each test creates fresh room, server cleans up on WS close
-- playwright.config.ts webServer url uses `/health` not `/` (root returns 404; Playwright needs 2xx to detect server ready for reuseExistingServer)
+
+**Phase 24 Plan 03 decisions:**
+- WS mock sequencing: send room-created, waitForURL(lobby) + 100ms, THEN send game-dealt
+- WS-mocked tests skip on WebKit (routeWebSocket is Chromium-only)
+- CSS class locators (button.bg-white.text-black.rounded) for card counting due to sibling-div structure
+- CI installs chromium-only to keep pipeline fast; WebKit mobile projects skip WS-mocked tests
+- Playwright report artifact uses if: ${{ !cancelled() }} (not always())
 
 ### Pending Todos
 
@@ -62,15 +68,17 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 ### Roadmap Evolution
 
-- Phase 24 added: Playwright Responsive E2E Testing
+- Phase 24 added: Playwright Responsive E2E Testing (complete)
 
 ### Blockers/Concerns
 
-- CI will need `bunx playwright install chromium` AND `bunx playwright install webkit` for full viewport coverage (mobile projects use WebKit)
+None — all known blockers resolved:
+- CI now installs Chromium and runs E2E tests
+- WS-mocked tests gracefully skip on WebKit mobile
 
 ## Session Continuity
 
 Last session: 2026-02-21
-Stopped at: Completed 24-02-PLAN.md (home + lobby E2E tests, 72 tests passing)
+Stopped at: Completed 24-03-PLAN.md (all phases complete — 150 E2E tests, CI integrated)
 Resume file: None
-Next: Execute 24-03-PLAN.md (responsive layout tests — game, swap phase, opponent cards)
+Next: All planned phases complete. Consider: monitor CI, debug dev tooling (pending todo)
