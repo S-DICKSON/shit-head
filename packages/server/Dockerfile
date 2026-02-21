@@ -49,12 +49,13 @@ RUN bunx vite build
 # Production stage (unified server + client)
 FROM base AS production
 WORKDIR /app
-# Copy package files for dependency resolution
+# Copy package files for dependency resolution (all workspace package.jsons needed for lockfile)
 COPY package.json bun.lock* tsconfig.json ./
 COPY packages/server/package.json ./packages/server/
 COPY packages/shared/package.json ./packages/shared/
+COPY packages/client/package.json ./packages/client/
 # Install production dependencies only
-RUN bun install --production
+RUN bun install --frozen-lockfile --production
 # Copy server and shared source
 COPY packages/server/ ./packages/server/
 COPY packages/shared/ ./packages/shared/
