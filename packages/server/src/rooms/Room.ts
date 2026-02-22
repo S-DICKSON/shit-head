@@ -1109,6 +1109,43 @@ export class Room {
     return this.disconnectedPlayers.has(playerId);
   }
 
+  /**
+   * Find the internal player ID for a given Discord user ID.
+   * Checks both active players and spectators.
+   * Returns null if not found.
+   */
+  findPlayerByDiscordUserId(discordUserId: string): string | null {
+    for (const [pid, player] of this.players) {
+      if (player.discordUserId === discordUserId) return pid;
+    }
+    for (const [sid, spectator] of this.spectators) {
+      if (spectator.discordUserId === discordUserId) return sid;
+    }
+    return null;
+  }
+
+  /**
+   * Immediately remove a player without waiting for the grace period.
+   * Used when a Discord Activity participant departure is detected by the SDK.
+   * Clears any existing grace timer and calls removePlayerAfterTimeout directly.
+   */
+  forceDisconnectPlayer(playerId: string): void {
+    // If there's an existing grace period timer, clear it
+    const existing = this.disconnectedPlayers.get(playerId);
+    if (existing?.gracePeriodTimer) {
+      clearTimeout(existing.gracePeriodTimer);
+    }
+
+    // Ensure a disconnectedPlayers entry exists so removePlayerAfterTimeout doesn't bail early
+    this.disconnectedPlayers.set(playerId, {
+      disconnectTime: Date.now(),
+      gracePeriodTimer: null,
+    });
+
+    // Call the internal removal logic immediately (no grace period wait)
+    this.removePlayerAfterTimeout(playerId);
+  }
+
   getDisconnectGraceRemaining(playerId: string): number {
     const disconnectData = this.disconnectedPlayers.get(playerId);
     if (!disconnectData) return 0;

@@ -17,6 +17,7 @@ import type {
   setRoundTimeSchema,
   addBotSchema,
   removeBotSchema,
+  discordParticipantLeftSchema,
   roomCreatedSchema,
   roomJoinedSchema,
   roomUpdatedSchema,
@@ -62,6 +63,7 @@ export type JoinOrCreateMessage = z.infer<typeof joinOrCreateSchema>;
 export type SetRoundTimeMessage = z.infer<typeof setRoundTimeSchema>;
 export type AddBotMessage = z.infer<typeof addBotSchema>;
 export type RemoveBotMessage = z.infer<typeof removeBotSchema>;
+export type DiscordParticipantLeftMessage = z.infer<typeof discordParticipantLeftSchema>;
 
 export type ClientMessage = z.infer<typeof clientMessageSchema>;
 

@@ -140,6 +140,11 @@ export const removeBotSchema = z.object({
   botId: z.string(),
 });
 
+export const discordParticipantLeftSchema = z.object({
+  type: z.literal('discord-participant-left'),
+  discordUserId: z.string().regex(/^\d{17,20}$/),
+});
+
 export const clientMessageSchema = z.discriminatedUnion('type', [
   createRoomSchema,
   joinRoomSchema,
@@ -157,6 +162,7 @@ export const clientMessageSchema = z.discriminatedUnion('type', [
   setRoundTimeSchema,
   addBotSchema,
   removeBotSchema,
+  discordParticipantLeftSchema,
 ]);
 
 // Server-to-client message schemas

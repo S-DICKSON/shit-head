@@ -1169,6 +1169,81 @@ export function handleMessage(
       publishToRoom(ws, roomCode, { type: 'room-updated', room: updatedRoomState });
       break;
     }
+
+    case 'discord-participant-left': {
+      const roomCode = ws.data.roomCode;
+      if (!roomCode) return; // Sender not in a room — ignore silently
+
+      const room = manager.getRoom(roomCode);
+      if (!room) return; // Room gone — ignore silently
+
+      // Find the target player by Discord user ID
+      const targetPlayerId = room.findPlayerByDiscordUserId(message.discordUserId);
+      if (!targetPlayerId) return; // Player not in room — ignore silently
+
+      // Don't remove yourself this way — your own WS close handles it
+      if (targetPlayerId === ws.data.playerId) return;
+
+      // Ensure disconnect callbacks are wired (same pattern as handleClose lobby path)
+      if (!room.hasDisconnectCallbacks()) {
+        room.setDisconnectCallbacks({
+          onDisconnected: (disconnectedPlayerId, nickname) => {
+            broadcastToRoom(room, {
+              type: 'player-disconnected',
+              playerId: disconnectedPlayerId,
+              nickname,
+              graceTimeRemaining: room.getDisconnectGraceRemaining(disconnectedPlayerId),
+            }, disconnectedPlayerId);
+          },
+          onReconnected: (reconnectedPlayerId, nickname) => {
+            broadcastToRoom(room, {
+              type: 'player-reconnected',
+              playerId: reconnectedPlayerId,
+              nickname,
+            }, reconnectedPlayerId);
+          },
+          onRemoved: (removedPlayerId, nickname, reason) => {
+            if (reason === 'host-left') {
+              broadcastToRoom(room, {
+                type: 'player-removed',
+                playerId: removedPlayerId,
+                nickname,
+                reason: 'host-left',
+              }, removedPlayerId);
+              manager.destroyRoom(room.code);
+            } else {
+              broadcastToRoom(room, {
+                type: 'player-removed',
+                playerId: removedPlayerId,
+                nickname,
+                reason: 'timeout',
+              }, removedPlayerId);
+              manager.removePlayerIndex(removedPlayerId);
+              // Send room-updated to remaining players (lobby case)
+              const updatedRoom = manager.getRoom(room.code);
+              if (updatedRoom) {
+                broadcastToRoom(updatedRoom, {
+                  type: 'room-updated',
+                  room: updatedRoom.getState(),
+                });
+              }
+            }
+          },
+        });
+
+        room.setHostMigrationCallback((oldHostId, _newHostId) => {
+          manager.removePlayerIndex(oldHostId);
+          broadcastToRoom(room, { type: 'room-updated', room: room.getState() });
+        });
+      }
+
+      // Force-remove the departed Discord participant immediately (no grace period)
+      room.forceDisconnectPlayer(targetPlayerId);
+
+      // Clean up the departed player's socket entry (their WS may still be open briefly)
+      playerSockets.delete(targetPlayerId);
+      break;
+    }
   }
 }
 
