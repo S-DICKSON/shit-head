@@ -24,7 +24,7 @@ RUN bunx vite build
 # Stage 2: Run server with built client
 FROM oven/bun:1
 WORKDIR /app
-COPY package.json bun.lock* tsconfig.json ./
+COPY package.json bun.lock* bunfig.toml tsconfig.json ./
 COPY packages/client/package.json ./packages/client/
 COPY packages/server/package.json ./packages/server/
 COPY packages/shared/package.json ./packages/shared/

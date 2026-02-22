@@ -54,11 +54,12 @@ WORKDIR /app
 # Copy package files for dependency resolution
 # NOTE: e2e package.json is intentionally excluded — CI validates lockfile integrity,
 # so --frozen-lockfile is not needed here and e2e has no runtime deps
-COPY package.json bun.lock* tsconfig.json ./
+COPY package.json bun.lock* bunfig.toml tsconfig.json ./
 COPY packages/server/package.json ./packages/server/
 COPY packages/shared/package.json ./packages/shared/
 COPY packages/client/package.json ./packages/client/
-# Install production dependencies only
+# Install production dependencies only (bunfig.toml sets frozen=false so missing
+# workspace packages like e2e don't cause lockfile mismatch errors)
 RUN bun install --production
 # Copy server and shared source
 COPY packages/server/ ./packages/server/
