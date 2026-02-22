@@ -68,6 +68,12 @@ export default defineConfig({
         viewport: { width: 1219, height: 643 },
       },
     },
+    {
+      name: 'discord-chat-1219',
+      use: {
+        viewport: { width: 1219, height: 594 },
+      },
+    },
   ],
 
   // In Docker, client/server are managed by docker-compose — skip webServer.

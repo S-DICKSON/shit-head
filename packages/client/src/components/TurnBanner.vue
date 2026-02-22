@@ -1,7 +1,7 @@
 <template>
   <div class="flex justify-center pointer-events-none">
     <div
-      class="bg-yellow-400 text-black font-bold text-lg px-6 py-2 rounded-full shadow-lg transition-opacity duration-200"
+      class="bg-yellow-400 text-black font-bold text-sm tall:text-lg px-4 py-1 tall:px-6 tall:py-2 rounded-full shadow-lg transition-opacity duration-200"
       :class="visible ? 'opacity-100' : 'opacity-0'"
     >
       YOUR TURN

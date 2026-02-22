@@ -127,7 +127,12 @@ async function setupGameMock(page: Page, playerCount: number, phase: 'playing' |
           faceDownCount: 3,
           opponents: allOpponents.slice(0, playerCount - 1),
           drawPileCount: playerCount === 2 ? 24 : playerCount === 3 ? 12 : 6,
-          discardPile: [{ kind: 'standard', rank: '6', suit: 'spades' }],
+          discardPile: [
+            { kind: 'standard', rank: '4', suit: 'hearts' },
+            { kind: 'standard', rank: '6', suit: 'spades' },
+            { kind: 'standard', rank: '9', suit: 'diamonds' },
+            { kind: 'standard', rank: 'J', suit: 'clubs' },
+          ],
           currentPlayerIndex: 0,
           dealerIndex: 0,
           firstTurn: true,
@@ -146,6 +151,7 @@ const deviceLabels: Record<string, string> = {
   '1920x1080': 'desktop',
   '460x720': 'discord',
   '1219x643': 'discord',
+  '1219x594': 'discord-chat',
 };
 
 function deviceLabel(vp: { width: number; height: number }): string {
