@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-21)
 ## Current Position
 
 Phase: 25 of 25 (25-bot-player)
-Plan: 1 of N complete
+Plan: 2 of N complete
 Status: In progress
-Last activity: 2026-02-22 - Completed 25-01-PLAN.md (bot player infrastructure)
+Last activity: 2026-02-22 - Completed 25-02-PLAN.md (BotPlayer TDD: 21 tests, refactored implementation)
 
-Progress: [##########] v1.0 (15 phases) + v2.0 (8 phases) + Phase 24 (4 plans) + Phase 25 (1/N plans)
+Progress: [##########] v1.0 (15 phases) + v2.0 (8 phases) + Phase 24 (4 plans) + Phase 25 (2/N plans)
 
 ## Performance Metrics
 
@@ -36,9 +36,9 @@ Progress: [##########] v1.0 (15 phases) + v2.0 (8 phases) + Phase 24 (4 plans) +
 - Total: ~12 minutes
 
 **Phase 25 Velocity:**
-- Plans completed: 1
-- Duration: ~5 minutes
-- Total: ~5 minutes
+- Plans completed: 2
+- Duration: ~5.5 minutes each
+- Total: ~11 minutes
 
 ## Accumulated Context
 
@@ -79,6 +79,12 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - `nanoid(8)` for bot IDs — unique 8-char suffix on `bot_` prefix
 - botNameCounter resets on resetToLobby — fresh lobby restarts Bot 1, Bot 2 naming
 
+**Phase 25 Plan 02 decisions (TDD):**
+- Test file at `src/game/__tests__/` (existing vitest convention: `src/**/*.test.ts`)
+- BotPlayer.ts already implemented in Plan 01; TDD confirmed correctness and drove refactor
+- Extracted `selectLowestValidGroup` helper to eliminate duplicated find-lowest logic
+- First-turn scan uses `RANK_ORDER.slice(1)` iteration (clearer than getRankValue scan)
+
 ### Pending Todos
 
 1 pending — `/gsd:check-todos` to review
@@ -96,6 +102,6 @@ None — all known blockers resolved.
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: Completed 25-01-PLAN.md (bot player infrastructure: shared types, Room methods, BotPlayer.selectMove)
+Stopped at: Completed 25-02-PLAN.md (BotPlayer TDD: 21 tests verified, refactored selectLowestValidGroup)
 Resume file: None
-Next: Execute 25-02-PLAN.md (BotPlayer integration into Room game loop)
+Next: Execute 25-03-PLAN.md (bot turn-taking loop, Room integration, handlers.ts wiring)
