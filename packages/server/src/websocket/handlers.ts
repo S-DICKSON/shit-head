@@ -437,6 +437,15 @@ export function handleMessage(
             onPlayPhaseStart: (currentPlayerIndex, firstTurn) => {
               // Notify all players when playing phase begins with first player
               broadcastToRoom(room, { type: 'turn-changed', currentPlayerIndex, firstTurn });
+
+              // Bot turn detection: if first player is a bot, trigger auto-play
+              const gs = room.getGameState();
+              if (gs) {
+                const currentPlayer = gs.players[currentPlayerIndex];
+                if (currentPlayer && room.isBot(currentPlayer.playerId)) {
+                  executeBotTurn(room, currentPlayer.playerId);
+                }
+              }
             },
           });
 
@@ -528,6 +537,15 @@ export function handleMessage(
                   }
                 }
               }
+
+              // After timeout auto-play, check if next player is a bot
+              const postTimeoutState = room.getGameState();
+              if (postTimeoutState && postTimeoutState.phase === 'playing') {
+                const nextPlayer = postTimeoutState.players[postTimeoutState.currentPlayerIndex];
+                if (nextPlayer && room.isBot(nextPlayer.playerId)) {
+                  executeBotTurn(room, nextPlayer.playerId);
+                }
+              }
             },
           });
 
@@ -585,9 +603,10 @@ export function handleMessage(
 
           room.startGame();
 
-          // Send player-specific game-dealt messages to each player
+          // Send player-specific game-dealt messages to each human player
           const playerIds = room.getPlayerIds();
           for (const playerId of playerIds) {
+            if (room.isBot(playerId)) continue; // Bots have no socket
             const view = room.getAugmentedPlayerView(playerId);
             const playerWs = playerSockets.get(playerId);
 
@@ -606,6 +625,16 @@ export function handleMessage(
                 firstTurn: view.firstTurn,
               });
             }
+          }
+
+          // Bot auto-ready during swap phase (bots don't swap cards)
+          const botIds = room.getBotIds();
+          for (const botId of botIds) {
+            // Short delay to simulate readying up
+            const readyDelay = 500 + Math.floor(Math.random() * 1000);
+            setTimeout(() => {
+              room.markPlayerReady(botId);
+            }, readyDelay);
           }
         }
       }, 3000);
