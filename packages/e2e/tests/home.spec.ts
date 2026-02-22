@@ -1,5 +1,15 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import { LandingPage } from './pages/LandingPage';
+
+// WS mock helper — intercepts the game-ws connection so waitForConnected() succeeds
+// without needing a real server. Only handles ping/pong (home tests never create rooms).
+async function setupHomeMock(page: Page) {
+  await page.routeWebSocket('**/game-ws**', ws => {
+    ws.onMessage(rawMsg => {
+      if (rawMsg === 'ping') { ws.send('pong'); }
+    });
+  });
+}
 
 test.describe('Home screen', () => {
   test('renders heading and form at all viewports', async ({ page }) => {
@@ -25,6 +35,7 @@ test.describe('Home screen', () => {
   });
 
   test('create room button becomes enabled after WS connects', async ({ page }) => {
+    await setupHomeMock(page);
     const landing = new LandingPage(page);
     await landing.goto();
     await landing.fillNickname('TestUser');
@@ -34,6 +45,7 @@ test.describe('Home screen', () => {
   });
 
   test('create room button disabled without nickname', async ({ page }) => {
+    await setupHomeMock(page);
     const landing = new LandingPage(page);
     await landing.goto();
     await landing.waitForConnected();
@@ -43,6 +55,7 @@ test.describe('Home screen', () => {
   });
 
   test('join room button disabled without room code', async ({ page }) => {
+    await setupHomeMock(page);
     const landing = new LandingPage(page);
     await landing.goto();
     await landing.waitForConnected();

@@ -1,9 +1,41 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import { LandingPage } from './pages/LandingPage';
 import { LobbyPage } from './pages/LobbyPage';
 
+// WS mock helper — intercepts the game-ws connection and handles ping/pong and create-room.
+// Returns a room-created response with status 'waiting' (lobby, not playing).
+// The nickname from the create-room message is echoed back in the response.
+async function setupLobbyMock(page: Page) {
+  await page.routeWebSocket('**/game-ws**', ws => {
+    ws.onMessage(rawMsg => {
+      if (rawMsg === 'ping') { ws.send('pong'); return; }
+      let msg: { type: string; nickname?: string };
+      try { msg = JSON.parse(rawMsg as string); } catch { return; }
+
+      if (msg.type === 'create-room') {
+        ws.send(JSON.stringify({
+          type: 'room-created',
+          playerId: 'test-player-1',
+          room: {
+            code: 'TEST00',
+            status: 'waiting',
+            players: [
+              { id: 'test-player-1', nickname: msg.nickname || 'Player1', isHost: true, isConnected: true },
+            ],
+            hostId: 'test-player-1',
+            minPlayers: 2,
+            maxPlayers: 4,
+            roundTime: 45,
+          },
+        }));
+      }
+    });
+  });
+}
+
 test.describe('Lobby screen', () => {
   test('create room navigates to lobby', async ({ page }) => {
+    await setupLobbyMock(page);
     const landing = new LandingPage(page);
     await landing.goto();
     await landing.waitForConnected();
@@ -17,6 +49,7 @@ test.describe('Lobby screen', () => {
   });
 
   test('lobby shows player name', async ({ page }) => {
+    await setupLobbyMock(page);
     const landing = new LandingPage(page);
     await landing.goto();
     await landing.waitForConnected();
@@ -28,6 +61,7 @@ test.describe('Lobby screen', () => {
   });
 
   test('lobby shows room code', async ({ page }) => {
+    await setupLobbyMock(page);
     const landing = new LandingPage(page);
     await landing.goto();
     await landing.waitForConnected();
@@ -43,6 +77,7 @@ test.describe('Lobby screen', () => {
   });
 
   test('leave button is visible', async ({ page }) => {
+    await setupLobbyMock(page);
     const landing = new LandingPage(page);
     await landing.goto();
     await landing.waitForConnected();
@@ -55,6 +90,7 @@ test.describe('Lobby screen', () => {
   });
 
   test('lobby fits within viewport', async ({ page }) => {
+    await setupLobbyMock(page);
     const landing = new LandingPage(page);
     await landing.goto();
     await landing.waitForConnected();
@@ -74,6 +110,7 @@ test.describe('Lobby screen', () => {
   });
 
   test('host sees waiting for players button when alone', async ({ page }) => {
+    await setupLobbyMock(page);
     const landing = new LandingPage(page);
     await landing.goto();
     await landing.waitForConnected();
