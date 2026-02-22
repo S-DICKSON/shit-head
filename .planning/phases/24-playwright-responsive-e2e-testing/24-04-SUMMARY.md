@@ -65,7 +65,7 @@ Each task was committed atomically:
 1. **Task 1: Switch mobile projects to Chromium with mobile viewports** - `3ef3464` (chore)
 2. **Task 2: Remove Chromium-only skip guards from WS-mocked tests** - `130990a` (test)
 
-**Plan metadata:** (pending docs commit)
+**Plan metadata:** `007e594` (docs: complete plan)
 
 ## Files Created/Modified
 

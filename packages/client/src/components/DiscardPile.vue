@@ -17,7 +17,7 @@
         <div
           v-for="(card, i) in visibleCards"
           :key="cardKey(card)"
-          :style="{ transform: getCardTransform(card, i), zIndex: i }"
+          :style="{ transform: getCardTransform(card, i), zIndex: Math.min(i, 10) }"
           class="absolute top-0 left-0 w-14 h-21 sm:w-16 sm:h-24 bg-white text-black rounded flex flex-col items-center justify-center text-xs sm:text-sm shadow-sm transition-transform duration-300 ease-in-out"
           :class="isTransparentEight(card, i) ? 'opacity-50 border-dashed border-2 border-purple-400' : 'border border-gray-300'"
         >

@@ -10,16 +10,19 @@
         v-if="opponent.discordUserId"
         :src="getAvatarUrl(opponent.avatarHash, opponent.discordUserId || opponent.playerId)"
         :alt="opponent.nickname"
-        class="w-6 h-6 rounded-full inline-block"
+        class="w-6 h-6 rounded-full inline-block bg-gray-400"
       >
       <span
-        class="text-sm font-medium truncate max-w-[100px]"
+        class="text-sm font-medium truncate max-w-[120px]"
         :class="isCurrentTurn ? 'text-yellow-300 font-semibold' : ''"
+        :title="opponent.nickname"
       >{{ opponent.nickname }}</span>
       <!-- Shithead marker (previous game's loser) -->
       <span
         v-if="opponent.isShithead"
         class="text-lg"
+        role="img"
+        aria-label="Lost last game"
         title="Lost last game"
       >&#128169;</span>
       <Transition name="dot">

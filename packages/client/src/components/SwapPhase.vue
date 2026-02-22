@@ -1,7 +1,8 @@
 <template>
   <!-- Leave button -->
   <button
-    class="fixed top-2 left-2 z-40 px-3 py-1 text-xs font-medium bg-gray-800/70 hover:bg-gray-800/90 text-gray-300 hover:text-white rounded-full backdrop-blur-sm transition-all"
+    class="fixed top-2 left-2 z-40 px-4 py-2 text-xs font-medium bg-gray-800/70 hover:bg-gray-800/90 text-gray-100 hover:text-white rounded-full backdrop-blur-sm transition-all"
+    aria-label="Leave game"
     @click="emit('leave')"
   >
     Leave

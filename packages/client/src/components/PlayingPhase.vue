@@ -65,7 +65,8 @@ watch(
   >
     <!-- Leave button -->
     <button
-      class="fixed top-2 left-2 z-40 px-3 py-1 text-xs font-medium bg-gray-800/70 hover:bg-gray-800/90 text-gray-300 hover:text-white rounded-full backdrop-blur-sm transition-all"
+      class="fixed top-2 left-2 z-40 px-4 py-2 text-xs font-medium bg-gray-800/70 hover:bg-gray-800/90 text-gray-100 hover:text-white rounded-full backdrop-blur-sm transition-all"
+      aria-label="Leave game"
       @click="emit('leave')"
     >
       Leave
@@ -74,9 +75,11 @@ watch(
     <!-- Spectator count (visible to active players) -->
     <span
       v-if="spectatorCount > 0"
-      class="fixed top-2 right-2 z-40 px-3 py-1 text-xs font-medium bg-gray-800/70 text-gray-300 rounded-full backdrop-blur-sm"
+      class="fixed top-2 right-2 z-40 px-3 py-1 text-xs font-medium bg-gray-800/70 text-gray-100 rounded-full backdrop-blur-sm"
+      role="status"
+      :aria-label="`${spectatorCount} spectator${spectatorCount === 1 ? '' : 's'} watching`"
     >
-      &#128065; {{ spectatorCount }}
+      <span aria-hidden="true">&#128065;</span> {{ spectatorCount }}
     </span>
 
     <!-- Top bar: Opponents -->

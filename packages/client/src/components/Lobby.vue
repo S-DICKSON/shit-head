@@ -13,6 +13,9 @@ const countdown = ref<number | null>(null);
 const isRenaming = ref(false);
 const newNickname = ref('');
 
+// Timer tracking for cleanup
+const activeTimers: ReturnType<typeof setInterval>[] = [];
+
 // Computed states
 const isHost = computed(() => {
   if (!roomState.value || !playerId.value) return false;
@@ -148,7 +151,7 @@ const unregister = onMessage((msg) => {
 
   if (msg.type === 'game-starting') {
     countdown.value = msg.countdown;
-    // Countdown timer
+    // Countdown timer (tracked for cleanup)
     const timer = setInterval(() => {
       if (countdown.value !== null && countdown.value > 0) {
         countdown.value--;
@@ -156,6 +159,7 @@ const unregister = onMessage((msg) => {
         clearInterval(timer);
       }
     }, 1000);
+    activeTimers.push(timer);
   }
 
   if (msg.type === 'game-dealt') {
@@ -167,6 +171,8 @@ const unregister = onMessage((msg) => {
 // Cleanup on unmount
 onUnmounted(() => {
   unregister();
+  activeTimers.forEach(t => clearInterval(t));
+  activeTimers.length = 0;
 });
 </script>
 
@@ -202,8 +208,10 @@ onUnmounted(() => {
             <span
               v-if="roomState?.spectatorCount && roomState.spectatorCount > 0"
               class="text-sm text-gray-500"
+              role="status"
+              :aria-label="`${roomState.spectatorCount} spectator${roomState.spectatorCount === 1 ? '' : 's'} watching`"
               title="Spectators watching"
-            >&#128065; {{ roomState.spectatorCount }} watching</span>
+            ><span aria-hidden="true">&#128065;</span> {{ roomState.spectatorCount }} watching</span>
           </div>
           <button
             class="text-sm text-red-600 hover:text-red-700 hover:underline"
@@ -227,11 +235,14 @@ onUnmounted(() => {
             <span
               v-if="player.isHost"
               class="text-yellow-500 text-xl"
+              role="img"
+              aria-label="Host"
               title="Host"
             >★</span>
             <span
               v-else
               class="text-transparent text-xl"
+              aria-hidden="true"
             >★</span>
 
             <!-- Player Nickname -->
@@ -255,6 +266,8 @@ onUnmounted(() => {
               <span
                 v-if="(player.id !== playerId || !isRenaming) && roomState?.shitheadPlayerId === player.id"
                 class="text-2xl"
+                role="img"
+                aria-label="Lost last game"
                 title="Lost last game"
               >&#128169;</span>
 
@@ -281,13 +294,15 @@ onUnmounted(() => {
                   @keyup.escape="cancelRenaming"
                 >
                 <button
-                  class="w-10 h-10 flex items-center justify-center text-lg text-green-600 hover:text-green-700 font-semibold bg-green-50 hover:bg-green-100 border border-green-200 rounded-lg transition-colors"
+                  class="w-11 h-11 flex items-center justify-center text-lg text-green-600 hover:text-green-700 font-semibold bg-green-50 hover:bg-green-100 border border-green-200 rounded-lg transition-colors"
+                  aria-label="Confirm rename"
                   @click="confirmRename"
                 >
                   ✓
                 </button>
                 <button
-                  class="w-10 h-10 flex items-center justify-center text-lg text-red-600 hover:text-red-700 font-semibold bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg transition-colors"
+                  class="w-11 h-11 flex items-center justify-center text-lg text-red-600 hover:text-red-700 font-semibold bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg transition-colors"
+                  aria-label="Cancel rename"
                   @click="cancelRenaming"
                 >
                   ✗
@@ -349,7 +364,7 @@ onUnmounted(() => {
       v-if="countdown !== null"
       class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50"
     >
-      <div class="text-white text-8xl font-bold animate-pulse">
+      <div class="text-white text-6xl sm:text-8xl font-bold animate-pulse">
         {{ countdown }}
       </div>
     </div>

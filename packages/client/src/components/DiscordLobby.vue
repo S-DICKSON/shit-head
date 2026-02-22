@@ -27,6 +27,9 @@ const authError = ref<string | null>(null);
 const authStep = ref('Initializing...');
 const countdown = ref<number | null>(null);
 
+// Timer tracking for cleanup
+const activeTimers: ReturnType<typeof setInterval>[] = [];
+
 // Computed
 const isHost = computed(() => {
   if (!roomState.value || !playerId.value) return false;
@@ -117,13 +120,14 @@ onMounted(async () => {
     if (status.value === 'OPEN') {
       doJoin();
     } else {
-      // Wait for connection
+      // Wait for connection (tracked for cleanup)
       const checkInterval = setInterval(() => {
         if (status.value === 'OPEN') {
           clearInterval(checkInterval);
           doJoin();
         }
       }, 100);
+      activeTimers.push(checkInterval);
       // Timeout after 10s
       setTimeout(() => clearInterval(checkInterval), 10000);
     }
@@ -155,6 +159,7 @@ const unregister = onMessage((msg) => {
         clearInterval(timer);
       }
     }, 1000);
+    activeTimers.push(timer);
   }
 
   if (msg.type === 'game-dealt') {
@@ -169,6 +174,8 @@ const unregister = onMessage((msg) => {
 
 onUnmounted(() => {
   unregister();
+  activeTimers.forEach(t => clearInterval(t));
+  activeTimers.length = 0;
 });
 </script>
 
@@ -232,9 +239,11 @@ onUnmounted(() => {
             <span
               v-if="spectatorCount > 0"
               class="text-sm text-gray-500"
+              role="status"
+              :aria-label="`${spectatorCount} spectator${spectatorCount === 1 ? '' : 's'} watching`"
               title="Spectators watching"
             >
-              &#128065; {{ spectatorCount }} watching
+              <span aria-hidden="true">&#128065;</span> {{ spectatorCount }} watching
             </span>
           </div>
 
@@ -250,13 +259,15 @@ onUnmounted(() => {
                 v-if="player.discordUserId"
                 :src="getAvatarUrl(player.avatarHash, player.discordUserId || player.id)"
                 :alt="player.nickname"
-                class="w-8 h-8 rounded-full"
+                class="w-8 h-8 rounded-full bg-gray-300"
               >
 
               <!-- Host Icon -->
               <span
                 v-if="player.isHost"
                 class="text-yellow-500 text-lg"
+                role="img"
+                aria-label="Host"
                 title="Host"
               >&#9733;</span>
 
@@ -276,6 +287,8 @@ onUnmounted(() => {
               <span
                 v-if="roomState.shitheadPlayerId === player.id"
                 class="text-2xl"
+                role="img"
+                aria-label="Lost last game"
                 title="Lost last game"
               >&#128169;</span>
             </div>
@@ -345,7 +358,7 @@ onUnmounted(() => {
       v-if="countdown !== null"
       class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50"
     >
-      <div class="text-white text-8xl font-bold animate-pulse">
+      <div class="text-white text-6xl sm:text-8xl font-bold animate-pulse">
         {{ countdown }}
       </div>
     </div>

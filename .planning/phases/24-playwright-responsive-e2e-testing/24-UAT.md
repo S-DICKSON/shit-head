@@ -1,9 +1,9 @@
 ---
-status: complete
+status: diagnosed
 phase: 24-playwright-responsive-e2e-testing
 source: 24-01-SUMMARY.md, 24-02-SUMMARY.md, 24-03-SUMMARY.md
 started: 2026-02-21T23:00:00Z
-updated: 2026-02-22T00:00:00Z
+updated: 2026-02-22T00:05:00Z
 ---
 
 ## Current Test
@@ -64,12 +64,19 @@ skipped: 0
 
 - truth: "Playwright UI mode runs all test specs including game and swap phase"
   status: failed
-  reason: "User reported: pass but game-spec and swap phase don't run"
+  reason: "User reported: pass but game-spec and swap phase don't run. User clarified: they pass in the report just not the UI"
   severity: major
   test: 2
-  root_cause: ""
-  artifacts: []
-  missing: []
+  root_cause: "mobile-375 and mobile-390 use WebKit device presets (iPhone SE/14). WS-mocked tests have test.skip(browserName !== 'chromium'). In Playwright UI, WebKit projects show prominently with skipped tests, making it look like specs don't run. The 4 Chromium projects do pass but are less visible in the UI."
+  artifacts:
+    - path: "packages/e2e/playwright.config.ts"
+      issue: "mobile-375/mobile-390 use WebKit device presets, causing WS-mocked tests to skip"
+    - path: "packages/e2e/tests/swap-phase.spec.ts"
+      issue: "test.skip(browserName !== 'chromium') skips on WebKit mobile projects"
+    - path: "packages/e2e/tests/game.spec.ts"
+      issue: "test.skip(browserName !== 'chromium') skips on WebKit mobile projects"
+  missing:
+    - "Change mobile viewport projects to use Chromium instead of WebKit device presets, so all 6 projects run WS-mocked tests"
   debug_session: ""
 
 - truth: "Lobby tests run across all 6 viewports visibly"
@@ -77,27 +84,36 @@ skipped: 0
   reason: "User reported: pass but it just looks like its running just mobile"
   severity: minor
   test: 4
-  root_cause: ""
-  artifacts: []
-  missing: []
+  root_cause: "Display artifact in Playwright UI. All 6 projects run but alphabetical ordering and WebKit mobile projects dominating the view create impression of mobile-only. All 36 lobby tests (6 tests x 6 viewports) do pass."
+  artifacts:
+    - path: "packages/e2e/playwright.config.ts"
+      issue: "Project ordering in UI shows mobile projects prominently"
+  missing:
+    - "Same fix as gap 1 — switching mobile to Chromium will make all projects appear consistently"
   debug_session: ""
 
 - truth: "Swap phase tests run and pass on Chromium viewports"
   status: failed
-  reason: "User reported: fail it doesn't run"
+  reason: "User reported: fail it doesn't run. User clarified: they pass in the report just not the UI"
   severity: major
   test: 5
-  root_cause: ""
-  artifacts: []
-  missing: []
+  root_cause: "Same root cause as gap 1 — WebKit mobile projects skip WS-mocked tests, making it appear as if nothing runs in the UI. Chromium projects do pass."
+  artifacts:
+    - path: "packages/e2e/tests/swap-phase.spec.ts"
+      issue: "test.skip on WebKit causes visual confusion in UI mode"
+  missing:
+    - "Same fix as gap 1"
   debug_session: ""
 
 - truth: "Game screen tests run and pass on Chromium viewports"
   status: failed
-  reason: "User reported: fail"
+  reason: "User reported: fail. User clarified: they pass in the report just not the UI"
   severity: major
   test: 6
-  root_cause: ""
-  artifacts: []
-  missing: []
+  root_cause: "Same root cause as gap 1 — WebKit mobile projects skip WS-mocked tests in UI mode. Chromium projects do pass."
+  artifacts:
+    - path: "packages/e2e/tests/game.spec.ts"
+      issue: "test.skip on WebKit causes visual confusion in UI mode"
+  missing:
+    - "Same fix as gap 1"
   debug_session: ""

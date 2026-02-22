@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, onMounted, onUnmounted, ref } from 'vue';
+import { inject, nextTick, onMounted, onUnmounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useGameSocket } from '../composables/useGameSocket';
 import { PlatformKey } from '../platform';
@@ -10,6 +10,7 @@ const router = useRouter();
 const platform = inject(PlatformKey);
 const { gameView, shitheadNickname, send, onMessage, isSpectator, spectatorGameView } = useGameSocket();
 const showLeaveConfirm = ref(false);
+const leaveModalRef = ref<HTMLDivElement | null>(null);
 
 // Guard against direct URL access without game state
 onMounted(() => {
@@ -19,8 +20,11 @@ onMounted(() => {
 });
 
 // Handle leave request (shows confirmation modal)
-const requestLeave = () => {
+const requestLeave = async () => {
   showLeaveConfirm.value = true;
+  await nextTick();
+  // Focus the first button in the modal for keyboard accessibility
+  leaveModalRef.value?.querySelector('button')?.focus();
 };
 
 // Cancel leave (dismisses modal)
@@ -106,7 +110,10 @@ onUnmounted(() => {
           v-if="shitheadNickname"
           class="text-3xl font-bold text-yellow-400 mb-4"
         >
-          {{ shitheadNickname }} &#128169;
+          {{ shitheadNickname }} <span
+            role="img"
+            aria-label="Shithead"
+          >&#128169;</span>
         </div>
         <p class="text-gray-300 text-sm animate-pulse">
           Returning to lobby...
@@ -128,9 +135,19 @@ onUnmounted(() => {
     <div
       v-if="showLeaveConfirm"
       class="fixed inset-0 bg-black/60 flex items-center justify-center z-50"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="leave-modal-title"
+      @keydown.escape="cancelLeave"
     >
-      <div class="bg-white rounded-xl p-6 mx-4 max-w-sm w-full text-center shadow-2xl">
-        <h2 class="text-xl font-bold text-gray-900 mb-2">
+      <div
+        ref="leaveModalRef"
+        class="bg-white rounded-xl p-6 mx-4 max-w-sm w-full text-center shadow-2xl"
+      >
+        <h2
+          id="leave-modal-title"
+          class="text-xl font-bold text-gray-900 mb-2"
+        >
           Leave this game?
         </h2>
         <p class="text-gray-500 text-sm mb-6">
