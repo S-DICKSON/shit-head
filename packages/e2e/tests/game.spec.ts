@@ -106,8 +106,7 @@ async function goToGameScreen(page: Page, sendGameDealt: () => void): Promise<Ga
 }
 
 test.describe('Active gameplay screen', () => {
-  test('renders game UI with opponent visible', async ({ page, browserName }) => {
-    test.skip(browserName !== 'chromium', 'WS mocking requires Chromium');
+  test('renders game UI with opponent visible', async ({ page }) => {
 
     const { sendGameDealt } = await setupGameMock(page);
     await goToGameScreen(page, sendGameDealt);
@@ -116,8 +115,7 @@ test.describe('Active gameplay screen', () => {
     await expect(page.getByText('Player2')).toBeVisible();
   });
 
-  test('shows player hand cards', async ({ page, browserName }) => {
-    test.skip(browserName !== 'chromium', 'WS mocking requires Chromium');
+  test('shows player hand cards', async ({ page }) => {
 
     const { sendGameDealt } = await setupGameMock(page);
     await goToGameScreen(page, sendGameDealt);
@@ -131,8 +129,7 @@ test.describe('Active gameplay screen', () => {
     await expect(gamePage.drawPile).toBeVisible();
   });
 
-  test('shows face-up and face-down card areas', async ({ page, browserName }) => {
-    test.skip(browserName !== 'chromium', 'WS mocking requires Chromium');
+  test('shows face-up and face-down card areas', async ({ page }) => {
 
     const { sendGameDealt } = await setupGameMock(page);
     await goToGameScreen(page, sendGameDealt);
@@ -143,8 +140,7 @@ test.describe('Active gameplay screen', () => {
     await expect(page.getByText('Discard')).toBeVisible();
   });
 
-  test('shows draw pile with count', async ({ page, browserName }) => {
-    test.skip(browserName !== 'chromium', 'WS mocking requires Chromium');
+  test('shows draw pile with count', async ({ page }) => {
 
     const { sendGameDealt } = await setupGameMock(page);
     await goToGameScreen(page, sendGameDealt);
@@ -158,8 +154,7 @@ test.describe('Active gameplay screen', () => {
     await expect(page.getByText('24')).toBeVisible();
   });
 
-  test('shows discard pile card', async ({ page, browserName }) => {
-    test.skip(browserName !== 'chromium', 'WS mocking requires Chromium');
+  test('shows discard pile card', async ({ page }) => {
 
     const { sendGameDealt } = await setupGameMock(page);
     await goToGameScreen(page, sendGameDealt);
@@ -173,8 +168,7 @@ test.describe('Active gameplay screen', () => {
     await expect(discardPileBadge).toBeVisible();
   });
 
-  test('leave button is visible', async ({ page, browserName }) => {
-    test.skip(browserName !== 'chromium', 'WS mocking requires Chromium');
+  test('leave button is visible', async ({ page }) => {
 
     const { sendGameDealt } = await setupGameMock(page);
     const gamePage = await goToGameScreen(page, sendGameDealt);
@@ -182,8 +176,7 @@ test.describe('Active gameplay screen', () => {
     await expect(gamePage.leaveButton).toBeVisible();
   });
 
-  test('no horizontal scroll', async ({ page, browserName }) => {
-    test.skip(browserName !== 'chromium', 'WS mocking requires Chromium');
+  test('no horizontal scroll', async ({ page }) => {
 
     const { sendGameDealt } = await setupGameMock(page);
     await goToGameScreen(page, sendGameDealt);

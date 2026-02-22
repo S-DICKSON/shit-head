@@ -105,8 +105,7 @@ async function goToSwapPhase(page: Page, sendGameDealt: () => void): Promise<Swa
 }
 
 test.describe('Swap phase screen', () => {
-  test('renders swap phase UI', async ({ page, browserName }) => {
-    test.skip(browserName !== 'chromium', 'WS mocking requires Chromium');
+  test('renders swap phase UI', async ({ page }) => {
 
     const { sendGameDealt } = await setupSwapPhaseMock(page);
     const swapPhase = await goToSwapPhase(page, sendGameDealt);
@@ -117,8 +116,7 @@ test.describe('Swap phase screen', () => {
     await expect(swapPhase.readyButton).toBeVisible();
   });
 
-  test('shows correct card counts', async ({ page, browserName }) => {
-    test.skip(browserName !== 'chromium', 'WS mocking requires Chromium');
+  test('shows correct card counts', async ({ page }) => {
 
     const { sendGameDealt } = await setupSwapPhaseMock(page);
     await goToSwapPhase(page, sendGameDealt);
@@ -134,8 +132,7 @@ test.describe('Swap phase screen', () => {
     expect(faceDownCards).toBe(3);
   });
 
-  test('ready button is interactive', async ({ page, browserName }) => {
-    test.skip(browserName !== 'chromium', 'WS mocking requires Chromium');
+  test('ready button is interactive', async ({ page }) => {
 
     const { sendGameDealt } = await setupSwapPhaseMock(page);
     const swapPhase = await goToSwapPhase(page, sendGameDealt);
@@ -143,8 +140,7 @@ test.describe('Swap phase screen', () => {
     await expect(swapPhase.readyButton).not.toBeDisabled();
   });
 
-  test('leave button is visible', async ({ page, browserName }) => {
-    test.skip(browserName !== 'chromium', 'WS mocking requires Chromium');
+  test('leave button is visible', async ({ page }) => {
 
     const { sendGameDealt } = await setupSwapPhaseMock(page);
     const swapPhase = await goToSwapPhase(page, sendGameDealt);
@@ -152,8 +148,7 @@ test.describe('Swap phase screen', () => {
     await expect(swapPhase.leaveButton).toBeVisible();
   });
 
-  test('no horizontal scroll', async ({ page, browserName }) => {
-    test.skip(browserName !== 'chromium', 'WS mocking requires Chromium');
+  test('no horizontal scroll', async ({ page }) => {
 
     const { sendGameDealt } = await setupSwapPhaseMock(page);
     await goToSwapPhase(page, sendGameDealt);
@@ -166,8 +161,7 @@ test.describe('Swap phase screen', () => {
     expect(scrollWidth).toBeLessThanOrEqual(clientWidth);
   });
 
-  test('opponent section visible', async ({ page, browserName }) => {
-    test.skip(browserName !== 'chromium', 'WS mocking requires Chromium');
+  test('opponent section visible', async ({ page }) => {
 
     const { sendGameDealt } = await setupSwapPhaseMock(page);
     await goToSwapPhase(page, sendGameDealt);
