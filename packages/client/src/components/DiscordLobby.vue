@@ -138,10 +138,23 @@ onMounted(async () => {
   }
 });
 
+const isRoomFull = computed(() => {
+  if (!roomState.value) return true;
+  return roomState.value.players.length >= roomState.value.maxPlayers;
+});
+
 // Start game action
 const startGame = () => {
   if (!isHost.value || !canStartGame.value) return;
   send({ type: 'start-game' });
+};
+
+const addBot = () => {
+  send({ type: 'add-bot' });
+};
+
+const removeBot = (botId: string) => {
+  send({ type: 'remove-bot', botId });
 };
 
 const setRoundTime = (time: 30 | 45 | 60) => {
@@ -254,9 +267,17 @@ onUnmounted(() => {
               :key="player.id"
               class="py-3 px-4 flex items-center gap-3"
             >
-              <!-- Discord Avatar (only shown for Discord users) -->
+              <!-- Bot Icon (shown instead of Discord avatar for bots) -->
+              <span
+                v-if="player.isBot"
+                class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-lg"
+                role="img"
+                aria-label="Bot player"
+                title="Bot player"
+              >&#129302;</span>
+              <!-- Discord Avatar (only shown for non-bot Discord users) -->
               <img
-                v-if="player.discordUserId"
+                v-else-if="player.discordUserId"
                 :src="getAvatarUrl(player.avatarHash, player.discordUserId || player.id)"
                 :alt="player.nickname"
                 class="w-8 h-8 rounded-full bg-gray-300"
@@ -291,6 +312,15 @@ onUnmounted(() => {
                 aria-label="Lost last game"
                 title="Lost last game"
               >&#128169;</span>
+
+              <!-- Remove bot button (host only) -->
+              <button
+                v-if="player.isBot && isHost"
+                class="px-2 py-1 text-xs font-medium text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 rounded transition-colors"
+                @click="removeBot(player.id)"
+              >
+                Remove
+              </button>
             </div>
           </div>
         </div>
@@ -300,6 +330,15 @@ onUnmounted(() => {
           v-if="isHost"
           class="mt-6"
         >
+          <!-- Add Bot button -->
+          <button
+            v-if="!isRoomFull"
+            class="w-full mb-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-3 rounded-lg transition-all border border-gray-300 text-base"
+            @click="addBot"
+          >
+            + Add Bot
+          </button>
+
           <div class="mb-4">
             <label class="block text-sm font-medium text-gray-600 mb-2">Round Time</label>
             <div class="flex gap-2">
@@ -318,6 +357,15 @@ onUnmounted(() => {
               </button>
             </div>
           </div>
+          <!-- Add Bot button (host only, when room not full) -->
+          <button
+            :disabled="isRoomFull"
+            class="w-full mb-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-bold py-3 rounded-lg transition-all text-base"
+            @click="addBot"
+          >
+            <span v-if="isRoomFull">Room Full</span>
+            <span v-else>Add Bot</span>
+          </button>
           <button
             :disabled="!canStartGame"
             class="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-bold py-4 rounded-lg transition-all shadow-md hover:shadow-lg text-lg"
