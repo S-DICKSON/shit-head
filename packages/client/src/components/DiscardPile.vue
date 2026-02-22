@@ -1,6 +1,6 @@
 <template>
   <div class="flex flex-col items-center">
-    <div class="relative w-16 h-24 sm:w-20 sm:h-30 overflow-visible">
+    <div class="relative w-16 h-24 tall:w-20 tall:h-30 overflow-visible">
       <!-- Empty state -->
       <div
         v-if="isEmpty"
@@ -18,7 +18,7 @@
           v-for="(card, i) in visibleCards"
           :key="cardKey(card)"
           :style="{ transform: getCardTransform(card, i), zIndex: Math.min(i, 10) }"
-          class="absolute top-0 left-0 w-14 h-21 sm:w-16 sm:h-24 bg-white text-black rounded flex flex-col items-center justify-center text-xs sm:text-sm shadow-sm transition-transform duration-300 ease-in-out"
+          class="absolute top-0 left-0 w-14 h-21 tall:w-16 tall:h-24 bg-white text-black rounded flex flex-col items-center justify-center text-xs tall:text-sm shadow-sm transition-transform duration-300 ease-in-out"
           :class="isTransparentEight(card, i) ? 'opacity-50 border-dashed border-2 border-purple-400' : 'border border-gray-300'"
         >
           <span class="font-bold">{{ card.kind === 'standard' ? card.rank : 'JKR' }}</span>

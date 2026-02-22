@@ -1,26 +1,26 @@
 <template>
-  <div class="flex flex-col h-full">
+  <div class="flex flex-col">
     <!-- Card area -->
-    <div class="flex-1 min-h-0">
+    <div>
       <!-- Table cards: face-down underneath face-up (stacked) -->
       <div
         v-if="faceUp.length > 0 || faceDownCount > 0"
-        class="mb-3"
+        class="mb-2 tall:mb-3"
       >
         <div class="text-center mb-1">
           <span class="text-xs text-green-300 uppercase tracking-wide">Table</span>
         </div>
-        <div class="flex justify-center gap-3 sm:gap-4 flex-wrap">
+        <div class="flex justify-center gap-3 tall:gap-4 flex-wrap">
           <!-- Each table position is a stack: face-down card on bottom, face-up card on top -->
           <div
             v-for="i in Math.max(faceUp.length, faceDownCount)"
             :key="'table-' + i"
-            class="relative w-14 h-21 sm:w-16 sm:h-24"
+            class="relative w-14 h-21 tall:w-16 tall:h-24"
           >
             <!-- Face-down card (bottom layer) -->
             <button
               v-if="i <= faceDownCount"
-              class="absolute inset-0 w-14 h-21 sm:w-16 sm:h-24 bg-blue-800 rounded border-2 border-blue-600 flex items-center justify-center text-lg text-blue-300 transition-all"
+              class="absolute inset-0 w-14 h-21 tall:w-16 tall:h-24 bg-blue-800 rounded border-2 border-blue-600 flex items-center justify-center text-lg text-blue-300 transition-all"
               :class="[
                 i <= faceUp.length ? 'translate-y-1 translate-x-0.5' : '',
                 activeSource === 'face-down' ? 'cursor-pointer hover:border-blue-400' : 'opacity-60 cursor-not-allowed'
@@ -33,7 +33,7 @@
             <!-- Face-up card (top layer, overlays the face-down) -->
             <button
               v-if="i <= faceUp.length"
-              class="absolute inset-0 w-14 h-21 sm:w-16 sm:h-24 bg-white text-black rounded border-2 flex flex-col items-center justify-center text-xs sm:text-sm transition-all"
+              class="absolute inset-0 w-14 h-21 tall:w-16 tall:h-24 bg-white text-black rounded border-2 flex flex-col items-center justify-center text-xs tall:text-sm transition-all"
               :class="[
                 selectedFaceUpIndex === (i - 1)
                   ? 'ring-2 ring-yellow-400 scale-105 border-yellow-400 shadow-lg'
@@ -61,7 +61,7 @@
       <!-- Hand cards section -->
       <div
         v-if="hand.length > 0"
-        class="mb-3"
+        class="mb-2 tall:mb-3"
       >
         <div class="text-center mb-1">
           <span class="text-xs text-green-300 uppercase tracking-wide">Hand ({{ hand.length }})</span>
@@ -79,7 +79,7 @@
           <button
             v-for="(card, i) in hand"
             :key="cardKey(card)"
-            class="w-14 h-21 sm:w-16 sm:h-24 bg-white text-black rounded border-2 flex flex-col items-center justify-center text-xs sm:text-sm transition-all flex-shrink-0"
+            class="w-14 h-21 tall:w-16 tall:h-24 bg-white text-black rounded border-2 flex flex-col items-center justify-center text-xs tall:text-sm transition-all flex-shrink-0"
             :class="[
               needsScroll ? 'snap-start' : '',
               selectedHandIndices.has(i)

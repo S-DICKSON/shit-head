@@ -34,3 +34,18 @@ services:
     environment:
       - NODE_ENV=development
       - PORT=3000
+
+  e2e:
+    build:
+      context: .
+      dockerfile: packages/e2e/Dockerfile
+    working_dir: /app/packages/e2e
+    volumes:
+      - ./packages/e2e:/app/packages/e2e
+      - /app/packages/e2e/node_modules
+    environment:
+      - E2E_BASE_URL=http://client:5173
+    depends_on:
+      - client
+    profiles:
+      - e2e

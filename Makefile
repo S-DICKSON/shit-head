@@ -1,4 +1,4 @@
-.PHONY: help install dev test test-server test-client clean lint lint-fix type-check type-check-server type-check-shared tunnel dev-discord dev-discord-down prod-local prod-local-down e2e e2e-ui e2e-report
+.PHONY: help install dev test test-server test-client clean lint lint-fix type-check type-check-server type-check-shared tunnel dev-discord dev-discord-down prod-local prod-local-down e2e e2e-ui e2e-report screenshots
 
 .DEFAULT_GOAL := help
 
@@ -66,11 +66,15 @@ prod-local: ## Start production-like environment with Caddy reverse proxy
 prod-local-down: ## Stop production-like environment
 	docker compose -f docker-compose.prod.yml down -v --remove-orphans
 
-e2e: ## Run Playwright E2E tests (local, no Docker)
-	cd packages/e2e && bunx playwright test
+e2e: ## Run Playwright E2E tests
+	docker compose --profile e2e run --rm e2e npx playwright test
 
-e2e-ui: ## Run Playwright E2E tests with UI mode
+e2e-ui: ## Run Playwright E2E tests with UI mode (requires local Playwright install)
 	cd packages/e2e && bunx playwright test --ui
 
-e2e-report: ## Open last Playwright test report
-	cd packages/e2e && bunx playwright show-report
+e2e-report: ## Serve last Playwright test report
+	docker compose --profile e2e run --rm -p 9323:9323 e2e npx playwright show-report --host 0.0.0.0
+
+screenshots: ## Capture game screenshots at all viewports (2p/3p/4p) for visual verification
+	docker compose --profile e2e run --rm e2e npx playwright test tests/screenshots.spec.ts
+	@echo "\nScreenshots saved to packages/e2e/screenshots/"

@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+/* Card sizes scale with viewport HEIGHT, not width.
+   Discord desktop is 1219px wide but only 643px tall —
+   width-based sm: breakpoint makes cards too big for the height. */
+@custom-variant tall (@media (min-height: 800px));
+
 :root {
   --safe-top: var(--discord-safe-area-inset-top, env(safe-area-inset-top, 0px));
   --safe-right: var(--discord-safe-area-inset-right, env(safe-area-inset-right, 0px));

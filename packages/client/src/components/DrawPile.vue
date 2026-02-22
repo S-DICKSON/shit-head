@@ -4,10 +4,10 @@
       <!-- Card back when cards remain -->
       <div
         v-if="count > 0"
-        class="w-14 h-21 sm:w-16 sm:h-24 bg-blue-800 rounded border-2 border-blue-600 flex items-center justify-center shadow-md"
+        class="w-14 h-21 tall:w-16 tall:h-24 bg-blue-800 rounded border-2 border-blue-600 flex items-center justify-center shadow-md"
       >
         <!-- Card back pattern -->
-        <div class="w-10 h-16 sm:w-12 sm:h-18 border border-blue-400 rounded-sm" />
+        <div class="w-10 h-16 tall:w-12 tall:h-18 border border-blue-400 rounded-sm" />
 
         <!-- Count badge -->
         <span
@@ -20,7 +20,7 @@
       <!-- Empty state -->
       <div
         v-else
-        class="w-14 h-21 sm:w-16 sm:h-24 border-2 border-dashed border-green-600 rounded flex items-center justify-center text-green-500 text-xs"
+        class="w-14 h-21 tall:w-16 tall:h-24 border-2 border-dashed border-green-600 rounded flex items-center justify-center text-green-500 text-xs"
       >
         Empty
       </div>

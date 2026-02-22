@@ -24,6 +24,12 @@ bun.lockb
 # OS files
 .DS_Store
 
+# E2E screenshots
+packages/e2e/screenshots/
+
+# Test results
+test-results/
+
 # Logs
 *.log
 

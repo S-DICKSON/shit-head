@@ -1,16 +1,22 @@
 import { defineConfig } from '@playwright/test';
 
+// In Docker, E2E_BASE_URL points to the client service (e.g. http://client:5173).
+// Locally / CI, tests use localhost and webServer starts the services.
+const baseURL = process.env.E2E_BASE_URL || 'http://localhost:5173';
+const isDocker = !!process.env.E2E_BASE_URL;
+
 export default defineConfig({
   testDir: './tests',
+  testIgnore: process.env.CI ? ['**/screenshots.spec.ts'] : [],
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 4 : undefined,
+  workers: process.env.CI ? 1 : undefined,
   reporter: process.env.CI ? [['list']] : [['html', { open: 'never' }]],
   timeout: 30_000,
 
   use: {
-    baseURL: 'http://localhost:5173',
+    baseURL,
     trace: 'on-first-retry',
   },
 
@@ -64,24 +70,28 @@ export default defineConfig({
     },
   ],
 
-  webServer: [
-    {
-      command: 'bun run src/index.ts',
-      cwd: '../server',
-      url: 'http://localhost:3000/health',
-      reuseExistingServer: !process.env.CI,
-      timeout: 30_000,
-      env: {
-        NODE_ENV: 'development',
-        PORT: '3000',
-      },
-    },
-    {
-      command: 'bunx vite',
-      cwd: '../client',
-      url: 'http://localhost:5173',
-      reuseExistingServer: !process.env.CI,
-      timeout: 60_000,
-    },
-  ],
+  // In Docker, client/server are managed by docker-compose — skip webServer.
+  // Locally / CI, Playwright starts them.
+  webServer: isDocker
+    ? undefined
+    : [
+        {
+          command: 'bun run src/index.ts',
+          cwd: '../server',
+          url: 'http://localhost:3000/health',
+          reuseExistingServer: !process.env.CI,
+          timeout: 30_000,
+          env: {
+            NODE_ENV: 'development',
+            PORT: '3000',
+          },
+        },
+        {
+          command: 'bunx vite',
+          cwd: '../client',
+          url: 'http://localhost:5173',
+          reuseExistingServer: !process.env.CI,
+          timeout: 60_000,
+        },
+      ],
 });

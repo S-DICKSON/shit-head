@@ -28,7 +28,7 @@
   </div>
 
   <div
-    class="flex flex-col bg-green-900 text-white p-4 overflow-hidden h-full"
+    class="flex flex-col bg-green-900 text-white p-4 h-full"
   >
     <!-- Opponents -->
     <div class="flex-shrink-0 flex flex-wrap justify-center gap-4 mb-4">

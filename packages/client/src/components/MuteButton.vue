@@ -5,7 +5,7 @@ const { muteState, toggleMute } = useSoundEffects();
 
 <template>
   <button
-    class="fixed top-2 right-12 z-40 px-3 py-2 text-lg bg-gray-800/70 hover:bg-gray-800/90 rounded-full backdrop-blur-sm transition-all"
+    class="fixed bottom-2 left-2 z-40 px-3 py-2 text-lg bg-gray-800/70 hover:bg-gray-800/90 rounded-full backdrop-blur-sm transition-all"
     :title="muteState ? 'Unmute sounds' : 'Mute sounds'"
     :aria-label="muteState ? 'Unmute sounds' : 'Mute sounds'"
     @click="toggleMute"

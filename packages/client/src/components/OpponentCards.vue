@@ -1,6 +1,6 @@
 <template>
   <div
-    class="text-center p-2 rounded-lg transition-all"
+    class="text-center p-2 rounded-lg transition-all flex-shrink-0 snap-start"
     :class="isCurrentTurn ? 'bg-yellow-900/40 ring-2 ring-yellow-400' : ''"
   >
     <!-- Nickname row -->
@@ -42,7 +42,7 @@
       <div
         v-for="card in opponent.faceUp"
         :key="cardKey(card)"
-        class="w-10 h-15 sm:w-12 sm:h-18 bg-white text-black rounded border border-gray-300 flex flex-col items-center justify-center text-[10px] sm:text-xs"
+        class="w-10 h-15 tall:w-12 tall:h-18 bg-white text-black rounded border border-gray-300 flex flex-col items-center justify-center text-[10px] tall:text-xs"
       >
         <span class="font-bold">{{ card.kind === 'standard' ? card.rank : 'JKR' }}</span>
         <span

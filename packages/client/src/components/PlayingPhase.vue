@@ -61,7 +61,7 @@ watch(
 
 <template>
   <div
-    class="flex flex-col bg-green-900 text-white overflow-hidden h-full"
+    class="flex flex-col bg-green-900 text-white h-full"
   >
     <!-- Leave button -->
     <button
@@ -83,8 +83,8 @@ watch(
     </span>
 
     <!-- Top bar: Opponents -->
-    <div class="flex-shrink-0 pt-2">
-      <div class="flex flex-wrap justify-center gap-2 sm:gap-4 px-2 mb-1">
+    <div class="flex-shrink-0 pt-2 overflow-x-auto snap-x snap-mandatory sm:overflow-x-visible sm:snap-none">
+      <div class="flex gap-2 tall:gap-4 px-2 mb-1 w-fit mx-auto sm:flex-wrap sm:justify-center sm:w-auto">
         <OpponentCards
           v-for="opponent in gameView?.opponents"
           :key="opponent.playerId"
@@ -95,8 +95,8 @@ watch(
     </div>
 
     <!-- Center game area: Draw/Discard Piles + Turn Banner below -->
-    <div class="flex-shrink-0 flex flex-col items-center justify-center px-4 py-2 sm:py-4">
-      <div class="flex items-center justify-center gap-6 sm:gap-8">
+    <div class="flex-1 min-h-0 flex flex-col items-center justify-center px-4 py-2 tall:py-4">
+      <div class="flex items-center justify-center gap-6 tall:gap-8">
         <DrawPile :count="gameView?.drawPileCount ?? 0" />
         <DiscardPile
           :cards="gameView?.discardPile ?? []"
@@ -115,7 +115,7 @@ watch(
     </div>
 
     <!-- Player's cards area (takes remaining space) -->
-    <div class="flex-1 min-h-0 px-2 pb-3 flex flex-col">
+    <div class="px-2 pb-2 tall:pb-3">
       <PlayerCards
         :hand="gameView?.hand ?? []"
         :face-up="gameView?.faceUp ?? []"

@@ -79,11 +79,17 @@ Known tech debt: orphaned adapter injection keys, missing tests for some newer c
 - **No backend auth**: No user accounts for web; Discord OAuth2 for Activity mode only
 - **Card deck**: Standard 52-card deck + 2 Jokers (54 cards total)
 - **Players**: 2-4 per room
+- **Docker-first Makefile**: All Makefile targets must run through Docker. Only git, docker, and make are required locally. Never add targets that require local bun/bunx/node/npm.
 
 ## Verification Requirements
 
 All phases that write code **must** pass linting before completion:
 - Run `make lint` and ensure zero errors before considering a phase done
+
+All phases that modify frontend layout/UI **must** include visual screenshot verification:
+- Run `make screenshots` to capture 2p/3p/4p game states at all 7 viewports
+- Review screenshots with the user before considering the phase done
+- Screenshots are local-only (gitignored, skipped in CI) — they are for UAT, not automated testing
 
 ## Key Decisions
 
