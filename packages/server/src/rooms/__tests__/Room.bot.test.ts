@@ -221,14 +221,15 @@ describe('Bot management', () => {
     const names = state.players.filter(p => p.isBot).map(p => p.nickname);
     expect(names).toEqual(['Darling Bot', 'Bica Bot', 'Knox Bot']);
 
-    // Remove middle bot and add a new one — should reuse 'Bica Bot', not duplicate
+    // Remove middle bot and add a new one — cycles to next available, not first available
     room.removeBot(ids[1]);
     const r = room.addBot();
     expect(r.success).toBe(true);
     if (r.success) {
       const s = room.getState();
       const newBot = s.players.find(p => p.id === r.data);
-      expect(newBot?.nickname).toBe('Bica Bot');
+      // Index continues cycling: after Darling(0), Bica(1), Knox(2), next is Joe(3)
+      expect(newBot?.nickname).toBe('Joe Bot');
       // Verify no duplicates
       const allNames = s.players.filter(p => p.isBot).map(p => p.nickname);
       expect(new Set(allNames).size).toBe(allNames.length);
