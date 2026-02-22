@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-02-22)
 Phase: 25 of 25 complete
 Plan: All complete
 Status: v2.1 milestone shipped
-Last activity: 2026-02-22 — v2.1 Quality & Testing milestone complete
+Last activity: 2026-02-22 — Completed quick-031: hide face-down cards during pregame/swap phase
 
 Progress: [##########] v1.0 (15 phases) + v2.0 (8 phases) + v2.1 (2 phases) = ALL PHASES COMPLETE
 
@@ -33,7 +33,7 @@ Progress: [##########] v1.0 (15 phases) + v2.0 (8 phases) + v2.1 (2 phases) = AL
 **v2.1 Velocity:**
 - Plans completed: 9 (Phase 24: 4, Phase 25: 5)
 - Total: ~32 minutes
-- Quick tasks completed: 1
+- Quick tasks completed: 2 (030, 031)
 
 ## Accumulated Context
 
@@ -52,7 +52,7 @@ None — all known blockers resolved.
 
 ## Session Continuity
 
-Last session: 2026-02-22
-Stopped at: v2.1 milestone complete
+Last session: 2026-02-22T12:11:00Z
+Stopped at: Completed quick-031-PLAN.md
 Resume file: None
 Next: `/gsd:new-milestone` to start next version (questioning → research → requirements → roadmap)
