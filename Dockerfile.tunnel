@@ -24,11 +24,12 @@ RUN bunx vite build
 # Stage 2: Run server with built client
 FROM oven/bun:1
 WORKDIR /app
-COPY package.json bun.lock* bunfig.toml tsconfig.json ./
+COPY package.json bun.lock* tsconfig.json ./
 COPY packages/client/package.json ./packages/client/
 COPY packages/server/package.json ./packages/server/
 COPY packages/shared/package.json ./packages/shared/
-RUN bun install --production
+COPY packages/e2e/package.json ./packages/e2e/
+RUN bun install --frozen-lockfile --production
 COPY packages/server/ ./packages/server/
 COPY packages/shared/ ./packages/shared/
 COPY --from=client-build /app/packages/client/dist ./packages/client/dist
