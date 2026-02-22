@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ref } from 'vue';
 import { render, screen, waitFor } from '@testing-library/vue';
 import { createRouter, createWebHashHistory } from 'vue-router';
+import { PlatformKey } from '../../platform/keys';
 
 vi.mock('../../composables/useGameSocket', () => {
   let _cache: any = null;
@@ -55,6 +56,7 @@ describe('Game.vue', () => {
     render(Game, {
       global: {
         plugins: [router],
+        provide: { [PlatformKey as symbol]: 'web' },
         stubs: { SwapPhase: true, PlayingPhase: true },
       },
     });

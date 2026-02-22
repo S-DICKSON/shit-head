@@ -1,10 +1,13 @@
 import pluginVue from 'eslint-plugin-vue'
-import vueTsConfig from '@vue/eslint-config-typescript'
+import {
+  defineConfigWithVueTs,
+  vueTsConfigs,
+} from '@vue/eslint-config-typescript'
 import globals from 'globals'
 
-export default [
-  ...pluginVue.configs['flat/recommended'],
-  ...vueTsConfig(),
+export default defineConfigWithVueTs(
+  pluginVue.configs['flat/recommended'],
+  vueTsConfigs.recommended,
   {
     files: ['**/*.vue', '**/*.ts'],
     languageOptions: {
@@ -43,4 +46,4 @@ export default [
   {
     ignores: ['dist/**', 'coverage/**'],
   }
-]
+)
