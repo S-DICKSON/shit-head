@@ -7,7 +7,7 @@ import { GameEngine, type BlindPlayResult, type AutoPlayResult } from '../game/G
 const ALPHABET = '2346789ABCDEFGHJKMNPQRTUVWXYZ';
 const generateRoomCode = customAlphabet(ALPHABET, 6);
 
-const BOT_NAMES = ['Jess Bot', 'Bica Bot', 'Knox Bot', 'Joe Bot'];
+const BOT_NAMES = ['Darling Bot', 'Bica Bot', 'Knox Bot', 'Joe Bot'];
 
 type OperationResult<T = void> = T extends void
   ? { success: true } | { success: false; error: string; code: ErrorCode }

@@ -22,7 +22,7 @@ describe('Bot management', () => {
     if (result.success) {
       const state = room.getState();
       const bot = state.players.find(p => p.id === result.data);
-      expect(bot?.nickname).toBe('Jess Bot');
+      expect(bot?.nickname).toBe('Darling Bot');
     }
   });
 
@@ -36,7 +36,7 @@ describe('Bot management', () => {
       const state = room.getState();
       const bot1 = state.players.find(p => p.id === r1.data);
       const bot2 = state.players.find(p => p.id === r2.data);
-      expect(bot1?.nickname).toBe('Jess Bot');
+      expect(bot1?.nickname).toBe('Darling Bot');
       expect(bot2?.nickname).toBe('Bica Bot');
     }
   });
@@ -216,7 +216,7 @@ describe('Bot management', () => {
     if (r1.success) {
       const state = room.getState();
       const bot = state.players.find(p => p.id === r1.data);
-      expect(bot?.nickname).toBe('Jess Bot');
+      expect(bot?.nickname).toBe('Darling Bot');
     }
     // Remove first bot and add 3 more to verify cycling
     if (r1.success) room.removeBot(r1.data);

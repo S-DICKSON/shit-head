@@ -25,7 +25,7 @@ describe('Bot integration', () => {
       const bot = state.players.find(p => p.id === result.data);
       expect(bot).toBeDefined();
       expect(bot?.isBot).toBe(true);
-      expect(bot?.nickname).toBe('Jess Bot');
+      expect(bot?.nickname).toBe('Darling Bot');
     }
   });
 
