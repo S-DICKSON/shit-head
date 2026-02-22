@@ -10,6 +10,7 @@ const lobbyPlayerSchema = z.object({
   isHost: z.boolean(),
   avatarHash: z.string().nullable().optional(), // Discord avatar hash, null for web players
   discordUserId: z.string().nullable().optional(), // Discord user ID for CDN avatar URLs
+  isBot: z.boolean().optional(), // True for bot players, omitted for human players
 });
 
 const roundTimeSchema = z.union([z.literal(30), z.literal(45), z.literal(60)]);
@@ -129,6 +130,16 @@ export const setRoundTimeSchema = z.object({
   roundTime: roundTimeSchema,
 });
 
+export const addBotSchema = z.object({
+  type: z.literal('add-bot'),
+  nickname: z.string().min(1).max(20).trim().optional(),
+});
+
+export const removeBotSchema = z.object({
+  type: z.literal('remove-bot'),
+  botId: z.string(),
+});
+
 export const clientMessageSchema = z.discriminatedUnion('type', [
   createRoomSchema,
   joinRoomSchema,
@@ -144,6 +155,8 @@ export const clientMessageSchema = z.discriminatedUnion('type', [
   playAgainSchema,
   joinOrCreateSchema,
   setRoundTimeSchema,
+  addBotSchema,
+  removeBotSchema,
 ]);
 
 // Server-to-client message schemas

@@ -15,6 +15,8 @@ import type {
   playAgainSchema,
   joinOrCreateSchema,
   setRoundTimeSchema,
+  addBotSchema,
+  removeBotSchema,
   roomCreatedSchema,
   roomJoinedSchema,
   roomUpdatedSchema,
@@ -58,6 +60,8 @@ export type RenamePlayerMessage = z.infer<typeof renamePlayerSchema>;
 export type PlayAgainMessage = z.infer<typeof playAgainSchema>;
 export type JoinOrCreateMessage = z.infer<typeof joinOrCreateSchema>;
 export type SetRoundTimeMessage = z.infer<typeof setRoundTimeSchema>;
+export type AddBotMessage = z.infer<typeof addBotSchema>;
+export type RemoveBotMessage = z.infer<typeof removeBotSchema>;
 
 export type ClientMessage = z.infer<typeof clientMessageSchema>;
 

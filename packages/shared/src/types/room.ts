@@ -12,6 +12,7 @@ export type LobbyPlayer = {
   isHost: boolean;
   avatarHash?: string | null; // Discord avatar hash, null for web players
   discordUserId?: string | null; // Discord user ID for CDN avatar URLs
+  isBot?: boolean; // True for bot players, omitted for human players
 };
 
 export type RoomStatus = 'waiting' | 'countdown' | 'playing';
