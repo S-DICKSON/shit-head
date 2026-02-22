@@ -4,6 +4,7 @@ import type { Room } from '../rooms/Room';
 import { clientMessageSchema } from '@shit-head/shared';
 import type { ServerMessage } from '@shit-head/shared';
 import type { ServerWebSocket } from 'bun';
+import { BotPlayer, type BotMove } from '../game/BotPlayer';
 
 export type WebSocketData = {
   playerId: string;
@@ -40,6 +41,124 @@ function broadcastToSpectators(room: Room, message: ServerMessage): void {
   for (const sid of room.getSpectatorIds()) {
     const sWs = playerSockets.get(sid);
     if (sWs) sendMessage(sWs, message);
+  }
+}
+
+/** Execute a bot turn after a random 1-2s think delay */
+function executeBotTurn(room: Room, botId: string): void {
+  // Random delay 1000-2000ms to simulate human think time
+  const delay = 1000 + Math.floor(Math.random() * 1000);
+  setTimeout(() => {
+    const gameState = room.getGameState();
+    if (!gameState || gameState.phase !== 'playing') return;
+
+    // Verify it's still this bot's turn (race condition guard)
+    const currentPlayer = gameState.players[gameState.currentPlayerIndex];
+    if (!currentPlayer || currentPlayer.playerId !== botId) return;
+
+    // Verify bot is still in the room
+    if (!room.isBot(botId)) return;
+
+    const move = BotPlayer.selectMove(gameState, botId);
+    executeBotMove(room, botId, move);
+  }, delay);
+}
+
+/** Execute a bot's selected move and broadcast results to all human players */
+function executeBotMove(room: Room, botId: string, move: BotMove): void {
+  if (move.type === 'play') {
+    const result = room.playCards(botId, move.cardIndices);
+    if (!result.success) return;
+
+    // Broadcast card-played to all human players
+    const gameState = room.getGameState();
+    if (!gameState) return;
+    const playedCards = gameState.discardPile.slice(-move.cardIndices.length);
+
+    for (const pid of room.getPlayerIds()) {
+      if (room.isBot(pid)) continue; // Don't send to bots
+      const view = room.getAugmentedPlayerView(pid);
+      const pWs = playerSockets.get(pid);
+      if (view && pWs) {
+        sendMessage(pWs, {
+          type: 'card-played',
+          playerId: botId,
+          cards: playedCards,
+          currentPlayerIndex: view.currentPlayerIndex,
+          drawPileCount: view.drawPileCount,
+          discardPile: view.discardPile,
+          hand: view.hand,
+          faceUp: view.faceUp,
+          faceDownCount: view.faceDownCount,
+          opponents: view.opponents,
+          firstTurn: view.firstTurn,
+        });
+      }
+    }
+    // Also send to spectators
+    broadcastToSpectators(room, {
+      type: 'card-played',
+      playerId: botId,
+      cards: playedCards,
+      currentPlayerIndex: gameState.currentPlayerIndex,
+      drawPileCount: gameState.drawPile.length,
+      discardPile: gameState.discardPile,
+      firstTurn: gameState.firstTurn,
+    });
+  } else if (move.type === 'pickup') {
+    const result = room.pickupPile(botId);
+    if (!result.success) return;
+
+    for (const pid of room.getPlayerIds()) {
+      if (room.isBot(pid)) continue;
+      const view = room.getAugmentedPlayerView(pid);
+      const pWs = playerSockets.get(pid);
+      if (view && pWs) {
+        sendMessage(pWs, {
+          type: 'pile-pickup',
+          playerId: botId,
+          currentPlayerIndex: view.currentPlayerIndex,
+          discardPile: view.discardPile,
+          hand: view.hand,
+          faceUp: view.faceUp,
+          faceDownCount: view.faceDownCount,
+          opponents: view.opponents,
+        });
+      }
+    }
+  } else if (move.type === 'face-down') {
+    const result = room.playFaceDownBlind(botId, move.faceDownIndex);
+    if (!result.success) return;
+
+    if (result.data) {
+      for (const pid of room.getPlayerIds()) {
+        if (room.isBot(pid)) continue;
+        const view = room.getAugmentedPlayerView(pid);
+        const pWs = playerSockets.get(pid);
+        if (view && pWs) {
+          sendMessage(pWs, {
+            type: 'face-down-result',
+            playerId: botId,
+            card: result.data.card,
+            playable: result.data.playable,
+            currentPlayerIndex: view.currentPlayerIndex,
+            discardPile: view.discardPile,
+            hand: view.hand,
+            faceDownCount: view.faceDownCount,
+            opponents: view.opponents,
+          });
+        }
+      }
+    }
+  }
+
+  // Check if next player is also a bot — chain bot turns
+  const updatedState = room.getGameState();
+  if (updatedState && updatedState.phase === 'playing') {
+    const nextPlayer = updatedState.players[updatedState.currentPlayerIndex];
+    if (nextPlayer && room.isBot(nextPlayer.playerId)) {
+      executeBotTurn(room, nextPlayer.playerId);
+    }
   }
 }
 
@@ -920,6 +1039,72 @@ export function handleMessage(
       const updatedState = room.getState();
       sendMessage(ws, { type: 'room-updated', room: updatedState });
       publishToRoom(ws, roomCode, { type: 'room-updated', room: updatedState });
+      break;
+    }
+
+    case 'add-bot': {
+      const roomCode = ws.data.roomCode;
+      if (!roomCode) {
+        sendMessage(ws, { type: 'error', message: 'Not in a room', code: 'ROOM_NOT_FOUND' });
+        return;
+      }
+
+      const room = manager.getRoom(roomCode);
+      if (!room) {
+        sendMessage(ws, { type: 'error', message: 'Room not found', code: 'ROOM_NOT_FOUND' });
+        return;
+      }
+
+      // Host-only validation
+      const addBotRoomState = room.getState();
+      if (addBotRoomState.hostId !== ws.data.playerId) {
+        sendMessage(ws, { type: 'error', message: 'Only the host can add bots', code: 'NOT_HOST' });
+        return;
+      }
+
+      const addBotResult = room.addBot(message.nickname);
+      if (!addBotResult.success) {
+        sendMessage(ws, { type: 'error', message: addBotResult.error, code: addBotResult.code });
+        return;
+      }
+
+      // Broadcast room-updated to all players
+      const updatedRoomState = room.getState();
+      sendMessage(ws, { type: 'room-updated', room: updatedRoomState });
+      publishToRoom(ws, roomCode, { type: 'room-updated', room: updatedRoomState });
+      break;
+    }
+
+    case 'remove-bot': {
+      const roomCode = ws.data.roomCode;
+      if (!roomCode) {
+        sendMessage(ws, { type: 'error', message: 'Not in a room', code: 'ROOM_NOT_FOUND' });
+        return;
+      }
+
+      const room = manager.getRoom(roomCode);
+      if (!room) {
+        sendMessage(ws, { type: 'error', message: 'Room not found', code: 'ROOM_NOT_FOUND' });
+        return;
+      }
+
+      // Host-only validation
+      const removeBotRoomState = room.getState();
+      if (removeBotRoomState.hostId !== ws.data.playerId) {
+        sendMessage(ws, { type: 'error', message: 'Only the host can remove bots', code: 'NOT_HOST' });
+        return;
+      }
+
+      const removeBotResult = room.removeBot(message.botId);
+      if (!removeBotResult.success) {
+        sendMessage(ws, { type: 'error', message: removeBotResult.error, code: removeBotResult.code });
+        return;
+      }
+
+      // Broadcast room-updated to all players
+      const updatedRoomState = room.getState();
+      sendMessage(ws, { type: 'room-updated', room: updatedRoomState });
+      publishToRoom(ws, roomCode, { type: 'room-updated', room: updatedRoomState });
       break;
     }
   }
