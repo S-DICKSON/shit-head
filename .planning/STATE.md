@@ -2,19 +2,19 @@
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-02-21)
+See: .planning/PROJECT.md (updated 2026-02-22)
 
 **Core value:** Friends can play a complete, rule-accurate game of Shithead together online with zero friction
-**Current focus:** v3.0 Quality & Testing — Phase 25 complete
+**Current focus:** Planning next milestone
 
 ## Current Position
 
-Phase: 25 of 25 (25-bot-player)
-Plan: 5 of 5 complete
-Status: Phase complete — verified 6/6 must-haves ✓
-Last activity: 2026-02-22 - Completed 25-05-PLAN.md (integration tests + manual playtest)
+Phase: 25 of 25 complete
+Plan: All complete
+Status: v2.1 milestone shipped
+Last activity: 2026-02-22 — v2.1 Quality & Testing milestone complete
 
-Progress: [##########] v1.0 (15 phases) + v2.0 (8 phases) + v3.0 (Phase 24 + Phase 25) = ALL PHASES COMPLETE
+Progress: [##########] v1.0 (15 phases) + v2.0 (8 phases) + v2.1 (2 phases) = ALL PHASES COMPLETE
 
 ## Performance Metrics
 
@@ -30,10 +30,10 @@ Progress: [##########] v1.0 (15 phases) + v2.0 (8 phases) + v3.0 (Phase 24 + Pha
 - Total execution time: 0.58 hours
 - Quick tasks completed: 10
 
-**v3.0 Velocity:**
+**v2.1 Velocity:**
 - Plans completed: 9 (Phase 24: 4, Phase 25: 5)
-- Phase 25 duration: ~20 min total (3 waves)
 - Total: ~32 minutes
+- Quick tasks completed: 1
 
 ## Accumulated Context
 
@@ -41,27 +41,10 @@ Progress: [##########] v1.0 (15 phases) + v2.0 (8 phases) + v3.0 (Phase 24 + Pha
 
 Decisions are logged in PROJECT.md Key Decisions table.
 
-**Quick 030 decisions:**
-- setupHomeMock() handles ping/pong only (home tests never create rooms)
-- setupLobbyMock() must echo nickname from create-room message (lobby reads player.nickname from server response, not local store)
-- game.spec.ts: removed 2 redundant tests (11 -> 9 per viewport)
-
-**Phase 25 decisions (summary):**
-- `botPlayerIds` Set tracks bot identity, `isBot: || undefined` in getState() for clean payloads
-- BotPlayer strategy: play lowest valid rank, group same-rank cards, selectLowestValidGroup helper
-- executeBotTurn/executeBotMove as module-level functions, 1-2s think delay, race condition guards
-- Robot emoji (U+1F916) for bot indicator, Add Bot hidden (not disabled) when room full
-- Bot turn detection added to play-cards/pickup-pile/play-face-down handlers (bug fix in 25-05)
-
 ### Pending Todos
 
 1 pending — `/gsd:check-todos` to review
 - Add debug gamestate dev tooling (tooling)
-
-### Roadmap Evolution
-
-- Phase 24 added: Playwright Responsive E2E Testing (complete)
-- Phase 25 added: Bot Player (complete)
 
 ### Blockers/Concerns
 
@@ -70,6 +53,6 @@ None — all known blockers resolved.
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: Quick 030 complete — E2E suite fixed (203/203 tests green, 0 failures)
+Stopped at: v2.1 milestone complete
 Resume file: None
-Next: All v3.0 phases complete. Quick 030 resolved E2E failures. Consider: /gsd:audit-milestone or /gsd:complete-milestone
+Next: `/gsd:new-milestone` to start next version (questioning → research → requirements → roadmap)

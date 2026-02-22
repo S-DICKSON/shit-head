@@ -48,10 +48,15 @@ Friends can play a complete, rule-accurate game of Shithead together online with
 - Host migration when host leaves room — v2.0
 - Spectator mode for late joiners — v2.0
 - Privacy policy and terms of service pages — v2.0
+- Playwright E2E testing: 150 tests across 6 viewports (mobile, tablet, laptop, desktop, Discord) — v2.1
+- Bot player for solo play and testing (autonomous gameplay, host add/remove UI) — v2.1
+- CI pipeline with Playwright E2E step — v2.1
 
 ### Active
 
 (None — planning next milestone)
+
+**v2.1 note:** No formal REQUIREMENTS.md was created for v2.1. Phases 24-25 were added directly to the roadmap as quality/testing improvements.
 
 ### Out of Scope
 
@@ -65,12 +70,12 @@ Friends can play a complete, rule-accurate game of Shithead together online with
 
 ## Context
 
-Shipped v2.0 with 16,517 LOC TypeScript/Vue across 208 files modified.
+Shipped v2.1 with ~25,000 LOC TypeScript/Vue across 83 files modified (v2.1 delta).
 Tech stack: Bun monorepo, Vue 3 + Vite + Tailwind CSS v4 client, Bun WebSocket server, Docker, Hetzner VPS.
 Discord Activity live and working (OAuth2, proxy networking, instance ID auto-join).
-462 tests total (122 client with @testing-library/vue, 340 server with Vitest).
-Live playtesting drove 30 quick-task bug fixes across both milestones.
-Known tech debt: orphaned adapter injection keys, missing tests for some newer composables/components.
+500+ tests total (122 client with @testing-library/vue, 384 server with Vitest, 150 Playwright E2E).
+Bot player enables solo play and manual testing without other human players.
+Known tech debt: duplicate Add Bot button in DiscordLobby.vue, orphaned adapter injection keys.
 
 ## Constraints
 
@@ -114,6 +119,10 @@ All phases that modify frontend layout/UI **must** include visual screenshot ver
 | instanceId-based auto-join | Canonical Discord Activity room pattern (same voice channel = same room) | Good |
 | Simplified mobile card UI | Horizontal scroll with snap replaced category tabs after playtesting (quick-029) | Good |
 | @testing-library/vue migration | Resolved Bun WeakMap failures from vue-test-utils | Good |
+| All-Chromium Playwright config | Uniform test execution, no WebKit skip guards needed | Good |
+| WS mocking via routeWebSocket | Test game screens without real server, Chromium-only API | Good |
+| botPlayerIds Set for bot identity | O(1) lookup, keeps player map structure unchanged | Good |
+| Module-level executeBotTurn/executeBotMove | Accessible from multiple handler callbacks, matches existing patterns | Good |
 
 ---
-*Last updated: 2026-02-21 after v2.0 milestone*
+*Last updated: 2026-02-22 after v2.1 milestone*

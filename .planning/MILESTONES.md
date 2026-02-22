@@ -1,5 +1,34 @@
 # Project Milestones: Shithead Online
 
+## v2.1 Quality & Testing (Shipped: 2026-02-22)
+
+**Delivered:** Playwright E2E testing infrastructure with 150+ tests across 6 viewports and a bot player for solo play and manual testing.
+
+**Phases completed:** 24-25 (9 plans total)
+
+**Key accomplishments:**
+
+- Playwright E2E testing: 150 tests across 6 viewports (mobile-375, mobile-390, tablet-768, laptop-1280, desktop-1920, discord-iframe-460)
+- Page Object Model infrastructure for all 4 screens (Landing, Lobby, SwapPhase, Game)
+- WS mocking pattern for testing game screens without a real server
+- Bot player with autonomous gameplay: selectMove logic using shared game rules, 1-2s think delay, turn chaining
+- Bot UI controls in both web and Discord lobbies (Add Bot, Remove, robot emoji indicator)
+- CI pipeline updated with Playwright E2E step (chromium install, test run, report artifact)
+
+**Stats:**
+
+- 83 files created/modified
+- +8,641 / -492 lines of TypeScript/Vue
+- 2 phases, 9 plans, 1 quick task (030)
+- 2 days from start (2026-02-21) to ship (2026-02-22)
+- 58 total commits
+
+**Git range:** `4748206` → `3d4c3dd`
+
+**What's next:** TBD
+
+---
+
 ## v2.0 UI + Discord (Shipped: 2026-02-21)
 
 **Delivered:** Discord Activity integration (OAuth2, proxy networking, instance ID auto-join), mobile UX improvements (playability highlights, horizontal scroll cards, swap timer fixes), sound mute toggle, host-configurable round time, frontend test suite, and 10 quick-task bug fixes from playtesting.
