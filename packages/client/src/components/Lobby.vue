@@ -47,6 +47,20 @@ const setRoundTime = (time: 30 | 45 | 60) => {
   send({ type: 'set-round-time', roundTime: time });
 };
 
+// Bot actions (host only)
+const addBot = () => {
+  send({ type: 'add-bot' });
+};
+
+const removeBot = (botId: string) => {
+  send({ type: 'remove-bot', botId });
+};
+
+const isRoomFull = computed(() => {
+  if (!roomState.value) return true;
+  return roomState.value.players.length >= roomState.value.maxPlayers;
+});
+
 // Rename actions
 const startRenaming = () => {
   const currentPlayer = roomState.value?.players.find(p => p.id === playerId.value);
@@ -245,6 +259,15 @@ onUnmounted(() => {
               aria-hidden="true"
             >★</span>
 
+            <!-- Bot Icon -->
+            <span
+              v-if="player.isBot"
+              class="text-gray-500 text-lg"
+              role="img"
+              aria-label="Bot player"
+              title="Bot player"
+            >&#129302;</span>
+
             <!-- Player Nickname -->
             <div
               class="flex-1 flex items-center gap-2"
@@ -270,6 +293,15 @@ onUnmounted(() => {
                 aria-label="Lost last game"
                 title="Lost last game"
               >&#128169;</span>
+
+              <!-- Remove bot button (host only) -->
+              <button
+                v-if="player.isBot && isHost"
+                class="px-2 py-1 text-xs font-medium text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 rounded transition-colors"
+                @click="removeBot(player.id)"
+              >
+                Remove
+              </button>
 
               <!-- Rename button for current player -->
               <button
@@ -318,6 +350,15 @@ onUnmounted(() => {
         v-if="isHost"
         class="mt-6"
       >
+        <!-- Add Bot button -->
+        <button
+          v-if="!isRoomFull"
+          class="w-full mb-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-3 rounded-lg transition-all border border-gray-300 text-base"
+          @click="addBot"
+        >
+          + Add Bot
+        </button>
+
         <div class="mb-4">
           <label class="block text-sm font-medium text-gray-600 mb-2">Round Time</label>
           <div class="flex gap-2">
