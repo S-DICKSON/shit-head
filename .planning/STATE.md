@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-02-22)
 Phase: 25 of 25 complete
 Plan: All complete
 Status: v2.1 milestone shipped
-Last activity: 2026-02-22 — Completed quick-032: playful bot names and lobby-persistent bots
+Last activity: 2026-02-22 — Completed quick-033: immediate player removal when Discord Activity participant leaves
 
 Progress: [##########] v1.0 (15 phases) + v2.0 (8 phases) + v2.1 (2 phases) = ALL PHASES COMPLETE
 
@@ -33,7 +33,7 @@ Progress: [##########] v1.0 (15 phases) + v2.0 (8 phases) + v2.1 (2 phases) = AL
 **v2.1 Velocity:**
 - Plans completed: 9 (Phase 24: 4, Phase 25: 5)
 - Total: ~32 minutes
-- Quick tasks completed: 3 (030, 031, 032)
+- Quick tasks completed: 4 (030, 031, 032, 033)
 
 ## Accumulated Context
 
@@ -52,7 +52,7 @@ None — all known blockers resolved.
 
 ## Session Continuity
 
-Last session: 2026-02-22T13:04:02Z
-Stopped at: Completed quick-032-PLAN.md
+Last session: 2026-02-22T16:15:36Z
+Stopped at: Completed quick-033-PLAN.md
 Resume file: None
 Next: `/gsd:new-milestone` to start next version (questioning → research → requirements → roadmap)
