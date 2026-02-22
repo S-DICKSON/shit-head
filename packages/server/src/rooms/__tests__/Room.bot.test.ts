@@ -22,7 +22,7 @@ describe('Bot management', () => {
     if (result.success) {
       const state = room.getState();
       const bot = state.players.find(p => p.id === result.data);
-      expect(bot?.nickname).toBe('Bot 1');
+      expect(bot?.nickname).toBe('Jess Bot');
     }
   });
 
@@ -36,8 +36,8 @@ describe('Bot management', () => {
       const state = room.getState();
       const bot1 = state.players.find(p => p.id === r1.data);
       const bot2 = state.players.find(p => p.id === r2.data);
-      expect(bot1?.nickname).toBe('Bot 1');
-      expect(bot2?.nickname).toBe('Bot 2');
+      expect(bot1?.nickname).toBe('Jess Bot');
+      expect(bot2?.nickname).toBe('Bica Bot');
     }
   });
 
@@ -164,7 +164,7 @@ describe('Bot management', () => {
     }
   });
 
-  test('resetToLobby removes all bots', () => {
+  test('resetToLobby keeps bots in lobby', () => {
     const room = createRoomWithHost();
     room.addPlayer('player-2', 'Bob');
     room.addBot('BotA');
@@ -195,20 +195,41 @@ describe('Bot management', () => {
     room.markPlayAgain('host-1');
     room.markPlayAgain('player-2');
 
-    // After resetToLobby, bots should be gone
-    expect(room.getBotIds()).toHaveLength(0);
+    // After resetToLobby, bots should still be present
+    expect(room.getBotIds()).toHaveLength(2);
     const state = room.getState();
-    // Only human players remain
-    for (const player of state.players) {
-      expect(player.isBot).toBeUndefined();
-    }
-    // Bot counter resets
+    // Room should be back in waiting with bots still in
+    expect(state.status).toBe('waiting');
+    const botPlayers = state.players.filter(p => p.isBot);
+    expect(botPlayers).toHaveLength(2);
+
+    // Adding another bot after reset gives the next name in the pool
+    // (2 bots were already named via the pool, so next is index 2 = 'Knox Bot')
     const r = room.addBot();
-    expect(r.success).toBe(true);
-    if (r.success) {
-      const s = room.getState();
-      const newBot = s.players.find(p => p.id === r.data);
-      expect(newBot?.nickname).toBe('Bot 1');
+    expect(r.success).toBe(false); // Room is now full (host + player-2 + BotA + BotB = 4)
+  });
+
+  test('bot names cycle through playful name pool', () => {
+    const room = createRoomWithHost();
+    const r1 = room.addBot();
+    expect(r1.success).toBe(true);
+    if (r1.success) {
+      const state = room.getState();
+      const bot = state.players.find(p => p.id === r1.data);
+      expect(bot?.nickname).toBe('Jess Bot');
     }
+    // Remove first bot and add 3 more to verify cycling
+    if (r1.success) room.removeBot(r1.data);
+    // Add 3 more bots (fills remaining 3 slots: host + 3 bots = 4)
+    const names: string[] = [];
+    for (let i = 0; i < 3; i++) {
+      const r = room.addBot();
+      if (r.success) {
+        const s = room.getState();
+        const bot = s.players.find(p => p.id === r.data);
+        if (bot) names.push(bot.nickname);
+      }
+    }
+    expect(names).toEqual(['Bica Bot', 'Knox Bot', 'Joe Bot']);
   });
 });
