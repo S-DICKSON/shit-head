@@ -31,6 +31,7 @@ async function setupGameMock(page: Page) {
             players: [
               { id: 'test-player-1', nickname: 'Player1', isHost: true, isConnected: true },
               { id: 'test-player-2', nickname: 'Player2', isHost: false, isConnected: true },
+              { id: 'test-player-3', nickname: 'Player3', isHost: false, isConnected: true },
             ],
             hostId: 'test-player-1',
             minPlayers: 2,
@@ -69,6 +70,17 @@ async function setupGameMock(page: Page) {
               { kind: 'standard', rank: '9', suit: 'spades' },
               { kind: 'standard', rank: 'J', suit: 'hearts' },
               { kind: 'standard', rank: '4', suit: 'diamonds' },
+            ],
+            faceDownCount: 3,
+          },
+          {
+            playerId: 'test-player-3',
+            nickname: 'Player3',
+            handCount: 4,
+            faceUp: [
+              { kind: 'standard', rank: 'Q', suit: 'hearts' },
+              { kind: 'standard', rank: '8', suit: 'clubs' },
+              { kind: 'standard', rank: '2', suit: 'spades' },
             ],
             faceDownCount: 3,
           },
@@ -127,17 +139,6 @@ test.describe('Active gameplay screen', () => {
 
     // Verify draw pile label is visible (confirms game rendered)
     await expect(gamePage.drawPile).toBeVisible();
-  });
-
-  test('shows face-up and face-down card areas', async ({ page }) => {
-
-    const { sendGameDealt } = await setupGameMock(page);
-    await goToGameScreen(page, sendGameDealt);
-
-    // PlayerCards.vue renders face-up and face-down sections
-    // Face-down cards have count=3 in mock, so they show as blue card backs
-    // The Discard pile label confirms game is in playing phase
-    await expect(page.getByText('Discard')).toBeVisible();
   });
 
   test('shows draw pile with count', async ({ page }) => {
@@ -202,20 +203,36 @@ test.describe('Active gameplay screen', () => {
     expect(scrollHeight).toBeLessThanOrEqual(clientHeight);
   });
 
-  test('action buttons visible within viewport', async ({ page }) => {
-
+  test('hand cards fully visible within viewport', async ({ page }) => {
     const { sendGameDealt } = await setupGameMock(page);
     await goToGameScreen(page, sendGameDealt);
 
+    const viewport = page.viewportSize()!;
+    const handCards = page.locator('button').filter({ has: page.locator('span.font-bold') });
+    const count = await handCards.count();
+    expect(count).toBeGreaterThan(0);
+
+    for (let i = 0; i < count; i++) {
+      const box = await handCards.nth(i).boundingBox();
+      if (!box) continue; // skip if not rendered (e.g. face-down behind face-up)
+      expect(box.y, `card ${i} top edge clipped`).toBeGreaterThanOrEqual(0);
+      expect(box.y + box.height, `card ${i} bottom edge clipped`).toBeLessThanOrEqual(viewport.height);
+    }
+  });
+
+  test('Pick Up Pile button fully visible within viewport', async ({ page }) => {
+    const { sendGameDealt } = await setupGameMock(page);
+    await goToGameScreen(page, sendGameDealt);
+
+    const viewport = page.viewportSize()!;
     const pickUpButton = page.getByRole('button', { name: /Pick Up Pile/i });
     await expect(pickUpButton).toBeVisible();
 
-    // Verify button is within viewport bounds (not clipped)
     const box = await pickUpButton.boundingBox();
     expect(box).not.toBeNull();
-
-    const viewport = page.viewportSize()!;
-    expect(box!.y + box!.height).toBeLessThanOrEqual(viewport.height);
-    expect(box!.y).toBeGreaterThanOrEqual(0);
+    expect(box!.x, 'left edge clipped').toBeGreaterThanOrEqual(0);
+    expect(box!.y, 'top edge clipped').toBeGreaterThanOrEqual(0);
+    expect(box!.x + box!.width, 'right edge clipped').toBeLessThanOrEqual(viewport.width);
+    expect(box!.y + box!.height, 'bottom edge clipped').toBeLessThanOrEqual(viewport.height);
   });
 });
