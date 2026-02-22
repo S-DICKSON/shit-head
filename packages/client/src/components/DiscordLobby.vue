@@ -30,6 +30,13 @@ const countdown = ref<number | null>(null);
 // Timer tracking for cleanup
 const activeTimers: ReturnType<typeof setInterval>[] = [];
 
+// Discord SDK participant tracking
+// Note: participantUpdateHandler is intentionally not torn down on unmount —
+// the SDK persists across route navigation (lobby -> game -> lobby), so the
+// subscription must remain active during gameplay as well.
+type ParticipantUpdateEvent = { participants: Array<{ id: string }> };
+let participantUpdateHandler: ((event: ParticipantUpdateEvent) => void) | null = null;
+
 // Computed
 const isHost = computed(() => {
   if (!roomState.value || !playerId.value) return false;
@@ -106,7 +113,34 @@ onMounted(async () => {
 
     isAuthenticating.value = false;
 
-    // Step 4: Wait for WebSocket to be open, then send join-or-create
+    // Step 4: Subscribe to Discord SDK participant updates
+    // This fires when anyone joins or leaves the activity, for both lobby and in-game state.
+    // The subscription is kept alive for the lifetime of the app (not torn down on unmount)
+    // because the SDK instance persists across route navigation.
+    participantUpdateHandler = (event: ParticipantUpdateEvent) => {
+      if (!roomState.value) return;
+
+      // Build set of current Discord participant IDs
+      const participantIds = new Set(event.participants.map((p) => p.id));
+
+      // Check each room player with a discordUserId
+      for (const player of roomState.value.players) {
+        if (player.discordUserId && !participantIds.has(player.discordUserId)) {
+          // This player's Discord user is no longer in the activity
+          // Skip yourself — your own WS close handles self-removal
+          if (player.id === playerId.value) continue;
+
+          send({
+            type: 'discord-participant-left',
+            discordUserId: player.discordUserId,
+          });
+        }
+      }
+    };
+
+    sdk.subscribe('ACTIVITY_INSTANCE_PARTICIPANTS_UPDATE', participantUpdateHandler);
+
+    // Step 5: Wait for WebSocket to be open, then send join-or-create
     const doJoin = () => {
       send({
         type: 'join-or-create',
