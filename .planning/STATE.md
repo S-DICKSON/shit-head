@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-21)
 
 **Core value:** Friends can play a complete, rule-accurate game of Shithead together online with zero friction
-**Current focus:** v3.0 Quality & Testing
+**Current focus:** Phase 25 — Bot Player
 
 ## Current Position
 
-Phase: 24 of 24 (24-playwright-responsive-e2e-testing)
-Plan: 4 of 4 complete (gap closure plan)
-Status: Phase complete — gap closure applied ✓
-Last activity: 2026-02-22 - Completed 24-04-PLAN.md (gap closure: all-Chromium mobile viewports)
+Phase: 25 of 25 (25-bot-player)
+Plan: 1 of N complete
+Status: In progress
+Last activity: 2026-02-22 - Completed 25-01-PLAN.md (bot player infrastructure)
 
-Progress: [##########] v1.0 (15 phases) + v2.0 (8 phases) + Phase 24 (4/4 plans) = ALL PHASES COMPLETE
+Progress: [##########] v1.0 (15 phases) + v2.0 (8 phases) + Phase 24 (4 plans) + Phase 25 (1/N plans)
 
 ## Performance Metrics
 
@@ -34,6 +34,11 @@ Progress: [##########] v1.0 (15 phases) + v2.0 (8 phases) + Phase 24 (4/4 plans)
 - Plans completed: 4
 - Duration: ~3 minutes each
 - Total: ~12 minutes
+
+**Phase 25 Velocity:**
+- Plans completed: 1
+- Duration: ~5 minutes
+- Total: ~5 minutes
 
 ## Accumulated Context
 
@@ -66,6 +71,14 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - Remove unused `devices` import from @playwright/test
 - Remove all test.skip(browserName !== 'chromium') guards — all projects now Chromium, 150/150 tests pass with 0 skips
 
+**Phase 25 Plan 01 decisions:**
+- `botPlayerIds` Set tracks bot identity (not stored on player objects); keeps player map structure unchanged
+- `isBot: || undefined` in getState() so non-bot players omit the field (cleaner payloads)
+- Bots excluded from markPlayAgain connected-player count (bots never call markPlayAgain)
+- BotPlayer.ts implemented in plan 01 to fix pre-committed test file (not deferred to plan 02)
+- `nanoid(8)` for bot IDs — unique 8-char suffix on `bot_` prefix
+- botNameCounter resets on resetToLobby — fresh lobby restarts Bot 1, Bot 2 naming
+
 ### Pending Todos
 
 1 pending — `/gsd:check-todos` to review
@@ -74,16 +87,15 @@ Decisions are logged in PROJECT.md Key Decisions table.
 ### Roadmap Evolution
 
 - Phase 24 added: Playwright Responsive E2E Testing (complete)
+- Phase 25 added: Bot Player (in progress)
 
 ### Blockers/Concerns
 
-None — all known blockers resolved:
-- CI now installs Chromium and runs E2E tests
-- WS-mocked tests no longer skip — all 6 projects use Chromium, 0 skips
+None — all known blockers resolved.
 
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: Completed 24-04-PLAN.md (gap closure: all-Chromium mobile viewports, 0 skipped tests)
+Stopped at: Completed 25-01-PLAN.md (bot player infrastructure: shared types, Room methods, BotPlayer.selectMove)
 Resume file: None
-Next: All planned phases complete. Consider: monitor CI, debug dev tooling (pending todo)
+Next: Execute 25-02-PLAN.md (BotPlayer integration into Room game loop)

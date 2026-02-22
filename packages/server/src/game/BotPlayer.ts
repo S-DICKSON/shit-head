@@ -1,7 +1,7 @@
 // BotPlayer — deterministic move selection for bot players in Shithead
 // Strategy: play the lowest valid rank group; pickup if no valid cards; random face-down index.
-import type { GameState, PlayerGameState } from '@shit-head/shared';
-import { canPlayOnPile, getRankValue } from '@shit-head/shared';
+import type { GameState, PlayerGameState, Card } from '@shit-head/shared';
+import { canPlayOnPile, getRankValue, RANK_ORDER } from '@shit-head/shared';
 
 // ---------------------------------------------------------------------------
 // Move types
@@ -39,17 +39,14 @@ export const BotPlayer = {
 
     // Determine play source
     if (player.hand.length > 0) {
-      // Play from hand
       return selectHandMove(player, state, state.firstTurn);
     }
 
     if (drawPileEmpty && player.faceUp.length > 0) {
-      // Play from face-up
-      return selectFaceUpMove(player, state);
+      return selectLowestValidGroup(player.faceUp, state.discardPile);
     }
 
     if (drawPileEmpty && player.faceUp.length === 0 && player.faceDown.length > 0) {
-      // Play random face-down
       const faceDownIndex = Math.floor(Math.random() * player.faceDown.length);
       return { type: 'face-down', faceDownIndex };
     }
@@ -65,52 +62,35 @@ export const BotPlayer = {
 
 /**
  * Select move from hand cards.
- * On first turn: play all copies of lowest non-2 rank.
+ * On first turn: play all copies of lowest non-2 rank (scans RANK_ORDER from '3' upward).
  * Otherwise: play lowest valid rank group, or pickup.
  */
 function selectHandMove(player: PlayerGameState, state: GameState, firstTurn: boolean): BotMove {
-  const { discardPile } = state;
-
   if (firstTurn) {
-    // First turn: must play lowest non-2 card(s)
-    const nonTwoCards = player.hand
-      .map((card, idx) => ({ card, idx }))
-      .filter(({ card }) => card.kind !== 'standard' || card.rank !== '2');
-
-    if (nonTwoCards.length === 0) {
-      // All 2s — play lowest (first)
-      return { type: 'play', cardIndices: [0] };
+    // Scan RANK_ORDER from '3' upward (skip '2' at index 0) to find lowest non-2 rank in hand
+    const scanOrder = RANK_ORDER.slice(1); // ['3', '4', '5', ..., 'A']
+    for (const rank of scanOrder) {
+      const indices = player.hand
+        .map((c, i) => (c.kind === 'standard' && c.rank === rank ? i : -1))
+        .filter(i => i !== -1);
+      if (indices.length > 0) {
+        return { type: 'play', cardIndices: indices };
+      }
     }
-
-    // Find lowest rank among non-2 cards
-    const lowestValue = Math.min(...nonTwoCards.map(({ card }) => getRankValue(card)));
-    const lowestGroup = nonTwoCards.filter(({ card }) => getRankValue(card) === lowestValue);
-    return { type: 'play', cardIndices: lowestGroup.map(({ idx }) => idx) };
+    // Fallback: hand contains only 2s — play first card
+    return { type: 'play', cardIndices: [0] };
   }
 
-  // Normal play: find valid cards
-  const validCards = player.hand
-    .map((card, idx) => ({ card, idx }))
-    .filter(({ card }) => canPlayOnPile(card, discardPile));
-
-  if (validCards.length === 0) {
-    return { type: 'pickup' };
-  }
-
-  // Find lowest valid rank group
-  const lowestValue = Math.min(...validCards.map(({ card }) => getRankValue(card)));
-  const lowestGroup = validCards.filter(({ card }) => getRankValue(card) === lowestValue);
-  return { type: 'play', cardIndices: lowestGroup.map(({ idx }) => idx) };
+  return selectLowestValidGroup(player.hand, state.discardPile);
 }
 
 /**
- * Select move from face-up cards (hand empty, draw pile empty).
- * Plays lowest valid rank group, or pickup.
+ * From a set of cards, find all cards valid to play on the discard pile,
+ * group them by rank value, and return the group with the lowest rank value.
+ * Returns pickup if no cards are valid.
  */
-function selectFaceUpMove(player: PlayerGameState, state: GameState): BotMove {
-  const { discardPile } = state;
-
-  const validCards = player.faceUp
+function selectLowestValidGroup(cards: Card[], discardPile: Card[]): BotMove {
+  const validCards = cards
     .map((card, idx) => ({ card, idx }))
     .filter(({ card }) => canPlayOnPile(card, discardPile));
 
@@ -118,7 +98,6 @@ function selectFaceUpMove(player: PlayerGameState, state: GameState): BotMove {
     return { type: 'pickup' };
   }
 
-  // Find lowest valid rank group
   const lowestValue = Math.min(...validCards.map(({ card }) => getRankValue(card)));
   const lowestGroup = validCards.filter(({ card }) => getRankValue(card) === lowestValue);
   return { type: 'play', cardIndices: lowestGroup.map(({ idx }) => idx) };
