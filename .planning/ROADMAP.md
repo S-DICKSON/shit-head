@@ -12,9 +12,9 @@ Plans:
 - [x] 24-01-PLAN.md — Scaffold packages/e2e with Playwright config and Page Object Models
 - [x] 24-02-PLAN.md — Home screen and lobby screen E2E tests (real WS)
 - [x] 24-03-PLAN.md — Swap phase and game screen E2E tests (WS mocked) + CI integration
-- [ ] 24-04-PLAN.md — Gap closure: Switch mobile projects from WebKit to Chromium, remove skip guards
+- [x] 24-04-PLAN.md — Gap closure: Switch mobile projects from WebKit to Chromium, remove skip guards
 
-**Status:** UAT gap closure in progress
+**Status:** Complete (verified 11/11 must-haves)
 
 **Details:**
 Enable quicker workflows for Claude to verify the interface renders and functions correctly at multiple viewport breakpoints:

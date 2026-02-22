@@ -1,21 +1,34 @@
 ---
 phase: 24-playwright-responsive-e2e-testing
-verified: 2026-02-21T22:21:36Z
+verified: 2026-02-22T01:00:00Z
 status: passed
 score: 11/11 must-haves verified
+re_verification:
+  previous_status: passed
+  previous_score: 11/11
+  gaps_closed:
+    - "All 6 projects now use Chromium (mobile-375 and mobile-390 migrated from WebKit device presets)"
+    - "Zero skipped tests — all 13 test.skip(browserName !== chromium) guards removed from swap-phase.spec.ts and game.spec.ts"
+    - "Mobile viewports preserve hasTouch: true and isMobile: true (no device preset spread)"
+    - "devices import removed from playwright.config.ts (no WebKit/iPhone references remain)"
+  gaps_remaining: []
+  regressions: []
 gaps: []
 human_verification:
   - test: "Run the full E2E suite against live local servers"
-    expected: "150 tests pass (124 Chromium, 26 WebKit skipped on WS-mocked tests)"
-    why_human: "Tests require a running Bun server + Vite client; can't execute in verifier context"
+    expected: "150 tests pass, 0 skipped, across all 6 viewport projects"
+    why_human: "Tests require a running Bun server + Vite client; cannot execute in verifier context"
+  - test: "CI pipeline validation — push to a PR and observe GitHub Actions"
+    expected: "Install Playwright browsers, Run E2E tests, Upload Playwright report steps all execute with Chromium only"
+    why_human: "Requires triggering a real CI run to observe live execution"
 ---
 
-# Phase 24: Playwright Responsive E2E Testing — Verification Report
+# Phase 24: Playwright Responsive E2E Testing — Verification Report (Re-verification)
 
 **Phase Goal:** Add Playwright E2E testing to validate the UI works across mobile, tablet, laptop, desktop, and Discord iframe viewport sizes. Tests cover home screen, lobby screen, prepare phase (card swaps), and active in-game play.
-**Verified:** 2026-02-21T22:21:36Z
+**Verified:** 2026-02-22T01:00:00Z
 **Status:** PASSED
-**Re-verification:** No — initial verification
+**Re-verification:** Yes — after gap closure (plan 24-04: all-Chromium mobile viewport migration)
 
 ## Goal Achievement
 
@@ -23,17 +36,17 @@ human_verification:
 
 | # | Truth | Status | Evidence |
 |---|-------|--------|----------|
-| 1 | packages/e2e exists as a valid workspace package with Playwright installed | VERIFIED | `packages/e2e/package.json` with `@playwright/test ^1.58.2`; entry in `bun.lock` at workspace path `packages/e2e`; `packages/*` glob in root package.json covers it |
-| 2 | Playwright can discover and run tests across 6 viewport projects | VERIFIED | `bunx playwright test --list` outputs 150 tests across mobile-375, mobile-390, tablet-768, laptop-1280, desktop-1920, discord-iframe-460 in 4 files |
-| 3 | make e2e, make e2e-ui, and make e2e-report targets exist | VERIFIED | Makefile lines 69-76 define all three targets; all in `.PHONY` on line 1 |
-| 4 | Page Object Models provide role-based locators for all 4 screens | VERIFIED | LandingPage, LobbyPage, SwapPhasePage, GamePage all export named classes using `getByRole`, `getByLabel`, `getByText`, `getByPlaceholder` — no raw CSS id selectors |
-| 5 | RoomCode.vue has data-testid="room-code" for reliable E2E selection | VERIFIED | `packages/client/src/components/RoomCode.vue` line 63 has `data-testid="room-code"` on the code display div |
-| 6 | Home screen renders heading, nickname input, create/join buttons at all 6 viewports | VERIFIED | `home.spec.ts` has 6 tests (6 per viewport = 36 total); test "renders heading and form at all viewports" asserts heading, nicknameInput, createRoomButton, joinRoomButton all visible |
-| 7 | Lobby screen shows player name, room code, and leave button at all viewports | VERIFIED | `lobby.spec.ts` has 6 tests x 6 viewports = 36 total; covers player name, room code regex `^[A-Z0-9]{6}$`, leave button, viewport fit, and start-game state |
-| 8 | Swap phase UI renders face-up, hand, face-down cards, and ready button | VERIFIED | `swap-phase.spec.ts` has 6 tests using `game-dealt` WS mock with `phase: 'swapping'`; asserts faceUpLabel, handLabel, faceDownLabel, readyButton all visible |
-| 9 | Game screen UI renders opponent area, draw pile, discard pile, and player cards | VERIFIED | `game.spec.ts` has 7 tests using `game-dealt` WS mock with `phase: 'playing'`; asserts Player2 opponent text, Draw label, Discard label, draw count 24, discard pile badge |
-| 10 | Swap phase and game tests use WebSocket mocking to pre-seed game state | VERIFIED | Both specs use `page.routeWebSocket('**/game-ws**', ...)` with `room-created` then deferred `game-dealt` after `waitForURL(/\/#\/room\//)` + 100ms; all WS-mocked tests include `test.skip(browserName !== 'chromium')` |
-| 11 | CI workflow installs Playwright browsers and runs E2E tests with artifact upload | VERIFIED | `.github/workflows/ci.yml` lines 55-69: "Install Playwright browsers" (`bunx playwright install --with-deps chromium`), "Run E2E tests" (`bunx playwright test` with `CI: true`), "Upload Playwright report" (`actions/upload-artifact@v4`, `if: ${{ !cancelled() }}`) |
+| 1 | Playwright E2E test infrastructure exists in packages/e2e | VERIFIED | `packages/e2e/package.json` has `@playwright/test ^1.58.2`; workspace glob `packages/*` covers it; `bun.lock` entry present |
+| 2 | Tests cover 6 viewport sizes (mobile-375, mobile-390, tablet-768, laptop-1280, desktop-1920, discord-iframe-460) | VERIFIED | All 6 named projects in `playwright.config.ts` lines 19-58 with correct dimensions |
+| 3 | Home screen tests exist and are substantive | VERIFIED | `home.spec.ts` — 67 lines, 6 tests, no stubs |
+| 4 | Lobby screen tests exist and are substantive | VERIFIED | `lobby.spec.ts` — 88 lines, 6 tests, no stubs |
+| 5 | Swap phase tests exist with WS mocking | VERIFIED | `swap-phase.spec.ts` — 172 lines, 6 tests, uses `routeWebSocket` with `game-dealt` payload, `phase: 'swapping'` |
+| 6 | Game screen tests exist with WS mocking | VERIFIED | `game.spec.ts` — 191 lines, 7 tests, uses `routeWebSocket` with `game-dealt` payload, `phase: 'playing'` |
+| 7 | All 6 projects use Chromium (no WebKit) | VERIFIED | `playwright.config.ts` has no `devices` import, no `...devices['iPhone SE']` or `...devices['iPhone 14']` spreads; mobile projects use `viewport + hasTouch + isMobile` only |
+| 8 | Zero skipped tests across all viewports | VERIFIED | No `test.skip` or `browserName` found in any of the 4 spec files; 6 x (6+6+6+7) = 150 tests run on all viewports |
+| 9 | CI workflow includes Playwright E2E step | VERIFIED | `.github/workflows/ci.yml` lines 55-69: browser install (chromium only), `bunx playwright test` with `CI: true`, artifact upload |
+| 10 | Page Object Models exist for maintainability | VERIFIED | 4 POM files: LandingPage (53 lines), LobbyPage (43 lines), SwapPhasePage (37 lines), GamePage (33 lines); all use role-based locators |
+| 11 | Mobile viewports have touch enabled (hasTouch: true) | VERIFIED | `playwright.config.ts` lines 22-23 and 30-31: `hasTouch: true` + `isMobile: true` on both mobile-375 and mobile-390 |
 
 **Score:** 11/11 truths verified
 
@@ -41,84 +54,82 @@ human_verification:
 
 | Artifact | Expected | Status | Details |
 |----------|----------|--------|---------|
-| `packages/e2e/package.json` | E2E package with @playwright/test | VERIFIED | 15 lines; `@playwright/test ^1.58.2` + `@types/node ^25.3.0` in devDependencies |
-| `packages/e2e/playwright.config.ts` | 6-viewport project config with webServer array | VERIFIED | 79 lines; 6 named projects; webServer array with server (`cwd: '../server'`, `/health`) and client (`cwd: '../client'`) |
-| `packages/e2e/tsconfig.json` | TypeScript config for test files | VERIFIED | 12 lines; includes `tests/**/*.ts` and `playwright.config.ts` |
-| `packages/e2e/.gitignore` | Ignores playwright-report, test-results, blob-report | VERIFIED | All 3 patterns present |
-| `packages/e2e/tests/pages/LandingPage.ts` | POM for home/landing screen | VERIFIED | 53 lines; exports `LandingPage`; methods: `goto`, `waitForConnected`, `fillNickname`, `createRoom`, `joinRoom` |
-| `packages/e2e/tests/pages/LobbyPage.ts` | POM for lobby screen | VERIFIED | 43 lines; exports `LobbyPage`; `roomCodeDisplay` uses `[data-testid="room-code"]` locator |
+| `packages/e2e/package.json` | E2E package with @playwright/test | VERIFIED | 15 lines; `@playwright/test ^1.58.2` in devDependencies |
+| `packages/e2e/playwright.config.ts` | 6-viewport all-Chromium config, webServer array | VERIFIED | 81 lines; 6 named projects; no `devices` import; `webServer` array targets Bun server + Vite client |
+| `packages/e2e/tsconfig.json` | TypeScript config for test files | VERIFIED | Includes `tests/**/*.ts` and `playwright.config.ts`; `strict: true` |
+| `packages/e2e/tests/pages/LandingPage.ts` | POM for home/landing screen | VERIFIED | 53 lines; exports `LandingPage`; role-based locators; `waitForConnected`, `createRoom`, `joinRoom` methods |
+| `packages/e2e/tests/pages/LobbyPage.ts` | POM for lobby screen | VERIFIED | 43 lines; exports `LobbyPage`; uses `[data-testid="room-code"]` locator |
 | `packages/e2e/tests/pages/SwapPhasePage.ts` | POM for swap phase screen | VERIFIED | 37 lines; exports `SwapPhasePage`; locators for faceUpLabel, handLabel, faceDownLabel, readyButton, leaveButton |
-| `packages/e2e/tests/pages/GamePage.ts` | POM for active gameplay screen | VERIFIED | 33 lines; exports `GamePage`; locators for leaveButton, turnBanner, drawPile, gameOverHeading |
-| `packages/e2e/tests/home.spec.ts` | Home screen E2E tests | VERIFIED | 67 lines; 6 tests; imports `LandingPage` POM; no stub patterns |
-| `packages/e2e/tests/lobby.spec.ts` | Lobby screen E2E tests | VERIFIED | 88 lines; 6 tests; imports `LandingPage` + `LobbyPage` POMs; uses real WS |
-| `packages/e2e/tests/swap-phase.spec.ts` | Swap phase E2E tests with WS mocking | VERIFIED | 178 lines; 6 tests; imports `SwapPhasePage` POM; uses `routeWebSocket` with `game-dealt` |
-| `packages/e2e/tests/game.spec.ts` | Active gameplay E2E tests with WS mocking | VERIFIED | 198 lines; 7 tests; imports `GamePage` POM; uses `routeWebSocket` with `game-dealt` |
-| `packages/client/src/components/RoomCode.vue` | data-testid="room-code" on code display | VERIFIED | Line 63: `data-testid="room-code"` present on the display div |
-| `Makefile` | e2e, e2e-ui, e2e-report targets | VERIFIED | Lines 69-76 + `.PHONY` line 1 includes all three |
-| `.github/workflows/ci.yml` | CI pipeline with Playwright E2E step | VERIFIED | 3 steps added after Build client: browser install, test run (`CI: true`), artifact upload |
+| `packages/e2e/tests/pages/GamePage.ts` | POM for active gameplay | VERIFIED | 33 lines; exports `GamePage`; locators for leaveButton, drawPile, turnBanner, gameOverHeading |
+| `packages/e2e/tests/home.spec.ts` | Home screen E2E tests | VERIFIED | 67 lines; 6 tests; no stub patterns |
+| `packages/e2e/tests/lobby.spec.ts` | Lobby screen E2E tests | VERIFIED | 88 lines; 6 tests; no stub patterns |
+| `packages/e2e/tests/swap-phase.spec.ts` | Swap phase tests, no skip guards | VERIFIED | 172 lines; 6 tests; zero `test.skip` or `browserName` references |
+| `packages/e2e/tests/game.spec.ts` | Game tests, no skip guards | VERIFIED | 191 lines; 7 tests; zero `test.skip` or `browserName` references |
+| `packages/client/src/components/RoomCode.vue` | data-testid="room-code" on code display | VERIFIED | Line 63: `data-testid="room-code"` present on display div |
+| `Makefile` | e2e, e2e-ui, e2e-report targets | VERIFIED | Lines 69-76; all three targets in `.PHONY` |
+| `.github/workflows/ci.yml` | CI pipeline with Playwright E2E step | VERIFIED | Lines 55-69: chromium-only browser install, test run with `CI: true`, artifact upload |
 
 ### Key Link Verification
 
 | From | To | Via | Status | Details |
 |------|----|-----|--------|---------|
-| `playwright.config.ts` | `packages/server/src/index.ts` | webServer `cwd: '../server'` | WIRED | Line 62: `cwd: '../server'`, command `bun run src/index.ts`, url `http://localhost:3000/health` |
-| `playwright.config.ts` | `packages/client/vite.config.ts` | webServer `cwd: '../client'` | WIRED | Line 73: `cwd: '../client'`, command `bunx vite`, url `http://localhost:5173` |
-| `home.spec.ts` | `LandingPage.ts` | import | WIRED | Line 2: `import { LandingPage } from './pages/LandingPage'`; used in all 6 tests |
-| `lobby.spec.ts` | `LandingPage.ts` + `LobbyPage.ts` | import | WIRED | Lines 2-3: both POMs imported; LandingPage used for room creation, LobbyPage for assertions |
-| `LobbyPage.ts` | `RoomCode.vue` | `[data-testid="room-code"]` | WIRED | LobbyPage line 18 uses `locator('[data-testid="room-code"]')`; RoomCode.vue line 63 has the attribute |
-| `swap-phase.spec.ts` | `SwapPhasePage.ts` | import | WIRED | Line 3: `import { SwapPhasePage } from './pages/SwapPhasePage'`; used in all 6 tests via `goToSwapPhase` |
-| `swap-phase.spec.ts` | `useGameSocket.ts` protocol | `game-dealt` message type | WIRED | Uses `type: 'game-dealt'` with flat fields (`phase`, `hand`, `faceUp`, `faceDownCount`, `opponents`, `drawPileCount`, `discardPile`, `currentPlayerIndex`, `dealerIndex`, `firstTurn`) — matches `gameDealtSchema` |
-| `game.spec.ts` | `GamePage.ts` | import | WIRED | Line 3: `import { GamePage } from './pages/GamePage'`; used in 6 of 7 tests |
-| `game.spec.ts` | `useGameSocket.ts` protocol | `game-dealt` message type | WIRED | Uses `type: 'game-dealt'` with `phase: 'playing'` and same flat field structure |
-| `.github/workflows/ci.yml` | `playwright.config.ts` | `bunx playwright test` | WIRED | CI line 59: `cd packages/e2e && bunx playwright test`; config at `packages/e2e/playwright.config.ts` auto-discovered |
+| `playwright.config.ts` | `packages/server` | `cwd: '../server'`, `/health` endpoint | WIRED | Line 62-64: command `bun run src/index.ts`, url `http://localhost:3000/health` |
+| `playwright.config.ts` | `packages/client` | `cwd: '../client'`, Vite | WIRED | Line 73-75: command `bunx vite`, url `http://localhost:5173` |
+| `swap-phase.spec.ts` | `SwapPhasePage.ts` | import + usage | WIRED | Line 3: `import { SwapPhasePage } from './pages/SwapPhasePage'`; used in all 6 tests via `goToSwapPhase` |
+| `swap-phase.spec.ts` | `LandingPage.ts` | import + usage | WIRED | Line 2: `import { LandingPage } from './pages/LandingPage'`; used in `goToSwapPhase` helper |
+| `game.spec.ts` | `GamePage.ts` | import + usage | WIRED | Line 3: `import { GamePage } from './pages/GamePage'`; used in 6 of 7 tests |
+| `game.spec.ts` | `LandingPage.ts` | import + usage | WIRED | Line 2: `import { LandingPage } from './pages/LandingPage'`; used in `goToGameScreen` helper |
+| `LobbyPage.ts` | `RoomCode.vue` | `[data-testid="room-code"]` selector | WIRED | LobbyPage line 18 uses locator; RoomCode.vue line 63 has the attribute |
+| `swap-phase.spec.ts` | WS protocol (`game-dealt`) | `routeWebSocket + phase: 'swapping'` | WIRED | Lines 10-82: `routeWebSocket('**/game-ws**')` with full `game-dealt` payload matching `gameDealtSchema` |
+| `game.spec.ts` | WS protocol (`game-dealt`) | `routeWebSocket + phase: 'playing'` | WIRED | Lines 10-83: `routeWebSocket('**/game-ws**')` with full `game-dealt` payload, `drawPileCount: 24` |
+| `.github/workflows/ci.yml` | `playwright.config.ts` | `cd packages/e2e && bunx playwright test` | WIRED | Line 59: auto-discovers config at `packages/e2e/playwright.config.ts` |
 
 ### Anti-Patterns Found
 
-None. Zero stub patterns (`TODO`, `FIXME`, `placeholder`, `not implemented`, `coming soon`) found across all spec files and POM files. All test bodies contain real assertions against real locators.
+None. Zero stub patterns across all spec files and POM files. No `TODO`, `FIXME`, `placeholder`, `not implemented`, or `coming soon` found. No `test.skip` or `browserName` guards remain in any test file.
 
-### TypeScript Compilation
+### Re-verification Delta (Plan 24-04 Changes)
 
-`bunx tsc --noEmit` in `packages/e2e` exits cleanly (0 errors). All 4 POM files and 4 spec files compile without errors.
+**What changed after the initial VERIFICATION.md was written:**
 
-### Test Discovery
+Plan 24-04 was executed on 2026-02-22 (after the initial verification on 2026-02-21). The following changes are confirmed in the actual codebase:
 
-`bunx playwright test --list` discovers **150 tests in 4 files** across 6 viewport projects:
-- 6 tests x 6 viewports = 36 home screen tests
-- 6 tests x 6 viewports = 36 lobby screen tests
-- 6 tests x 6 viewports = 36 swap phase tests (26 will skip on WebKit mobile at runtime)
-- 7 tests x 6 viewports = 42 game screen tests (28 will skip on WebKit mobile at runtime)
+1. **playwright.config.ts** — `devices` import removed; `mobile-375` and `mobile-390` projects now use `{ viewport: { width, height }, hasTouch: true, isMobile: true }` instead of `...devices['iPhone SE']` and `...devices['iPhone 14']` spreads. No WebKit or iPhone references remain.
+
+2. **swap-phase.spec.ts** — All 6 `test.skip(browserName !== 'chromium', ...)` lines removed. All 6 `browserName` destructured parameters removed from test callbacks. Tests now run as `async ({ page }) =>` with no conditional skipping.
+
+3. **game.spec.ts** — All 7 `test.skip(browserName !== 'chromium', ...)` lines removed. All 7 `browserName` destructured parameters removed. Tests now run as `async ({ page }) =>` with no conditional skipping.
+
+**Net effect:** 6 x (6+6+6+7) = **150 tests, 0 skipped**, all 6 viewport projects use Chromium uniformly.
 
 ### Human Verification Required
 
 #### 1. Full E2E Suite Execution
 
-**Test:** Run `make e2e` with local dev servers running (or let Playwright start them via webServer config)
-**Expected:** 124 tests pass, 26 skip (WebKit mobile for WS-mocked tests); 0 failures
-**Why human:** Tests require live WebSocket server (`bun run src/index.ts`) and Vite client; verifier cannot execute network-dependent tests
+**Test:** Run `make e2e` (or `cd packages/e2e && bunx playwright test`) with local dev servers available (Playwright starts them automatically via `webServer` config)
+**Expected:** 150 tests pass, 0 skipped, 0 failures across all 6 viewport projects (mobile-375, mobile-390, tablet-768, laptop-1280, desktop-1920, discord-iframe-460)
+**Why human:** Tests require a live Bun WebSocket server and Vite client; verifier cannot execute network-dependent tests
 
 #### 2. CI Pipeline Validation
 
-**Test:** Push a change to a PR and observe GitHub Actions run
-**Expected:** "Install Playwright browsers", "Run E2E tests", and "Upload Playwright report" steps all appear and execute in the CI run
-**Why human:** Requires triggering a real CI run to observe live execution
+**Test:** Push a change to a PR branch and observe the GitHub Actions CI run
+**Expected:** "Install Playwright browsers" installs only Chromium; "Run E2E tests" runs 150 tests; "Upload Playwright report" uploads the HTML report artifact
+**Why human:** Requires triggering a real CI run on GitHub Actions
 
 ## Summary
 
-Phase 24 goal is fully achieved. All structural, wiring, and substantive verification passes:
+Phase 24 goal is fully achieved. The re-verification confirms plan 24-04 executed correctly:
 
-- `packages/e2e` is a complete, valid Bun workspace package with `@playwright/test ^1.58.2` installed and registered in `bun.lock`
-- All 6 viewport projects are defined (`mobile-375`, `mobile-390`, `tablet-768`, `laptop-1280`, `desktop-1920`, `discord-iframe-460`) with correct device specs
-- `webServer` array properly targets the Bun server (via `/health` endpoint) and Vite client with `reuseExistingServer: !process.env.CI`
-- 4 fully implemented POM classes with role-based locators, substantive method implementations, and correct exports
-- `data-testid="room-code"` anchored to `RoomCode.vue` and consumed by `LobbyPage.roomCodeDisplay`
-- 4 spec files covering all required screens: home (6 tests), lobby (6 tests), swap phase (6 tests, WS-mocked), game (7 tests, WS-mocked)
-- WS-mocked tests use the correct `game-dealt` protocol with deferred send after `waitForURL(/\/#\/room\//)` + 100ms — no `game-view` message type used
-- Chromium-only skip pattern applied to all 13 WS-mocked tests
+- `packages/e2e/playwright.config.ts` has no `devices` import and no WebKit device presets — both mobile projects use Chromium with explicit `viewport + hasTouch + isMobile` config
+- `packages/e2e/tests/swap-phase.spec.ts` has zero `test.skip` guards and zero `browserName` references — all 6 tests run uniformly on all 6 viewports
+- `packages/e2e/tests/game.spec.ts` has zero `test.skip` guards and zero `browserName` references — all 7 tests run uniformly on all 6 viewports
+- All 4 POM files and 4 spec files are substantive (37-191 lines each), properly exported, properly imported, and contain real assertions
+- CI workflow targets Chromium-only browser install and runs the full suite with `CI: true`
+- `data-testid="room-code"` anchor intact in `RoomCode.vue` line 63
 - Makefile `e2e`, `e2e-ui`, `e2e-report` targets in `.PHONY` and functioning
-- CI workflow extended with browser install, test run, and artifact upload steps
-- TypeScript compiles cleanly; 150 tests discovered by `playwright test --list`
+- No stub patterns anywhere in the test infrastructure
 
 ---
 
-_Verified: 2026-02-21T22:21:36Z_
+_Verified: 2026-02-22T01:00:00Z_
 _Verifier: Claude (gsd-verifier)_
