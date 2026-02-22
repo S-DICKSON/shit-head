@@ -80,20 +80,6 @@
         </button>
       </div>
 
-      <!-- Player's face-down cards (non-interactive) -->
-      <div class="text-center mb-2">
-        <span class="text-xs text-green-300 uppercase tracking-wide">Face Down</span>
-      </div>
-      <div class="flex justify-center gap-2 mb-4">
-        <div
-          v-for="n in (gameView?.faceDownCount ?? 0)"
-          :key="'fd-' + n"
-          class="w-16 h-24 bg-blue-800 rounded border-2 border-blue-600 flex items-center justify-center text-lg text-blue-400"
-        >
-          ?
-        </div>
-      </div>
-
       <!-- Player's hand cards -->
       <div class="text-center mb-2">
         <span class="text-xs text-green-300 uppercase tracking-wide">Your Hand</span>
