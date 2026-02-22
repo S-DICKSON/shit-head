@@ -774,6 +774,17 @@ export function handleMessage(
           });
         }
       }
+
+      // After human plays, check if next player is a bot
+      {
+        const postPlayState = room.getGameState();
+        if (postPlayState && postPlayState.phase === 'playing') {
+          const nextPlayer = postPlayState.players[postPlayState.currentPlayerIndex];
+          if (nextPlayer && room.isBot(nextPlayer.playerId)) {
+            executeBotTurn(room, nextPlayer.playerId);
+          }
+        }
+      }
       break;
     }
 
@@ -811,6 +822,17 @@ export function handleMessage(
             faceDownCount: view.faceDownCount,
             opponents: view.opponents,
           });
+        }
+      }
+
+      // After human picks up, check if next player is a bot
+      {
+        const postPickupState = room.getGameState();
+        if (postPickupState && postPickupState.phase === 'playing') {
+          const nextPlayer = postPickupState.players[postPickupState.currentPlayerIndex];
+          if (nextPlayer && room.isBot(nextPlayer.playerId)) {
+            executeBotTurn(room, nextPlayer.playerId);
+          }
         }
       }
       break;
@@ -857,6 +879,17 @@ export function handleMessage(
               faceDownCount: view.faceDownCount,
               opponents: view.opponents,
             });
+          }
+        }
+      }
+
+      // After human plays face-down, check if next player is a bot
+      {
+        const postFaceDownState = room.getGameState();
+        if (postFaceDownState && postFaceDownState.phase === 'playing') {
+          const nextPlayer = postFaceDownState.players[postFaceDownState.currentPlayerIndex];
+          if (nextPlayer && room.isBot(nextPlayer.playerId)) {
+            executeBotTurn(room, nextPlayer.playerId);
           }
         }
       }
