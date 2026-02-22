@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-02-22)
 Phase: 25 of 25 complete
 Plan: All complete
 Status: v2.1 milestone shipped
-Last activity: 2026-02-22 — Completed quick-031: hide face-down cards during pregame/swap phase
+Last activity: 2026-02-22 — Completed quick-032: playful bot names and lobby-persistent bots
 
 Progress: [##########] v1.0 (15 phases) + v2.0 (8 phases) + v2.1 (2 phases) = ALL PHASES COMPLETE
 
@@ -52,7 +52,7 @@ None — all known blockers resolved.
 
 ## Session Continuity
 
-Last session: 2026-02-22T12:11:00Z
-Stopped at: Completed quick-031-PLAN.md
+Last session: 2026-02-22T13:04:02Z
+Stopped at: Completed quick-032-PLAN.md
 Resume file: None
 Next: `/gsd:new-milestone` to start next version (questioning → research → requirements → roadmap)
