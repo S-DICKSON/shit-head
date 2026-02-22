@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-21)
 ## Current Position
 
 Phase: 24 of 24 (24-playwright-responsive-e2e-testing)
-Plan: 3 of 3 complete
-Status: Phase complete — verified ✓ (11/11 must-haves)
-Last activity: 2026-02-21 - Phase 24 verified and complete
+Plan: 4 of 4 complete (gap closure plan)
+Status: Phase complete — gap closure applied ✓
+Last activity: 2026-02-22 - Completed 24-04-PLAN.md (gap closure: all-Chromium mobile viewports)
 
-Progress: [##########] v1.0 (15 phases) + v2.0 (8 phases) + Phase 24 (3/3 plans) = ALL PHASES COMPLETE
+Progress: [##########] v1.0 (15 phases) + v2.0 (8 phases) + Phase 24 (4/4 plans) = ALL PHASES COMPLETE
 
 ## Performance Metrics
 
@@ -31,9 +31,9 @@ Progress: [##########] v1.0 (15 phases) + v2.0 (8 phases) + Phase 24 (3/3 plans)
 - Quick tasks completed: 10
 
 **v3.0 Velocity:**
-- Plans completed: 3
+- Plans completed: 4
 - Duration: ~3 minutes each
-- Total: ~9 minutes
+- Total: ~12 minutes
 
 ## Accumulated Context
 
@@ -61,6 +61,11 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - CI installs chromium-only to keep pipeline fast; WebKit mobile projects skip WS-mocked tests
 - Playwright report artifact uses if: ${{ !cancelled() }} (not always())
 
+**Phase 24 Plan 04 decisions (gap closure):**
+- Switch mobile-375/mobile-390 from iPhone SE/14 WebKit presets to Chromium with `{ viewport, hasTouch: true, isMobile: true }`
+- Remove unused `devices` import from @playwright/test
+- Remove all test.skip(browserName !== 'chromium') guards — all projects now Chromium, 150/150 tests pass with 0 skips
+
 ### Pending Todos
 
 1 pending — `/gsd:check-todos` to review
@@ -74,11 +79,11 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 None — all known blockers resolved:
 - CI now installs Chromium and runs E2E tests
-- WS-mocked tests gracefully skip on WebKit mobile
+- WS-mocked tests no longer skip — all 6 projects use Chromium, 0 skips
 
 ## Session Continuity
 
-Last session: 2026-02-21
-Stopped at: Completed 24-03-PLAN.md (all phases complete — 150 E2E tests, CI integrated)
+Last session: 2026-02-22
+Stopped at: Completed 24-04-PLAN.md (gap closure: all-Chromium mobile viewports, 0 skipped tests)
 Resume file: None
 Next: All planned phases complete. Consider: monitor CI, debug dev tooling (pending todo)
