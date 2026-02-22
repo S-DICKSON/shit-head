@@ -1,5 +1,5 @@
 // Room class - individual room state and logic
-import { customAlphabet } from 'nanoid';
+import { customAlphabet, nanoid } from 'nanoid';
 import type { RoomState, RoomStatus, LobbyPlayer, ErrorCode, GameState, PlayerGameView, Card, OpponentView, RoundTime } from '@shit-head/shared';
 import { GameEngine, type BlindPlayResult, type AutoPlayResult } from '../game/GameEngine';
 
@@ -36,6 +36,8 @@ export class Room {
   private readonly DISCONNECT_GRACE_PERIOD = 90000; // 90 seconds
   private readonly LOBBY_DISCONNECT_GRACE_PERIOD = 15000; // 15 seconds
   private shitheadPlayerId: string | null = null;
+  private botPlayerIds: Set<string> = new Set();
+  private botNameCounter: number = 0;
   private autoReturnTimer: ReturnType<typeof setTimeout> | null = null;
   private readonly AUTO_RETURN_DELAY = 5000; // 5 seconds to see game-over screen
   private onSwapTimerTick?: (timeRemaining: number) => void;
@@ -149,6 +151,43 @@ export class Room {
 
   isSpectator(playerId: string): boolean {
     return this.spectators.has(playerId);
+  }
+
+  addBot(botNickname?: string): OperationResult<string> {
+    if (this.status !== 'waiting') {
+      return { success: false, error: 'Cannot add bot after game starts', code: 'INVALID_ACTION' };
+    }
+    if (this.players.size >= this.maxPlayers) {
+      return { success: false, error: 'Room is full', code: 'ROOM_FULL' };
+    }
+    const botId = 'bot_' + nanoid(8);
+    const nickname = botNickname || 'Bot ' + (++this.botNameCounter);
+    this.players.set(botId, {
+      id: botId,
+      nickname,
+      isHost: false,
+      avatarHash: null,
+      discordUserId: null,
+    });
+    this.botPlayerIds.add(botId);
+    return { success: true, data: botId };
+  }
+
+  removeBot(botId: string): OperationResult {
+    if (!this.botPlayerIds.has(botId)) {
+      return { success: false, error: 'Bot not found', code: 'PLAYER_NOT_FOUND' };
+    }
+    this.players.delete(botId);
+    this.botPlayerIds.delete(botId);
+    return { success: true };
+  }
+
+  isBot(playerId: string): boolean {
+    return this.botPlayerIds.has(playerId);
+  }
+
+  getBotIds(): string[] {
+    return Array.from(this.botPlayerIds);
   }
 
   getShitheadPlayerId(): string | null {
@@ -301,6 +340,7 @@ export class Room {
       isHost: p.isHost,
       avatarHash: p.avatarHash ?? null,
       discordUserId: p.discordUserId ?? null,
+      isBot: this.botPlayerIds.has(p.id) || undefined,
     }));
 
     return {
@@ -403,12 +443,13 @@ export class Room {
       }, 30000); // 30 seconds
     }
 
-    // Count connected players (not disconnected)
+    // Count connected human players (not disconnected, not bots)
+    // Bots never call markPlayAgain — they are always removed on resetToLobby
     const connectedPlayers = Array.from(this.players.keys()).filter(
-      pid => !this.isPlayerDisconnected(pid)
+      pid => !this.isPlayerDisconnected(pid) && !this.botPlayerIds.has(pid)
     );
 
-    // If all connected players have responded, reset immediately
+    // If all connected human players have responded, reset immediately
     if (this.playAgainPlayers.size === connectedPlayers.length) {
       this.resetToLobby();
     }
@@ -455,6 +496,13 @@ export class Room {
       }
     }
 
+    // Remove bots on return to lobby
+    for (const botId of this.botPlayerIds) {
+      this.players.delete(botId);
+    }
+    this.botPlayerIds.clear();
+    this.botNameCounter = 0;
+
     // Clear game state
     this.gameState = null;
     this.status = 'waiting';
@@ -483,6 +531,13 @@ export class Room {
       clearTimeout(this.playAgainTimeout);
       this.playAgainTimeout = null;
     }
+
+    // Remove bots before promoting spectators
+    for (const botId of this.botPlayerIds) {
+      this.players.delete(botId);
+    }
+    this.botPlayerIds.clear();
+    this.botNameCounter = 0;
 
     // Promote spectators to players
     for (const [spectatorId, spectator] of this.spectators) {
@@ -835,10 +890,10 @@ export class Room {
       this.onPlayerDisconnected?.(playerId, player.nickname);
 
       // If in finished phase and player disconnects before clicking play-again,
-      // they implicitly are not playing again. Check if all remaining connected players responded.
+      // they implicitly are not playing again. Check if all remaining connected human players responded.
       if (this.gameState && this.gameState.phase === 'finished' && this.playAgainPlayers.size > 0) {
         const connectedPlayers = Array.from(this.players.keys()).filter(
-          pid => !this.isPlayerDisconnected(pid)
+          pid => !this.isPlayerDisconnected(pid) && !this.botPlayerIds.has(pid)
         );
         if (this.playAgainPlayers.size === connectedPlayers.length) {
           this.resetToLobby();

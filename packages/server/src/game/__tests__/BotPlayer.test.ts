@@ -1,14 +1,13 @@
 import { describe, expect, test } from 'vitest';
 import { BotPlayer } from '../BotPlayer';
-import type { GameState, PlayerGameState } from '@shit-head/shared';
-import type { Card } from '@shit-head/shared';
+import type { GameState, PlayerGameState, Rank, Suit } from '@shit-head/shared';
 
 // ---------------------------------------------------------------------------
 // Test helpers
 // ---------------------------------------------------------------------------
 
-function makeCard(rank: Card extends { kind: 'standard'; rank: infer R } ? R : never, suit: 'hearts' | 'diamonds' | 'clubs' | 'spades' = 'hearts'): Card {
-  return { kind: 'standard', suit, rank } as Card;
+function makeCard(rank: Rank, suit: Suit = 'hearts'): { kind: 'standard'; suit: Suit; rank: Rank } {
+  return { kind: 'standard', suit, rank };
 }
 
 function makeState(overrides: Partial<GameState> & { player?: Partial<PlayerGameState>; player2?: Partial<PlayerGameState> }): GameState {
