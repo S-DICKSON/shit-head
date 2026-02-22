@@ -39,7 +39,7 @@ export class Room {
   private readonly LOBBY_DISCONNECT_GRACE_PERIOD = 15000; // 15 seconds
   private shitheadPlayerId: string | null = null;
   private botPlayerIds: Set<string> = new Set();
-  private botNameIndex: number = 0;
+
   private autoReturnTimer: ReturnType<typeof setTimeout> | null = null;
   private readonly AUTO_RETURN_DELAY = 5000; // 5 seconds to see game-over screen
   private onSwapTimerTick?: (timeRemaining: number) => void;
@@ -163,7 +163,9 @@ export class Room {
       return { success: false, error: 'Room is full', code: 'ROOM_FULL' };
     }
     const botId = 'bot_' + nanoid(8);
-    const nickname = botNickname || BOT_NAMES[this.botNameIndex++ % BOT_NAMES.length];
+    const usedNames = new Set([...this.players.values()].map(p => p.nickname));
+    const availableName = BOT_NAMES.find(name => !usedNames.has(name)) ?? `Bot ${this.botPlayerIds.size + 1}`;
+    const nickname = botNickname || availableName;
     this.players.set(botId, {
       id: botId,
       nickname,

@@ -209,27 +209,29 @@ describe('Bot management', () => {
     expect(r.success).toBe(false); // Room is now full (host + player-2 + BotA + BotB = 4)
   });
 
-  test('bot names cycle through playful name pool', () => {
+  test('bot names are never duplicated', () => {
     const room = createRoomWithHost();
-    const r1 = room.addBot();
-    expect(r1.success).toBe(true);
-    if (r1.success) {
-      const state = room.getState();
-      const bot = state.players.find(p => p.id === r1.data);
-      expect(bot?.nickname).toBe('Darling Bot');
-    }
-    // Remove first bot and add 3 more to verify cycling
-    if (r1.success) room.removeBot(r1.data);
-    // Add 3 more bots (fills remaining 3 slots: host + 3 bots = 4)
-    const names: string[] = [];
+    // Add 3 bots (max with host = 4 players)
+    const ids: string[] = [];
     for (let i = 0; i < 3; i++) {
       const r = room.addBot();
-      if (r.success) {
-        const s = room.getState();
-        const bot = s.players.find(p => p.id === r.data);
-        if (bot) names.push(bot.nickname);
-      }
+      if (r.success) ids.push(r.data);
     }
-    expect(names).toEqual(['Bica Bot', 'Knox Bot', 'Joe Bot']);
+    const state = room.getState();
+    const names = state.players.filter(p => p.isBot).map(p => p.nickname);
+    expect(names).toEqual(['Darling Bot', 'Bica Bot', 'Knox Bot']);
+
+    // Remove middle bot and add a new one — should reuse 'Bica Bot', not duplicate
+    room.removeBot(ids[1]);
+    const r = room.addBot();
+    expect(r.success).toBe(true);
+    if (r.success) {
+      const s = room.getState();
+      const newBot = s.players.find(p => p.id === r.data);
+      expect(newBot?.nickname).toBe('Bica Bot');
+      // Verify no duplicates
+      const allNames = s.players.filter(p => p.isBot).map(p => p.nickname);
+      expect(new Set(allNames).size).toBe(allNames.length);
+    }
   });
 });
