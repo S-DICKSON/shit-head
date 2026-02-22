@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 680px;
+    height: 240px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(ellipse at 40% 50%, #1a5c2a 0%, #0d3318 60%, #071a0c 100%);
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Felt texture overlay */
+  body::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='6' height='6' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='1' height='1' x='0' y='0' fill='rgba(255,255,255,0.02)'/%3E%3Crect width='1' height='1' x='3' y='3' fill='rgba(0,0,0,0.03)'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Vignette */
+  body::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.5) 100%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .scene {
+    position: relative;
+    width: 680px;
+    height: 240px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+  }
+
+  /* Cards */
+  .card {
+    position: absolute;
+    width: 80px;
+    height: 115px;
+    border-radius: 8px;
+    background: white;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.5), 0 1px 3px rgba(0,0,0,0.3);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Georgia', serif;
+    border: 1.5px solid #e0e0e0;
+  }
+
+  .card .corner {
+    position: absolute;
+    font-size: 12px;
+    font-weight: bold;
+    line-height: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .corner-tl { top: 5px; left: 6px; }
+  .corner-br { bottom: 5px; right: 6px; transform: rotate(180deg); }
+
+  .card .center-suit {
+    font-size: 32px;
+    line-height: 1;
+  }
+
+  .card.red { color: #cc0000; }
+  .card.black { color: #1a1a1a; }
+
+  .card-left {
+    transform: rotate(-25deg) translateX(-72px) translateY(10px);
+    z-index: 1;
+  }
+
+  .card-right {
+    transform: rotate(25deg) translateX(72px) translateY(10px);
+    z-index: 1;
+  }
+
+  /* Card backs */
+  .card-back {
+    position: absolute;
+    width: 80px;
+    height: 115px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #c41e3a 0%, #8b0000 100%);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+    border: 1.5px solid #e0e0e0;
+    z-index: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .card-back::after {
+    content: '';
+    width: 62px;
+    height: 95px;
+    border-radius: 5px;
+    border: 1.5px solid rgba(255,255,255,0.3);
+    background: repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 4px,
+      rgba(255,255,255,0.08) 4px,
+      rgba(255,255,255,0.08) 8px
+    );
+  }
+
+  .card-back-left {
+    transform: rotate(-36deg) translateX(-90px) translateY(18px);
+  }
+  .card-back-right {
+    transform: rotate(36deg) translateX(90px) translateY(18px);
+  }
+  .card-back-center {
+    transform: translateY(22px);
+  }
+
+  /* Monkey */
+  .monkey {
+    position: relative;
+    z-index: 10;
+    font-size: 110px;
+    line-height: 1;
+    filter: drop-shadow(0 5px 16px rgba(0,0,0,0.5));
+    transform: translateY(-12px);
+  }
+
+  /* Card group */
+  .card-group {
+    position: relative;
+    transform: translateX(-100px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 300px;
+    height: 240px;
+    flex-shrink: 0;
+  }
+
+  /* Ring */
+  .ring {
+    position: absolute;
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(255, 215, 0, 0.1);
+    z-index: 0;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  /* Title area */
+  .title-area {
+    position: absolute;
+    right: 40px;
+    z-index: 20;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .title-area .brand {
+    font-family: 'Georgia', serif;
+    font-size: 16px;
+    font-weight: 900;
+    color: #e8dcc8;
+    text-shadow:
+      0 0 8px rgba(232, 220, 200, 0.3),
+      1px 1px 0 rgba(0,0,0,0.5),
+      0 2px 8px rgba(0,0,0,0.5);
+    letter-spacing: 7px;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+
+  .title-area h1 {
+    font-family: 'Georgia', serif;
+    font-size: 58px;
+    font-weight: 900;
+    color: #ffd700;
+    text-shadow:
+      0 0 16px rgba(255, 215, 0, 0.4),
+      2px 2px 0 #8b6914,
+      3px 3px 0 #6b4f10,
+      0 4px 16px rgba(0,0,0,0.6);
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    line-height: 1;
+  }
+
+  .title-area .subtitle {
+    font-family: 'Georgia', serif;
+    font-size: 16px;
+    color: #e8dcc8;
+    text-shadow: 0 1px 6px rgba(0,0,0,0.6);
+    letter-spacing: 8px;
+    text-transform: uppercase;
+    margin-top: 3px;
+  }
+
+  /* Gold divider */
+  .divider {
+    position: absolute;
+    width: 1.5px;
+    height: 160px;
+    background: linear-gradient(to bottom, transparent, rgba(255,215,0,0.25), transparent);
+    left: 370px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 5;
+  }
+</style>
+</head>
+<body>
+  <div class="scene">
+    <div class="divider"></div>
+
+    <div class="card-group">
+      <div class="ring"></div>
+      <div class="card-back card-back-left"></div>
+      <div class="card-back card-back-right"></div>
+      <div class="card-back card-back-center"></div>
+
+      <div class="card black card-left">
+        <div class="corner corner-tl"><span>A</span><span>&#9824;</span></div>
+        <div class="center-suit">&#9824;</div>
+        <div class="corner corner-br"><span>A</span><span>&#9824;</span></div>
+      </div>
+
+      <div class="card red card-right">
+        <div class="corner corner-tl"><span>A</span><span>&#9829;</span></div>
+        <div class="center-suit">&#9829;</div>
+        <div class="corner corner-br"><span>A</span><span>&#9829;</span></div>
+      </div>
+
+      <div class="monkey">&#x1F648;</div>
+    </div>
+
+    <div class="title-area">
+      <div class="brand">Splat Monkey</div>
+      <h1>Karma</h1>
+      <div class="subtitle">Online</div>
+    </div>
+  </div>
+</body>
+</html>
