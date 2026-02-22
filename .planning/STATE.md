@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-21)
 ## Current Position
 
 Phase: 25 of 25 (25-bot-player)
-Plan: 2 of N complete
+Plan: 4 of N complete
 Status: In progress
-Last activity: 2026-02-22 - Completed 25-02-PLAN.md (BotPlayer TDD: 21 tests, refactored implementation)
+Last activity: 2026-02-22 - Completed 25-04-PLAN.md (Bot lobby UI: Add Bot button, bot indicator, Remove button)
 
-Progress: [##########] v1.0 (15 phases) + v2.0 (8 phases) + Phase 24 (4 plans) + Phase 25 (2/N plans)
+Progress: [##########] v1.0 (15 phases) + v2.0 (8 phases) + Phase 24 (4 plans) + Phase 25 (4/N plans)
 
 ## Performance Metrics
 
@@ -36,9 +36,9 @@ Progress: [##########] v1.0 (15 phases) + v2.0 (8 phases) + Phase 24 (4 plans) +
 - Total: ~12 minutes
 
 **Phase 25 Velocity:**
-- Plans completed: 2
-- Duration: ~5.5 minutes each
-- Total: ~11 minutes
+- Plans completed: 4
+- Duration: ~3.5 minutes average (plans 01-04)
+- Total: ~14 minutes
 
 ## Accumulated Context
 
@@ -85,6 +85,12 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - Extracted `selectLowestValidGroup` helper to eliminate duplicated find-lowest logic
 - First-turn scan uses `RANK_ORDER.slice(1)` iteration (clearer than getRankValue scan)
 
+**Phase 25 Plan 04 decisions (lobby UI):**
+- Robot emoji (U+1F916) for bot indicator — no image assets, consistent with existing emoji usage
+- Discord lobby wraps bot emoji in same-size circle as Discord avatar (visual grid parity)
+- Add Bot hidden with v-if (not disabled) when room is full — cleaner UX
+- Remove button placed inline in player row, colocated with the bot it removes
+
 ### Pending Todos
 
 1 pending — `/gsd:check-todos` to review
@@ -102,6 +108,6 @@ None — all known blockers resolved.
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: Completed 25-02-PLAN.md (BotPlayer TDD: 21 tests verified, refactored selectLowestValidGroup)
+Stopped at: Completed 25-04-PLAN.md (Bot lobby UI: Add Bot button, bot indicator, Remove button in both Lobby.vue and DiscordLobby.vue)
 Resume file: None
-Next: Execute 25-03-PLAN.md (bot turn-taking loop, Room integration, handlers.ts wiring)
+Next: Execute 25-05-PLAN.md (if exists) or verify bot feature end-to-end
