@@ -83,7 +83,7 @@ watch(
     </span>
 
     <!-- Top bar: Opponents -->
-    <div class="flex-shrink-0 pt-2 overflow-x-auto snap-x snap-mandatory sm:overflow-x-visible sm:snap-none">
+    <div class="flex-shrink-0 pt-1 overflow-x-auto snap-x snap-mandatory sm:overflow-x-visible sm:snap-none">
       <div class="flex gap-2 tall:gap-4 px-2 mb-1 w-fit mx-auto sm:flex-wrap sm:justify-center sm:w-auto">
         <OpponentCards
           v-for="opponent in gameView?.opponents"
@@ -95,7 +95,7 @@ watch(
     </div>
 
     <!-- Center game area: Draw/Discard Piles + Turn Banner below -->
-    <div class="flex-1 min-h-0 flex flex-col items-center justify-center px-4 py-2 tall:py-4">
+    <div class="flex-1 min-h-0 flex flex-col items-center justify-center px-4 py-1 tall:py-4">
       <div class="flex items-center justify-center gap-6 tall:gap-8">
         <DrawPile :count="gameView?.drawPileCount ?? 0" />
         <DiscardPile

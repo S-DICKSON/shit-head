@@ -62,7 +62,19 @@ const handCards = [
   { kind: 'standard', rank: '3', suit: 'clubs' },
 ];
 
-async function setupGameMock(page: Page, playerCount: number) {
+const swapHandCards = [
+  { kind: 'standard', rank: 'K', suit: 'hearts' },
+  { kind: 'standard', rank: '7', suit: 'clubs' },
+  { kind: 'standard', rank: 'A', suit: 'spades' },
+];
+
+const faceUpCards = [
+  { kind: 'standard', rank: '3', suit: 'diamonds' },
+  { kind: 'standard', rank: '10', suit: 'hearts' },
+  { kind: 'standard', rank: '5', suit: 'clubs' },
+];
+
+async function setupGameMock(page: Page, playerCount: number, phase: 'playing' | 'swapping' = 'playing') {
   let mockWs: { send: (msg: string) => void } | null = null;
 
   await page.routeWebSocket('**/game-ws**', ws => {
@@ -92,25 +104,52 @@ async function setupGameMock(page: Page, playerCount: number) {
 
   return {
     sendGameDealt: () => {
-      mockWs!.send(JSON.stringify({
-        type: 'game-dealt',
-        phase: 'playing',
-        hand: handCards,
-        faceUp: [
-          { kind: 'standard', rank: '3', suit: 'diamonds' },
-          { kind: 'standard', rank: '10', suit: 'hearts' },
-          { kind: 'standard', rank: '5', suit: 'clubs' },
-        ],
-        faceDownCount: 3,
-        opponents: allOpponents.slice(0, playerCount - 1),
-        drawPileCount: playerCount === 2 ? 24 : playerCount === 3 ? 12 : 6,
-        discardPile: [{ kind: 'standard', rank: '6', suit: 'spades' }],
-        currentPlayerIndex: 0,
-        dealerIndex: 0,
-        firstTurn: true,
-      }));
+      if (phase === 'swapping') {
+        mockWs!.send(JSON.stringify({
+          type: 'game-dealt',
+          phase: 'swapping',
+          hand: swapHandCards,
+          faceUp: faceUpCards,
+          faceDownCount: 3,
+          opponents: allOpponents.slice(0, playerCount - 1),
+          drawPileCount: 0,
+          discardPile: [],
+          currentPlayerIndex: 0,
+          dealerIndex: 0,
+          firstTurn: false,
+        }));
+      } else {
+        mockWs!.send(JSON.stringify({
+          type: 'game-dealt',
+          phase: 'playing',
+          hand: handCards,
+          faceUp: faceUpCards,
+          faceDownCount: 3,
+          opponents: allOpponents.slice(0, playerCount - 1),
+          drawPileCount: playerCount === 2 ? 24 : playerCount === 3 ? 12 : 6,
+          discardPile: [{ kind: 'standard', rank: '6', suit: 'spades' }],
+          currentPlayerIndex: 0,
+          dealerIndex: 0,
+          firstTurn: true,
+        }));
+      }
     },
   };
+}
+
+// Map viewport dimensions to friendly device labels for screenshot filenames
+const deviceLabels: Record<string, string> = {
+  '375x667': 'mobile',
+  '390x844': 'mobile',
+  '768x1024': 'tablet',
+  '1280x800': 'laptop',
+  '1920x1080': 'desktop',
+  '460x720': 'discord',
+  '1219x643': 'discord',
+};
+
+function deviceLabel(vp: { width: number; height: number }): string {
+  return deviceLabels[`${vp.width}x${vp.height}`] ?? '';
 }
 
 async function goToGame(page: Page, sendGameDealt: () => void) {
@@ -127,13 +166,29 @@ async function goToGame(page: Page, sendGameDealt: () => void) {
   await page.waitForTimeout(500);
 }
 
+// Playing phase screenshots
 for (const players of [2, 3, 4]) {
   test(`${players}p game`, async ({ page }) => {
-    const { sendGameDealt } = await setupGameMock(page, players);
+    const { sendGameDealt } = await setupGameMock(page, players, 'playing');
     await goToGame(page, sendGameDealt);
     const vp = page.viewportSize()!;
+    const label = deviceLabel(vp);
     await page.screenshot({
-      path: `screenshots/${players}p-${vp.width}x${vp.height}.png`,
+      path: `screenshots/${players}p-${vp.width}x${vp.height}${label ? `-${label}` : ''}.png`,
+      fullPage: false,
+    });
+  });
+}
+
+// Swap phase screenshots
+for (const players of [2, 3, 4]) {
+  test(`${players}p swap phase`, async ({ page }) => {
+    const { sendGameDealt } = await setupGameMock(page, players, 'swapping');
+    await goToGame(page, sendGameDealt);
+    const vp = page.viewportSize()!;
+    const label = deviceLabel(vp);
+    await page.screenshot({
+      path: `screenshots/${players}p-swap-${vp.width}x${vp.height}${label ? `-${label}` : ''}.png`,
       fullPage: false,
     });
   });

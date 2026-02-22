@@ -5,7 +5,7 @@
       <!-- Table cards: face-down underneath face-up (stacked) -->
       <div
         v-if="faceUp.length > 0 || faceDownCount > 0"
-        class="mb-2 tall:mb-3"
+        class="mb-1 tall:mb-3"
       >
         <div class="text-center mb-1">
           <span class="text-xs text-green-300 uppercase tracking-wide">Table</span>
@@ -61,7 +61,7 @@
       <!-- Hand cards section -->
       <div
         v-if="hand.length > 0"
-        class="mb-2 tall:mb-3"
+        class="mb-1 tall:mb-3"
       >
         <div class="text-center mb-1">
           <span class="text-xs text-green-300 uppercase tracking-wide">Hand ({{ hand.length }})</span>
@@ -105,7 +105,7 @@
     </div>
 
     <!-- Action buttons (always visible below card area) -->
-    <div class="flex-shrink-0 bg-green-900 py-2 -mx-2 px-2">
+    <div class="flex-shrink-0 bg-green-900 py-1 tall:py-2 -mx-2 px-2">
       <div class="flex flex-col items-center gap-2">
         <div class="flex justify-center gap-4">
           <button
