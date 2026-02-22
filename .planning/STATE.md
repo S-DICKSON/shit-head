@@ -85,6 +85,12 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - Extracted `selectLowestValidGroup` helper to eliminate duplicated find-lowest logic
 - First-turn scan uses `RANK_ORDER.slice(1)` iteration (clearer than getRankValue scan)
 
+**Phase 25 Plan 03 decisions (WebSocket integration):**
+- executeBotTurn/executeBotMove defined as module-level functions (not inside handler) — accessible from multiple callback contexts, matches existing sendMessage/broadcastToRoom pattern
+- game-dealt loop skips bots (isBot() guard) — bots have no WebSocket, sending would fail
+- Bot auto-ready uses 500-1500ms random delay to stagger multiple bots from readying simultaneously
+- Add Bot button added to DiscordLobby.vue to resolve pre-staged unused-vars lint errors
+
 **Phase 25 Plan 04 decisions (lobby UI):**
 - Robot emoji (U+1F916) for bot indicator — no image assets, consistent with existing emoji usage
 - Discord lobby wraps bot emoji in same-size circle as Discord avatar (visual grid parity)
@@ -108,6 +114,6 @@ None — all known blockers resolved.
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: Completed 25-04-PLAN.md (Bot lobby UI: Add Bot button, bot indicator, Remove button in both Lobby.vue and DiscordLobby.vue)
+Stopped at: Completed 25-03-PLAN.md (WebSocket bot integration: add-bot/remove-bot handlers, executeBotTurn/executeBotMove, onPlayPhaseStart bot detection)
 Resume file: None
-Next: Execute 25-05-PLAN.md (if exists) or verify bot feature end-to-end
+Next: Verify 25-04 (pre-staged lobby UI commits) or execute remaining plans
