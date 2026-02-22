@@ -31,3 +31,28 @@ Screens to test:
 - Active in-game (gameplay UI)
 
 ---
+
+### Phase 25: Bot Player
+
+**Goal:** Add a bot player that can join a game room and play autonomously following valid game rules, enabling solo play and manual testing without needing other human players.
+**Depends on:** Phase 24 (all prior phases complete)
+**Plans:** 5 plans
+
+Plans:
+- [ ] 25-01-PLAN.md — Shared types (isBot) + Room bot infrastructure (addBot/removeBot)
+- [ ] 25-02-PLAN.md — BotPlayer move selection logic (TDD)
+- [ ] 25-03-PLAN.md — Wire bot into WebSocket handlers (add-bot/remove-bot, turn detection, auto-play)
+- [ ] 25-04-PLAN.md — Client lobby UI bot controls (Add Bot, Remove, bot indicator)
+- [ ] 25-05-PLAN.md — Integration tests + manual playtest verification
+
+**Status:** Planned
+
+**Details:**
+- Bot joins a room as a regular player (server-side, no browser needed)
+- Bot follows game rules: plays valid cards, picks up when needed, handles swap phase
+- Simple strategy sufficient (play lowest valid card, basic heuristics)
+- Host can add/remove bots from lobby
+- Bots work in both standalone web and Discord Activity modes
+- Useful for solo play and manual testing without multiple browser tabs
+
+---
