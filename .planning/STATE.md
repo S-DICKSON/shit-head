@@ -41,6 +41,11 @@ Progress: [##########] v1.0 (15 phases) + v2.0 (8 phases) + v3.0 (Phase 24 + Pha
 
 Decisions are logged in PROJECT.md Key Decisions table.
 
+**Quick 030 decisions:**
+- setupHomeMock() handles ping/pong only (home tests never create rooms)
+- setupLobbyMock() must echo nickname from create-room message (lobby reads player.nickname from server response, not local store)
+- game.spec.ts: removed 2 redundant tests (11 -> 9 per viewport)
+
 **Phase 25 decisions (summary):**
 - `botPlayerIds` Set tracks bot identity, `isBot: || undefined` in getState() for clean payloads
 - BotPlayer strategy: play lowest valid rank, group same-rank cards, selectLowestValidGroup helper
@@ -65,6 +70,6 @@ None — all known blockers resolved.
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: Phase 25 complete — all 5 plans executed, verified 6/6 must-haves
+Stopped at: Quick 030 complete — E2E suite fixed (203/203 tests green, 0 failures)
 Resume file: None
-Next: All v3.0 phases complete. Consider: /gsd:audit-milestone or /gsd:complete-milestone
+Next: All v3.0 phases complete. Quick 030 resolved E2E failures. Consider: /gsd:audit-milestone or /gsd:complete-milestone
