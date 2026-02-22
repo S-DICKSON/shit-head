@@ -11,6 +11,7 @@ FROM base AS dev
 COPY package.json bun.lock* tsconfig.json ./
 COPY packages/server/package.json ./packages/server/
 COPY packages/shared/package.json ./packages/shared/
+COPY packages/e2e/package.json ./packages/e2e/
 # Install dependencies
 RUN bun install
 # Copy source (will be overridden by volume mounts in dev mode)
@@ -26,10 +27,11 @@ FROM base AS client-build
 WORKDIR /app
 # Copy root dependencies and TypeScript config
 COPY package.json bun.lock* tsconfig.json ./
-# Copy all package.json files for dependency resolution
+# Copy all package.json files for dependency resolution (all workspace packages needed for lockfile)
 COPY packages/client/package.json ./packages/client/
 COPY packages/shared/package.json ./packages/shared/
 COPY packages/server/package.json ./packages/server/
+COPY packages/e2e/package.json ./packages/e2e/
 # Copy client TypeScript configs
 COPY packages/client/tsconfig.json ./packages/client/
 COPY packages/client/tsconfig.app.json ./packages/client/
@@ -49,13 +51,15 @@ RUN bunx vite build
 # Production stage (unified server + client)
 FROM base AS production
 WORKDIR /app
-# Copy package files for dependency resolution (all workspace package.jsons needed for lockfile)
+# Copy package files for dependency resolution
+# NOTE: e2e package.json is intentionally excluded — CI validates lockfile integrity,
+# so --frozen-lockfile is not needed here and e2e has no runtime deps
 COPY package.json bun.lock* tsconfig.json ./
 COPY packages/server/package.json ./packages/server/
 COPY packages/shared/package.json ./packages/shared/
 COPY packages/client/package.json ./packages/client/
 # Install production dependencies only
-RUN bun install --frozen-lockfile --production
+RUN bun install --production
 # Copy server and shared source
 COPY packages/server/ ./packages/server/
 COPY packages/shared/ ./packages/shared/

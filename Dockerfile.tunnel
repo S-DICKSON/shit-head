@@ -8,6 +8,7 @@ COPY package.json bun.lock* tsconfig.json ./
 COPY packages/client/package.json ./packages/client/
 COPY packages/server/package.json ./packages/server/
 COPY packages/shared/package.json ./packages/shared/
+COPY packages/e2e/package.json ./packages/e2e/
 COPY packages/shared/tsconfig.json ./packages/shared/
 COPY packages/client/tsconfig.json ./packages/client/
 COPY packages/client/tsconfig.app.json ./packages/client/
@@ -27,7 +28,7 @@ COPY package.json bun.lock* tsconfig.json ./
 COPY packages/client/package.json ./packages/client/
 COPY packages/server/package.json ./packages/server/
 COPY packages/shared/package.json ./packages/shared/
-RUN bun install --frozen-lockfile --production
+RUN bun install --production
 COPY packages/server/ ./packages/server/
 COPY packages/shared/ ./packages/shared/
 COPY --from=client-build /app/packages/client/dist ./packages/client/dist
