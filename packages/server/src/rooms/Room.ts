@@ -7,6 +7,8 @@ import { GameEngine, type BlindPlayResult, type AutoPlayResult } from '../game/G
 const ALPHABET = '2346789ABCDEFGHJKMNPQRTUVWXYZ';
 const generateRoomCode = customAlphabet(ALPHABET, 6);
 
+const BOT_NAMES = ['Jess Bot', 'Bica Bot', 'Knox Bot', 'Joe Bot'];
+
 type OperationResult<T = void> = T extends void
   ? { success: true } | { success: false; error: string; code: ErrorCode }
   : { success: true; data: T } | { success: false; error: string; code: ErrorCode };
@@ -37,7 +39,7 @@ export class Room {
   private readonly LOBBY_DISCONNECT_GRACE_PERIOD = 15000; // 15 seconds
   private shitheadPlayerId: string | null = null;
   private botPlayerIds: Set<string> = new Set();
-  private botNameCounter: number = 0;
+  private botNameIndex: number = 0;
   private autoReturnTimer: ReturnType<typeof setTimeout> | null = null;
   private readonly AUTO_RETURN_DELAY = 5000; // 5 seconds to see game-over screen
   private onSwapTimerTick?: (timeRemaining: number) => void;
@@ -161,7 +163,7 @@ export class Room {
       return { success: false, error: 'Room is full', code: 'ROOM_FULL' };
     }
     const botId = 'bot_' + nanoid(8);
-    const nickname = botNickname || 'Bot ' + (++this.botNameCounter);
+    const nickname = botNickname || BOT_NAMES[this.botNameIndex++ % BOT_NAMES.length];
     this.players.set(botId, {
       id: botId,
       nickname,
@@ -470,10 +472,10 @@ export class Room {
       this.autoReturnTimer = null;
     }
 
-    // Identify players to remove (those who didn't click play-again)
+    // Identify players to remove (those who didn't click play-again, excluding bots)
     const removedPlayerIds: string[] = [];
     for (const [playerId] of this.players) {
-      if (!this.playAgainPlayers.has(playerId)) {
+      if (!this.playAgainPlayers.has(playerId) && !this.botPlayerIds.has(playerId)) {
         removedPlayerIds.push(playerId);
       }
     }
@@ -495,13 +497,6 @@ export class Room {
         }
       }
     }
-
-    // Remove bots on return to lobby
-    for (const botId of this.botPlayerIds) {
-      this.players.delete(botId);
-    }
-    this.botPlayerIds.clear();
-    this.botNameCounter = 0;
 
     // Clear game state
     this.gameState = null;
@@ -532,15 +527,9 @@ export class Room {
       this.playAgainTimeout = null;
     }
 
-    // Remove bots before promoting spectators
-    for (const botId of this.botPlayerIds) {
-      this.players.delete(botId);
-    }
-    this.botPlayerIds.clear();
-    this.botNameCounter = 0;
-
-    // Promote spectators to players
+    // Promote spectators to players (up to maxPlayers limit, bots remain)
     for (const [spectatorId, spectator] of this.spectators) {
+      if (this.players.size >= this.maxPlayers) break;
       this.players.set(spectatorId, {
         id: spectator.id,
         nickname: spectator.nickname,
