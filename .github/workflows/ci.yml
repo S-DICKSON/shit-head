@@ -52,18 +52,22 @@ jobs:
       - name: Build client
         run: cd packages/client && bun run vite build
 
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('packages/e2e/package.json') }}
+
       - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: cd packages/e2e && bunx playwright install --with-deps chromium
+
+      - name: Install Playwright deps (cached)
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: cd packages/e2e && bunx playwright install-deps chromium
 
       - name: Run E2E tests
         run: cd packages/e2e && bunx playwright test
         env:
           CI: true
-
-      - name: Upload Playwright report
-        uses: actions/upload-artifact@v4
-        if: ${{ !cancelled() }}
-        with:
-          name: playwright-report
-          path: packages/e2e/playwright-report/
-          retention-days: 30

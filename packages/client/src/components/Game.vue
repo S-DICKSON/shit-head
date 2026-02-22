@@ -84,7 +84,10 @@ onUnmounted(() => {
   </div>
 
   <!-- Normal Player View -->
-  <div v-else-if="gameView">
+  <div
+    v-else-if="gameView"
+    class="h-full"
+  >
     <!-- Swap Phase -->
     <SwapPhase
       v-if="gameView.phase === 'swapping' || gameView.phase === 'transitioning'"

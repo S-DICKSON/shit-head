@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col h-full">
     <!-- Card area -->
-    <div class="overflow-y-auto min-h-0">
+    <div class="flex-1 min-h-0">
       <!-- Table cards: face-down underneath face-up (stacked) -->
       <div
         v-if="faceUp.length > 0 || faceDownCount > 0"
