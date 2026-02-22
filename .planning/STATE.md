@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-21)
 
 **Core value:** Friends can play a complete, rule-accurate game of Shithead together online with zero friction
-**Current focus:** Phase 25 — Bot Player
+**Current focus:** v3.0 Quality & Testing — Phase 25 complete
 
 ## Current Position
 
 Phase: 25 of 25 (25-bot-player)
-Plan: 4 of N complete
-Status: In progress
-Last activity: 2026-02-22 - Completed 25-04-PLAN.md (Bot lobby UI: Add Bot button, bot indicator, Remove button)
+Plan: 5 of 5 complete
+Status: Phase complete — verified 6/6 must-haves ✓
+Last activity: 2026-02-22 - Completed 25-05-PLAN.md (integration tests + manual playtest)
 
-Progress: [##########] v1.0 (15 phases) + v2.0 (8 phases) + Phase 24 (4 plans) + Phase 25 (4/N plans)
+Progress: [##########] v1.0 (15 phases) + v2.0 (8 phases) + v3.0 (Phase 24 + Phase 25) = ALL PHASES COMPLETE
 
 ## Performance Metrics
 
@@ -31,14 +31,9 @@ Progress: [##########] v1.0 (15 phases) + v2.0 (8 phases) + Phase 24 (4 plans) +
 - Quick tasks completed: 10
 
 **v3.0 Velocity:**
-- Plans completed: 4
-- Duration: ~3 minutes each
-- Total: ~12 minutes
-
-**Phase 25 Velocity:**
-- Plans completed: 4
-- Duration: ~3.5 minutes average (plans 01-04)
-- Total: ~14 minutes
+- Plans completed: 9 (Phase 24: 4, Phase 25: 5)
+- Phase 25 duration: ~20 min total (3 waves)
+- Total: ~32 minutes
 
 ## Accumulated Context
 
@@ -46,56 +41,12 @@ Progress: [##########] v1.0 (15 phases) + v2.0 (8 phases) + Phase 24 (4 plans) +
 
 Decisions are logged in PROJECT.md Key Decisions table.
 
-**Phase 24 Plan 01 decisions:**
-- E2E tests live in packages/e2e as standalone Bun workspace (not merged with client/server tests)
-- @types/node required in packages/e2e for process.env TypeScript support
-- LandingPage.waitForConnected() fills temp nickname to observe canCreate button state
-- POM locator strategy: getByRole > getByLabel > getByPlaceholder > getByText > data-testid
-- data-testid="room-code" added to RoomCode.vue for stable E2E anchor
-
-**Phase 24 Plan 02 decisions:**
-- WebKit installed locally for mobile-375/mobile-390 viewport projects (iPhone SE/14 use WebKit by default)
-- Hash-based routing detected via `page.waitForURL(/\/#\/room\//)` pattern
-- Room code validated as `/^[A-Z0-9]{6}$/` from `[data-testid="room-code"]`
-- Lobby tests: each test creates fresh room, server cleans up on WS close
-
-**Phase 24 Plan 03 decisions:**
-- WS mock sequencing: send room-created, waitForURL(lobby) + 100ms, THEN send game-dealt
-- WS-mocked tests skip on WebKit (routeWebSocket is Chromium-only)
-- CSS class locators (button.bg-white.text-black.rounded) for card counting due to sibling-div structure
-- CI installs chromium-only to keep pipeline fast; WebKit mobile projects skip WS-mocked tests
-- Playwright report artifact uses if: ${{ !cancelled() }} (not always())
-
-**Phase 24 Plan 04 decisions (gap closure):**
-- Switch mobile-375/mobile-390 from iPhone SE/14 WebKit presets to Chromium with `{ viewport, hasTouch: true, isMobile: true }`
-- Remove unused `devices` import from @playwright/test
-- Remove all test.skip(browserName !== 'chromium') guards — all projects now Chromium, 150/150 tests pass with 0 skips
-
-**Phase 25 Plan 01 decisions:**
-- `botPlayerIds` Set tracks bot identity (not stored on player objects); keeps player map structure unchanged
-- `isBot: || undefined` in getState() so non-bot players omit the field (cleaner payloads)
-- Bots excluded from markPlayAgain connected-player count (bots never call markPlayAgain)
-- BotPlayer.ts implemented in plan 01 to fix pre-committed test file (not deferred to plan 02)
-- `nanoid(8)` for bot IDs — unique 8-char suffix on `bot_` prefix
-- botNameCounter resets on resetToLobby — fresh lobby restarts Bot 1, Bot 2 naming
-
-**Phase 25 Plan 02 decisions (TDD):**
-- Test file at `src/game/__tests__/` (existing vitest convention: `src/**/*.test.ts`)
-- BotPlayer.ts already implemented in Plan 01; TDD confirmed correctness and drove refactor
-- Extracted `selectLowestValidGroup` helper to eliminate duplicated find-lowest logic
-- First-turn scan uses `RANK_ORDER.slice(1)` iteration (clearer than getRankValue scan)
-
-**Phase 25 Plan 03 decisions (WebSocket integration):**
-- executeBotTurn/executeBotMove defined as module-level functions (not inside handler) — accessible from multiple callback contexts, matches existing sendMessage/broadcastToRoom pattern
-- game-dealt loop skips bots (isBot() guard) — bots have no WebSocket, sending would fail
-- Bot auto-ready uses 500-1500ms random delay to stagger multiple bots from readying simultaneously
-- Add Bot button added to DiscordLobby.vue to resolve pre-staged unused-vars lint errors
-
-**Phase 25 Plan 04 decisions (lobby UI):**
-- Robot emoji (U+1F916) for bot indicator — no image assets, consistent with existing emoji usage
-- Discord lobby wraps bot emoji in same-size circle as Discord avatar (visual grid parity)
-- Add Bot hidden with v-if (not disabled) when room is full — cleaner UX
-- Remove button placed inline in player row, colocated with the bot it removes
+**Phase 25 decisions (summary):**
+- `botPlayerIds` Set tracks bot identity, `isBot: || undefined` in getState() for clean payloads
+- BotPlayer strategy: play lowest valid rank, group same-rank cards, selectLowestValidGroup helper
+- executeBotTurn/executeBotMove as module-level functions, 1-2s think delay, race condition guards
+- Robot emoji (U+1F916) for bot indicator, Add Bot hidden (not disabled) when room full
+- Bot turn detection added to play-cards/pickup-pile/play-face-down handlers (bug fix in 25-05)
 
 ### Pending Todos
 
@@ -105,7 +56,7 @@ Decisions are logged in PROJECT.md Key Decisions table.
 ### Roadmap Evolution
 
 - Phase 24 added: Playwright Responsive E2E Testing (complete)
-- Phase 25 added: Bot Player (in progress)
+- Phase 25 added: Bot Player (complete)
 
 ### Blockers/Concerns
 
@@ -114,6 +65,6 @@ None — all known blockers resolved.
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: Completed 25-03-PLAN.md (WebSocket bot integration: add-bot/remove-bot handlers, executeBotTurn/executeBotMove, onPlayPhaseStart bot detection)
+Stopped at: Phase 25 complete — all 5 plans executed, verified 6/6 must-haves
 Resume file: None
-Next: Verify 25-04 (pre-staged lobby UI commits) or execute remaining plans
+Next: All v3.0 phases complete. Consider: /gsd:audit-milestone or /gsd:complete-milestone

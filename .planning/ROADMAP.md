@@ -39,13 +39,13 @@ Screens to test:
 **Plans:** 5 plans
 
 Plans:
-- [ ] 25-01-PLAN.md — Shared types (isBot) + Room bot infrastructure (addBot/removeBot)
-- [ ] 25-02-PLAN.md — BotPlayer move selection logic (TDD)
-- [ ] 25-03-PLAN.md — Wire bot into WebSocket handlers (add-bot/remove-bot, turn detection, auto-play)
-- [ ] 25-04-PLAN.md — Client lobby UI bot controls (Add Bot, Remove, bot indicator)
-- [ ] 25-05-PLAN.md — Integration tests + manual playtest verification
+- [x] 25-01-PLAN.md — Shared types (isBot) + Room bot infrastructure (addBot/removeBot)
+- [x] 25-02-PLAN.md — BotPlayer move selection logic (TDD)
+- [x] 25-03-PLAN.md — Wire bot into WebSocket handlers (add-bot/remove-bot, turn detection, auto-play)
+- [x] 25-04-PLAN.md — Client lobby UI bot controls (Add Bot, Remove, bot indicator)
+- [x] 25-05-PLAN.md — Integration tests + manual playtest verification
 
-**Status:** Planned
+**Status:** Complete (verified 6/6 must-haves)
 
 **Details:**
 - Bot joins a room as a regular player (server-side, no browser needed)
