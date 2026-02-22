@@ -56,6 +56,12 @@ export default defineConfig({
         viewport: { width: 460, height: 720 },
       },
     },
+    {
+      name: 'discord-laptop-1219',
+      use: {
+        viewport: { width: 1219, height: 643 },
+      },
+    },
   ],
 
   webServer: [

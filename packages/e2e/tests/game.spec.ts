@@ -188,4 +188,34 @@ test.describe('Active gameplay screen', () => {
 
     expect(scrollWidth).toBeLessThanOrEqual(clientWidth);
   });
+
+  test('no vertical scroll — all content fits viewport', async ({ page }) => {
+
+    const { sendGameDealt } = await setupGameMock(page);
+    await goToGameScreen(page, sendGameDealt);
+
+    const { scrollHeight, clientHeight } = await page.evaluate(() => ({
+      scrollHeight: document.documentElement.scrollHeight,
+      clientHeight: document.documentElement.clientHeight,
+    }));
+
+    expect(scrollHeight).toBeLessThanOrEqual(clientHeight);
+  });
+
+  test('action buttons visible within viewport', async ({ page }) => {
+
+    const { sendGameDealt } = await setupGameMock(page);
+    await goToGameScreen(page, sendGameDealt);
+
+    const pickUpButton = page.getByRole('button', { name: /Pick Up Pile/i });
+    await expect(pickUpButton).toBeVisible();
+
+    // Verify button is within viewport bounds (not clipped)
+    const box = await pickUpButton.boundingBox();
+    expect(box).not.toBeNull();
+
+    const viewport = page.viewportSize()!;
+    expect(box!.y + box!.height).toBeLessThanOrEqual(viewport.height);
+    expect(box!.y).toBeGreaterThanOrEqual(0);
+  });
 });

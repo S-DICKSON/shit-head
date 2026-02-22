@@ -161,6 +161,35 @@ test.describe('Swap phase screen', () => {
     expect(scrollWidth).toBeLessThanOrEqual(clientWidth);
   });
 
+  test('no vertical scroll — all content fits viewport', async ({ page }) => {
+
+    const { sendGameDealt } = await setupSwapPhaseMock(page);
+    await goToSwapPhase(page, sendGameDealt);
+
+    const { scrollHeight, clientHeight } = await page.evaluate(() => ({
+      scrollHeight: document.documentElement.scrollHeight,
+      clientHeight: document.documentElement.clientHeight,
+    }));
+
+    expect(scrollHeight).toBeLessThanOrEqual(clientHeight);
+  });
+
+  test('ready button visible within viewport', async ({ page }) => {
+
+    const { sendGameDealt } = await setupSwapPhaseMock(page);
+    const swapPhase = await goToSwapPhase(page, sendGameDealt);
+
+    await expect(swapPhase.readyButton).toBeVisible();
+
+    // Verify button is within viewport bounds (not clipped)
+    const box = await swapPhase.readyButton.boundingBox();
+    expect(box).not.toBeNull();
+
+    const viewport = page.viewportSize()!;
+    expect(box!.y + box!.height).toBeLessThanOrEqual(viewport.height);
+    expect(box!.y).toBeGreaterThanOrEqual(0);
+  });
+
   test('opponent section visible', async ({ page }) => {
 
     const { sendGameDealt } = await setupSwapPhaseMock(page);
