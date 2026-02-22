@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 1024px;
+    height: 1024px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at 50% 40%, #1a5c2a 0%, #0d3318 60%, #071a0c 100%);
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Felt texture overlay */
+  body::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='6' height='6' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='1' height='1' x='0' y='0' fill='rgba(255,255,255,0.02)'/%3E%3Crect width='1' height='1' x='3' y='3' fill='rgba(0,0,0,0.03)'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .scene {
+    position: relative;
+    width: 900px;
+    height: 900px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+  }
+
+  /* Cards behind the monkey */
+  .card {
+    position: absolute;
+    width: 200px;
+    height: 290px;
+    border-radius: 16px;
+    background: white;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.5), 0 2px 6px rgba(0,0,0,0.3);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Georgia', serif;
+    border: 3px solid #e0e0e0;
+  }
+
+  .card .corner {
+    position: absolute;
+    font-size: 28px;
+    font-weight: bold;
+    line-height: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .corner-tl { top: 12px; left: 14px; }
+  .corner-br { bottom: 12px; right: 14px; transform: rotate(180deg); }
+
+  .card .center-suit {
+    font-size: 80px;
+    line-height: 1;
+  }
+
+  .card.red { color: #cc0000; }
+  .card.black { color: #1a1a1a; }
+
+  /* Left card - Ace of Spades */
+  .card-left {
+    transform: rotate(-28deg) translateX(-170px) translateY(20px);
+    z-index: 1;
+  }
+
+  /* Right card - Ace of Hearts */
+  .card-right {
+    transform: rotate(28deg) translateX(170px) translateY(20px);
+    z-index: 1;
+  }
+
+  /* Back card peeking behind */
+  .card-back {
+    position: absolute;
+    width: 200px;
+    height: 290px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #c41e3a 0%, #8b0000 100%);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+    border: 3px solid #e0e0e0;
+    z-index: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .card-back::after {
+    content: '';
+    width: 160px;
+    height: 250px;
+    border-radius: 10px;
+    border: 3px solid rgba(255,255,255,0.3);
+    background: repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 8px,
+      rgba(255,255,255,0.08) 8px,
+      rgba(255,255,255,0.08) 16px
+    );
+  }
+
+  .card-back-left {
+    transform: rotate(-40deg) translateX(-200px) translateY(40px);
+  }
+  .card-back-right {
+    transform: rotate(40deg) translateX(200px) translateY(40px);
+  }
+  .card-back-center {
+    transform: translateY(50px);
+  }
+
+  /* Monkey */
+  .monkey {
+    position: relative;
+    z-index: 10;
+    font-size: 280px;
+    line-height: 1;
+    filter: drop-shadow(0 10px 30px rgba(0,0,0,0.5));
+    transform: translateY(-30px);
+  }
+
+  /* Title area */
+  .title {
+    position: absolute;
+    bottom: 40px;
+    z-index: 20;
+    text-align: center;
+  }
+
+  .title h1 {
+    font-family: 'Georgia', serif;
+    font-size: 110px;
+    font-weight: 900;
+    color: #ffd700;
+    text-shadow:
+      0 0 20px rgba(255, 215, 0, 0.4),
+      3px 3px 0 #8b6914,
+      4px 4px 0 #6b4f10,
+      0 6px 20px rgba(0,0,0,0.6);
+    letter-spacing: 8px;
+    text-transform: uppercase;
+  }
+
+  .title .subtitle {
+    font-family: 'Georgia', serif;
+    font-size: 36px;
+    color: #e8dcc8;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+    letter-spacing: 10px;
+    text-transform: uppercase;
+    margin-top: 6px;
+  }
+
+  /* Top text */
+  .top-text {
+    position: absolute;
+    top: 70px;
+    z-index: 20;
+    text-align: center;
+    font-family: 'Georgia', serif;
+    font-size: 52px;
+    font-weight: 900;
+    color: #e8dcc8;
+    text-shadow:
+      0 0 15px rgba(232, 220, 200, 0.3),
+      2px 2px 0 rgba(0,0,0,0.5),
+      0 4px 15px rgba(0,0,0,0.5);
+    letter-spacing: 14px;
+    text-transform: uppercase;
+  }
+
+  /* Decorative ring */
+  .ring {
+    position: absolute;
+    width: 820px;
+    height: 820px;
+    border-radius: 50%;
+    border: 3px solid rgba(255, 215, 0, 0.15);
+    z-index: 0;
+  }
+</style>
+</head>
+<body>
+  <div class="scene">
+    <div class="ring"></div>
+
+    <!-- Top text -->
+    <div class="top-text">Splat Monkey</div>
+
+    <!-- Card backs -->
+    <div class="card-back card-back-left"></div>
+    <div class="card-back card-back-right"></div>
+    <div class="card-back card-back-center"></div>
+
+    <!-- Ace of Spades -->
+    <div class="card black card-left">
+      <div class="corner corner-tl"><span>A</span><span>&#9824;</span></div>
+      <div class="center-suit">&#9824;</div>
+      <div class="corner corner-br"><span>A</span><span>&#9824;</span></div>
+    </div>
+
+    <!-- Ace of Hearts -->
+    <div class="card red card-right">
+      <div class="corner corner-tl"><span>A</span><span>&#9829;</span></div>
+      <div class="center-suit">&#9829;</div>
+      <div class="corner corner-br"><span>A</span><span>&#9829;</span></div>
+    </div>
+
+    <!-- Monkey emoji -->
+    <div class="monkey">&#x1F648;</div>
+
+    <!-- Title -->
+    <div class="title">
+      <h1>Karma</h1>
+      <div class="subtitle">Online</div>
+    </div>
+  </div>
+</body>
+</html>
