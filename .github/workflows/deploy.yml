@@ -83,8 +83,9 @@ jobs:
             sed -i "s|ghcr.io/OWNER/shithead-server|${DEPLOY_IMAGE}|g" /etc/systemd/system/shithead-game.service
             systemctl daemon-reload
 
-            # Configure Caddy with domain
-            cat > /etc/caddy/Caddyfile << CADDYEOF
+            # Configure Caddy with domain (writes to conf.d/ — shared with my-stremio)
+            mkdir -p /etc/caddy/conf.d
+            cat > /etc/caddy/conf.d/shithead.caddy << CADDYEOF
           ${DEPLOY_DOMAIN} {
               reverse_proxy localhost:3000
               log {
